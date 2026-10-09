@@ -9,16 +9,16 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
   static PARTS={main:{template:`modules/${ID}/templates/quest-manager.hbs`}};
   constructor(opts={}){
     super(opts);this.search="";this._refreshQueued=false;
-    this._journalHook=Hooks.on('updateJournalEntry',(journal,changes)=>{
-      if(journal.getFlag(ID,'kind')!=='quest')return;
-      if(!('flags' in changes) && !('name' in changes) && !('folder' in changes))return;
+    this._journalHook=Hooks.on("updateJournalEntry",(journal,changes)=>{
+      if(journal.getFlag(ID,"kind")!=="quest")return;
+      if(!("flags" in changes)&&!("name" in changes)&&!("folder" in changes))return;
       if(this._refreshQueued)return;
       this._refreshQueued=true;
-      queueMicrotask(async()=>{this._refreshQueued=false;try{await this.render();}catch{ /* closed app */ }});
+      queueMicrotask(async()=>{this._refreshQueued=false;try{await this.render();}catch{ /* window closed */ }});
     });
   }
   async _onClose(options){
-    if(this._journalHook!==null){Hooks.off('updateJournalEntry',this._journalHook);this._journalHook=null;}
+    if(this._journalHook!==null){Hooks.off("updateJournalEntry",this._journalHook);this._journalHook=null;}
     await super._onClose?.(options);
   }
   async _prepareContext(){
@@ -26,39 +26,54 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
     const entries=quests().map(q=>{
       const status=q.getFlag(ID,"status")??"unavailable";
       const faction=factions().find(f=>f.uuid===q.getFlag(ID,"factionUuid"));
-      const assignment=q.getFlag(ID,"assignment");
-      const assigned=assignment==="individual"?(q.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)?.name).filter(Boolean).join(", "):"Unassigned";
-      return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status.replaceAll("-"," "),assigned,
-        canGive:status==="available",canTurnIn:!q.getFlag(ID,"claimed") && ["offered","accepted","in-progress","completed"].includes(status),
-        canViewResults:!!q.getFlag(ID,"claimed") || ["failed","abandoned"].includes(status),
-        canToggle:["unavailable","available"].includes(status),isAvailable:status==="available",claimed:!!q.getFlag(ID,"claimed")};
+      const assignees=q.getFlag(ID,"assignees")??[];
+      const progress=q.getFlag(ID,"progress")??{};
+      const counts={completed:0,failed:0,active:0};
+      for(const id of assignees){
+        const s=progress[id]?.status??"accepted";
+        if(s==="completed")counts.completed++;
+        else if(s==="failed")counts.failed++;
+        else counts.active++;
+      }
+      const canGive=status==="available";
+      const canTurnIn=canGive && (counts.active>0 || !!q.getFlag(ID,"activeTurnIn"));
+      const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||counts.failed>0;
+      return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status.replaceAll("-"," "),
+        total:assignees.length,...counts,canGive,canTurnIn,hasHistory,
+        canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
     return {entries,query:this.search,total:entries.length};
   }
   _onRender(){
     const root=this.element;
-    root.querySelector('[data-action="new"]')?.addEventListener('click',()=>new QuestApp().render(true));
-    root.querySelector('[name="filter"]')?.addEventListener('input',e=>{
-      this.search=e.target.value;
-      const q=this.search.trim().toLocaleLowerCase();
-      root.querySelectorAll('.hqr-quest-record').forEach(row=>{row.hidden=!!q&&!row.textContent.toLocaleLowerCase().includes(q);});
+    root.querySelector('[data-action="new"]')?.addEventListener("click",()=>new QuestApp().render(true));
+    root.querySelector('[name="filter"]')?.addEventListener("input",event=>{
+      this.search=event.target.value;
+      const search=this.search.trim().toLocaleLowerCase();
+      root.querySelectorAll(".hqr-quest-record").forEach(row=>{row.hidden=!!search&&!row.textContent.toLocaleLowerCase().includes(search);});
     });
-    root.querySelector('[data-action="refresh"]')?.addEventListener('click',()=>this.render());
-    root.querySelectorAll('[data-quest-id]').forEach(row=>row.addEventListener('click',async e=>{
-      const button=e.target.closest('[data-action]');if(!button)return;
+    root.querySelector('[data-action="refresh"]')?.addEventListener("click",()=>this.render());
+    root.querySelectorAll("[data-quest-id]").forEach(row=>row.addEventListener("click",async event=>{
+      const button=event.target.closest("[data-action]");if(!button)return;
       const journal=game.journal.get(row.dataset.questId);if(!journal)return;
       try{
         const action=button.dataset.action;
-        if(action==='edit')new QuestApp(journal).render(true);
-        else if(action==='open')journal.sheet?.render(true);
-        else if(action==='give')new QuestLifecycleApp(journal,'giving').render(true);
-        else if(action==='turnin'){if(journal.getFlag(ID,'claimed'))throw new Error('Rewards already issued. Open View Results.');new QuestLifecycleApp(journal,'turnin').render(true);}
-        else if(action==='results')new QuestResultsApp(journal).render(true);
-        else if(action==='toggle'){
-          await setQuestAvailability(journal,journal.getFlag(ID,'status')!=='available');
-          await this.render();
+        if(action==="edit")new QuestApp(journal).render(true);
+        else if(action==="open")journal.sheet?.render(true);
+        else if(action==="give")new QuestLifecycleApp(journal,"giving").render(true);
+        else if(action==="turnin")new QuestLifecycleApp(journal,"turnin").render(true);
+        else if(action==="results")new QuestResultsApp(journal).render(true);
+        else if(["available","unavailable","inactive"].includes(action)){
+          if(action==="inactive"){
+            const pending=(journal.getFlag(ID,"assignees")??[]).filter(id=>!["completed","failed"].includes(journal.getFlag(ID,"progress")?.[id]?.status));
+            const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Inactivate Quest"},
+              content:`<p>Mark <strong>${esc(journal.name)}</strong> Inactive?</p><p><strong>${pending.length} unfinished Character(s)</strong> will be marked Failed. Completed Characters keep their results. Journal and history remain available.</p>`,
+              yes:{label:"Inactivate & Mark Failed"},no:{label:"Cancel"}});
+            if(!yes)return;
+          }
+          await setQuestAvailability(journal,action);await this.render();
         }
-      }catch(err){report(err,'Quest Manager action failed');}
+      }catch(error){report(error,"Quest Manager action failed");}
     }));
   }
 }

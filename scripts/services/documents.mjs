@@ -44,7 +44,7 @@ export function questHTML(name,data) {
     rewards.push(`<li><strong>Renown:</strong> ${amount>0?"+":""}${amount} — ${esc(affected.name)}</li>`);
   }
   const names = (data.assignees??[]).map(id=>game.actors.get(id)?.name).filter(Boolean);
-  const assigned = data.assignment === "individual" ? (names.join(", ") || "Unassigned") : "Not yet assigned";
+  const assigned = names.join(", ") || "Not yet assigned";
   return `<section class="hqr-journal"><h1>${esc(name)}</h1><p class="hqr-journal-subtitle">${esc(faction?.name??"No Faction")} · ${esc(status)}</p><h2>Quest Briefing</h2><div>${htmlText(data.flavor??"")}</div><h2>Objectives</h2><ul>${objectives||"<li>No objectives listed.</li>"}</ul><h2>Accepted By</h2><p>${esc(assigned)}</p><h2>Rewards</h2><ul>${rewards.join("")||"<li>No announced rewards.</li>"}</ul></section>`;
 }
 async function setPage(doc, gmOnly, name, html) {
@@ -98,7 +98,7 @@ export async function saveQuest(doc, {name,notes,...data}) {
     if(seen.has(reward.factionUuid))throw new Error("Each Faction may appear only once in Renown rewards.");
     seen.add(reward.factionUuid);
   }
-  if(doc?.getFlag(ID,"claimed") || doc?.getFlag(ID,"payoutPlan")) {
+  if((doc?.getFlag(ID,"payouts")??[]).length || doc?.getFlag(ID,"activeTurnIn")) {
     const orig=doc.flags[ID];
     const normalizedItems=rows=>(rows??[]).map(({uuid,quantity})=>({uuid,quantity:Number(quantity)}));
     if(data.factionUuid!==orig.factionUuid ||
@@ -114,7 +114,8 @@ export async function saveQuest(doc, {name,notes,...data}) {
   const normalized={
     factionUuid:faction?.uuid??"", status:doc?.getFlag(ID,"status")??"unavailable", flavor:String(data.flavor??""),
     assignment:doc?.getFlag(ID,"assignment")==="individual"?"individual":"none",
-    assignees:doc?.getFlag(ID,"assignees")??[],
+    assignees:doc?.getFlag(ID,"assignees")??[], progress:doc?.getFlag(ID,"progress")??{},
+    payouts:doc?.getFlag(ID,"payouts")??[], groupAwards:doc?.getFlag(ID,"groupAwards")??{},
     objectives:Array.isArray(data.objectives)?data.objectives:[],
     currency:Object.fromEntries(CURRENCIES.map(k=>[k,Math.max(0,Math.trunc(Number(data.currency?.[k])||0))])),
     items:Array.isArray(data.items)?data.items:[], renownRewards,
@@ -122,7 +123,7 @@ export async function saveQuest(doc, {name,notes,...data}) {
   };
   if (!doc) {
     doc = await JournalEntry.create({name:name.trim(),folder:folder.id,ownership:{default:OWN_NONE},
-      flags:{[ID]:{kind:"quest",...normalized,claimed:false}},
+      flags:{[ID]:{kind:"quest",...normalized}},
       pages:[pageText("Quest Briefing",questHTML(name,normalized)),pageText("GM Notes",htmlText(notes),true)]});
   } else {
     if (doc.getFlag(ID,"kind")!=="quest") throw new Error("Not a managed Quest.");
@@ -140,7 +141,7 @@ export function isDiscoverable(actor,factionUuid) {
   return (actor?.getFlag(ID,"ledger")??[]).some(x=>x.factionUuid===factionUuid);
 }
 function questCharacters(journal) {
-  if (!["offered","accepted","in-progress","completed","failed","abandoned"].includes(journal.getFlag(ID,"status"))) return [];
+  // Preserve journal access for Completed AND Failed Characters after Inactive.
   return getQuestParticipants(journal);
 }
 export async function reconcileAccess() {
@@ -181,14 +182,21 @@ export function getGMNotes(doc) {
   return div.innerText??div.textContent??"";
 }
 
-/** GM-only quest lifecycle operations, separate from editing quest definitions. */
-export async function setQuestAvailability(doc, available) {
+/** Availability is global; progress belongs to each assigned Character. */
+export async function setQuestAvailability(doc, status) {
   assertGM();
-  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
-  const current=doc.getFlag(ID,"status");
-  if (!["available","unavailable"].includes(current)) throw new Error("Only unassigned Quests can be made available/unavailable.");
-  const status=available?"available":"unavailable";
-  await doc.setFlag(ID,"status",status);
+  if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
+  if(!["available","unavailable","inactive"].includes(status))throw new Error("Invalid Quest availability.");
+  if(doc.getFlag(ID,"activeTurnIn"))throw new Error("Resolve the interrupted Turn-In before changing availability.");
+  const progress={...(doc.getFlag(ID,"progress")??{})};
+  if(status==="inactive"){
+    const at=new Date().toISOString();
+    for(const id of doc.getFlag(ID,"assignees")??[]){
+      const previous=progress[id]??{status:"accepted"};
+      if(!["completed","failed"].includes(previous.status))progress[id]={...previous,status:"failed",failedAt:at,reason:"Quest became Inactive"};
+    }
+  }
+  await doc.update({[`flags.${ID}.status`]:status,[`flags.${ID}.progress`]:progress});
   await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
   await reconcileAccess();
 }
@@ -196,26 +204,26 @@ export function getQuestParticipants(doc) {
   return [...new Set(doc?.getFlag(ID,"assignees")??[])]
     .map(id=>game.actors.get(id)).filter(eligible);
 }
-export async function giveQuest(doc,{assignees,status="offered"}) {
+export function progressOf(doc, actorId) {
+  const progress=doc?.getFlag(ID,"progress")??{};
+  return progress[actorId]?.status??((doc?.getFlag(ID,"assignees")??[]).includes(actorId)?"accepted":"unassigned");
+}
+export async function giveQuest(doc,{assignees}={}) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
-  if(doc.getFlag(ID,"status")!=="available")throw new Error("Quest must be Available before Giving.");
-  if(!["offered","accepted","in-progress"].includes(status))throw new Error("Invalid Giving status.");
+  if(doc.getFlag(ID,"status")!=="available")throw new Error("Only Available Quests can be given.");
   const ids=[...new Set(assignees??[])];
-  if(!ids.length || ids.some(id=>!eligible(game.actors.get(id))))
+  if(!ids.length||ids.some(id=>!eligible(game.actors.get(id))))
     throw new Error("Select at least one eligible Character with an explicit non-GM Owner.");
-  await doc.update({[`flags.${ID}.assignment`]:"individual",[`flags.${ID}.groupId`]:"",
-    [`flags.${ID}.assignees`]:ids,[`flags.${ID}.status`]:status});
+  const original=new Set(doc.getFlag(ID,"assignees")??[]);
+  const progress={...(doc.getFlag(ID,"progress")??{})};
+  const additions=ids.filter(id=>!original.has(id));
+  if(!additions.length)throw new Error("All selected Characters already received this Quest.");
+  const at=new Date().toISOString();
+  for(const id of additions){original.add(id);progress[id]={status:"accepted",acceptedAt:at};}
+  await doc.update({[`flags.${ID}.assignment`]:"individual",[`flags.${ID}.assignees`]:[...original],
+    [`flags.${ID}.progress`]:progress});
   await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
   await reconcileAccess();
-}
-export async function setQuestOutcome(doc,status) {
-  assertGM();
-  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
-  if (!["offered","accepted","in-progress","completed","failed","abandoned"].includes(doc.getFlag(ID,"status"))) throw new Error("Quest has not been assigned.");
-  if (!["accepted","in-progress","completed","failed","abandoned"].includes(status)) throw new Error("Invalid Quest state.");
-  if (doc.getFlag(ID,"claimed") && status!=="completed") throw new Error("Rewards have already been claimed. Cannot change away from Completed.");
-  await doc.setFlag(ID,"status",status);
-  await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
-  await reconcileAccess();
+  return additions.length;
 }

@@ -123,3 +123,28 @@
 .hqr-app .hqr-negative{color:#e69292;font-weight:bold}
 .hqr-app .hqr-group-members{display:block;color:#b7aaa1;font-size:10px;margin-top:2px}
 @media(max-width:600px){.hqr-app .hqr-turnin-renown-row{grid-template-columns:minmax(0,1fr) 65px;row-gap:7px}}
+/* v0.0.5: One custom checkbox, no Foundry-native pseudo-element overlay. */
+.hqr-app input[type="checkbox"]{appearance:none!important;-webkit-appearance:none!important;box-sizing:border-box!important;flex:none!important;width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;max-height:18px!important;margin:0!important;padding:0!important;border:1px solid #ae966d!important;border-radius:3px!important;background:#211e20!important;box-shadow:none!important;outline-offset:2px;vertical-align:middle;cursor:pointer}
+.hqr-app input[type="checkbox"]::before,.hqr-app input[type="checkbox"]::after{content:none!important;display:none!important}
+.hqr-app input[type="checkbox"]:checked{border-color:#e1bd72!important;background:#84423f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='m3 9 4 4 8-9' stroke='%23fff1c6' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") center/15px 15px no-repeat!important}
+.hqr-app input[type="checkbox"]:disabled{opacity:.55;cursor:not-allowed}
+.hqr-app label.hqr-check{display:inline-flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;min-height:34px;margin:0;cursor:pointer}
+.hqr-app label.hqr-check>span{display:inline-block;white-space:nowrap}
+.hqr-app label.hqr-check>small{color:#b6b0a6;font-weight:400;font-size:10px;white-space:nowrap}
+.hqr-app label.hqr-check.hqr-already{opacity:.68;cursor:default}
+.hqr-app .hqr-selection-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px;color:#d9c8a5}
+.hqr-app .hqr-selection-toolbar>div{display:flex;align-items:center;gap:7px}
+.hqr-app .hqr-people{max-height:185px;min-height:32px}
+/* Character-sensitive outcome panel in the native Journal sheet. */
+.hqr-personal-quest-state{--hqr-outcome:#c3a66f;box-sizing:border-box;flex:none;width:100%;margin:7px 0 17px;padding:10px 15px;border:1px solid rgba(164,138,94,.55);border-radius:5px;background:linear-gradient(110deg,rgba(85,66,40,.16),rgba(23,22,21,.04));color:var(--color-text-primary,#dfd4bd)}
+.hqr-personal-quest-state.hqr-state-failed{--hqr-outcome:#ae7857;border-color:rgba(141,89,69,.6);background:linear-gradient(110deg,rgba(108,56,43,.17),transparent)}
+.hqr-personal-quest-state .hqr-status-line{display:flex;align-items:center;gap:16px;min-height:55px}
+.hqr-personal-quest-state .hqr-outcome-stamp{width:72px;height:72px;object-fit:contain;flex:none;filter:drop-shadow(1px 2px 3px #0005)}
+.hqr-personal-quest-state .hqr-status-caption{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hqr-personal-quest-state .hqr-status-caption strong{font:800 20px var(--dnd5e-font-roboto-slab,serif);color:var(--hqr-outcome);letter-spacing:.06em;white-space:nowrap}
+.hqr-personal-quest-state .hqr-status-caption span{font-size:12px}
+.hqr-personal-quest-state .hqr-status-caption small{font-size:11px;opacity:.75}
+.hqr-personal-quest-state .hqr-quest-character-selector{display:flex;align-items:center;gap:10px;margin:0 0 9px;font-size:11px}
+.hqr-personal-quest-state .hqr-quest-character-selector select{min-width:120px;max-width:270px;padding:4px 8px;height:28px}
+.hqr-personal-quest-state .hqr-status-for-gm{display:flex;align-items:center;gap:10px;font-size:12px}
+.hqr-personal-quest-state .hqr-status-for-gm img{width:25px;height:25px;object-fit:contain}

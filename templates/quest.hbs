@@ -9,7 +9,7 @@
     <button type="button" class="hqr-quiet" data-action="add-objective"><i class="fa-solid fa-plus"></i> Add Objective</button>
   </div>
   <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Announced Rewards</h3>
-    {{#if claimed}}<div class="hqr-warning">Rewards have already been issued; Faction and reward values are locked.</div>{{/if}}
+    {{#if claimed}}<div class="hqr-warning">At least one Character has completed this Quest. Reward definitions are locked to preserve Each payouts.</div>{{/if}}
     <h4>Currency</h4><div class="hqr-currencies">{{#each currencies}}<label>{{label}}<input name="currency_{{id}}" type="number" value="{{value}}" min="0" step="1" {{#if ../claimed}}readonly{{/if}}></label>{{/each}}</div>
     <h4>Items</h4><div class="hqr-item-drop" data-locked="{{claimed}}"><div class="hqr-drop-prompt"><i class="fa-solid fa-box-open"></i> Drag & Drop Items from the World or Compendiums here</div><div class="hqr-items hqr-list">{{#each items}}<div class="hqr-item-row"><div class="hqr-item-label"><img class="hqr-item-img" src="{{img}}" alt=""><span class="hqr-item-name">{{name}}</span><input type="hidden" data-field="uuid" value="{{uuid}}"></div><label class="hqr-qty">Qty.<input type="number" data-field="quantity" min="1" step="1" value="{{quantity}}" {{#if ../claimed}}readonly{{/if}}></label><button type="button" data-action="remove-item" title="Remove Item" {{#if ../claimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div></div>
     <h4>Faction Renown Rewards</h4>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Completed quest golden wax seal">
+<defs><radialGradient id="metal"><stop stop-color="#fff0b4"/><stop offset=".6" stop-color="#bd8d39"/><stop offset="1" stop-color="#5e3916"/></radialGradient><linearGradient id="emboss" x2="0" y2="1"><stop stop-color="#f8dd98"/><stop offset="1" stop-color="#74501c"/></linearGradient></defs>
+<path d="M64 3 76 12 90 8 98 21 112 23 115 39 126 48 121 64 126 78 115 89 112 105 97 108 90 120 76 117 64 127 51 117 37 120 30 107 15 105 12 89 2 78 7 64 2 48 12 39 15 23 30 21 37 8 51 12Z" fill="url(#metal)" stroke="#6a471a" stroke-width="3"/>
+<circle cx="64" cy="64" r="45" fill="none" stroke="#f6d987" stroke-width="3"/><circle cx="64" cy="64" r="38" fill="#6c491f" opacity=".48"/><path d="m37 63 17 18 37-41" fill="none" stroke="#3f2a12" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="m37 60 17 18 37-41" fill="none" stroke="url(#emboss)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

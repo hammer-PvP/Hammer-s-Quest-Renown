@@ -21,7 +21,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
   }
   async _prepareContext(){
     assertGM();
-    return {...this.data,isEdit:!!this.doc,claimed:!!this.doc?.getFlag(ID,"claimed"),
+    return {...this.data,isEdit:!!this.doc,claimed:!!(this.doc?.getFlag(ID,"payouts")??[]).length || !!this.doc?.getFlag(ID,"activeTurnIn"),
       factions:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===this.data.factionUuid})),
       hasFac:factions().length>0,
       statusLabel:String(this.doc?.getFlag(ID,"status")??"unavailable").replaceAll("-"," "),
@@ -45,7 +45,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
   _onRender(){
     const root=this.element;
     root.querySelector('[data-action="add-renown"]')?.addEventListener('click',()=>{
-      if(this.doc?.getFlag(ID,'claimed'))return;
+      if(((this.doc?.getFlag(ID,'payouts')??[]).length>0 || !!this.doc?.getFlag(ID,'activeTurnIn')))return;
       const options=factions();
       const used=new Set([...root.querySelectorAll('.hqr-renown-reward [data-field="faction"]')].map(x=>x.value));
       const selected=options.find(f=>!used.has(f.uuid));
@@ -63,7 +63,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     });
     root.querySelector('.hqr-renown-rewards')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-action="remove-renown"]');
-      if(button&&!this.doc?.getFlag(ID,'claimed'))button.closest('.hqr-renown-reward')?.remove();
+      if(button&&!((this.doc?.getFlag(ID,'payouts')??[]).length>0 || !!this.doc?.getFlag(ID,'activeTurnIn')))button.closest('.hqr-renown-reward')?.remove();
     });
     root.querySelector('[data-action="add-objective"]')?.addEventListener('click',()=>{
       const row=document.createElement('div');row.className='hqr-objective';
@@ -81,7 +81,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     drop?.addEventListener('dragleave',e=>{if(!drop.contains(e.relatedTarget))drop.classList.remove('dragover');});
     drop?.addEventListener('drop',async e=>{
       e.preventDefault();e.stopPropagation();drop.classList.remove('dragover');
-      if(this.doc?.getFlag(ID,'claimed')){ui.notifications.warn("Rewards have already been issued for this Quest.");return;}
+      if(((this.doc?.getFlag(ID,'payouts')??[]).length>0 || !!this.doc?.getFlag(ID,'activeTurnIn'))){ui.notifications.warn("Rewards are locked after the first Turn-In for this Quest.");return;}
       try{
         const raw=e.dataTransfer?.getData('text/plain');
         const payload=foundry.applications.ux.TextEditor?.implementation?.getDragEventData?.(e)??JSON.parse(raw);

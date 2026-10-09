@@ -9,6 +9,22 @@ Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entrie
 - **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
 - **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
 
+## v0.0.5 — Each Rewards & Individual Quest Outcomes
+
+**Prototype schema change:** No automatic migration of experimental v0.0.4 Quests. For predictable testing, create new Quests in a test World. Existing Faction Journals and Actor Renown ledgers are not intentionally deleted.
+
+- Quest Giving always sets newly assigned Characters to **Accepted**. Add more eligible Characters later, even after others completed. `Select All` and `Clear Selection` affect only newly eligible Characters.
+- Availability is global: **Unavailable / Available / Inactive**. Completed / Failed are stored separately for each assigned Character on the same Quest Journal.
+- Quest Turn-In selects **unfinished assigned Characters**. Currency and Item rewards are **Each**: every newly completing Character receives the full values directly into their own inventory. Personal Renown rewards also apply once per Character.
+- Represented Groups are filtered by current selected participants, initially unchecked and always optional. Each explicitly selected Group can receive its collective Renown **once per Quest**, no matter how many Characters complete later.
+- Every Turn-In saves a recipient snapshot, individual status and receipt history. Interrupted payouts resume from their saved recipients. Currency and Item reward receipts and Renown ledger keys guard against duplicate payments.
+- Marking a Quest **Inactive** automatically marks assigned Characters who have not completed it **Failed**. Completed results remain. Journal, UUID, history and all rewards persist. Reopening availability does not undo failures automatically.
+- A single native Journal shows a **golden Completed** or **rusted Failed** seal based on the viewing Character. If a User controls multiple assigned Characters, the status panel has a Character selector. GM sees a summary.
+- Fixed misaligned/duplicated checkbox styling across the module. Added bulk select/clear controls to Giving and Turn-In.
+- GM-only pages remain private; player Journals are read-only Observer. Native D&D5e 6.0.6 Character and Group Reputation tabs remain Actor-specific.
+
+**Known constraint:** This package has passed isolated service tests and static/syntax checks, but has not been run in a live Foundry V14 World. The personalized Journal status panel must be visually verified in the native Journal sheet.
+
 ## v0.0.4 — Multi-Faction Renown, Characters & Optional Groups
 
 This release changes the prototype Quest reward schema and assignment model. There is **no migration of experimental Quests created with v0.0.3 or earlier**. Recreate those Quests for reliable v0.0.4 Turn-In testing. Already recorded Actor ledgers are not deleted.

@@ -6,6 +6,7 @@ import {ReputationApp} from "./apps/reputation-app.mjs";
 import {QuestManagerApp} from "./apps/quest-manager-app.mjs";
 import {QuestLifecycleApp} from "./apps/quest-lifecycle-app.mjs";
 import {installReputationTabs} from "./sheets/reputation-tab.mjs";
+import {renderQuestStatus} from "./sheets/quest-status.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
 function startQuest(doc=null){ if(!isGM())return;new QuestApp(doc).render(true); }
@@ -58,6 +59,7 @@ function addJournalSheetButton(app,html){
   const root=html?.[0]??html??app.element;
   if(!(root instanceof HTMLElement))return;
   attachItemTooltips(root);
+  renderQuestStatus(app,root);
   if(!isGM() || root.querySelector('.hqr-edit-journal'))return;
   const host=root.querySelector('.window-header .window-title')??root.querySelector('.window-header');
   if(!host)return;
@@ -71,7 +73,7 @@ function isDndActorSheet(app){
   return !!(actor && ['group','character'].includes(actor.type) && app?.document===actor && (sheetClass ? app instanceof sheetClass : /ActorSheet/.test(app?.constructor?.name??'')));
 }
 Hooks.once('init',()=>{
-  console.info(`${ID} | Initializing v0.0.4`);
+  console.info(`${ID} | Initializing v0.0.5`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
@@ -133,6 +135,10 @@ Hooks.on('updateActor',(actor,change)=>{
 Hooks.on('createUser',queuePermissions);
 Hooks.on('updateUser',queuePermissions);
 Hooks.on('updateJournalEntry',(journal,change)=>{
+  if(journal.getFlag(ID,'kind')==='quest'){
+    const sheet=journal.sheet;
+    if(sheet?.rendered)renderQuestStatus(sheet,sheet.element);
+  }
   if(['quest','faction'].includes(journal.getFlag(ID,'kind')) && (change.ownership||change.flags?.[ID]))queuePermissions();
 });
 

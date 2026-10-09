@@ -1,13 +1,16 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>Prepare, unlock, assign and complete quests from one place.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
+<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>One Journal, individual progress and Each rewards. Inactive quests remain archived.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
 <div class="hqr-toolbar"><label>Filter Quests<input type="search" name="filter" placeholder="Search by name, faction or status..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="refresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
 <div class="hqr-scroll">
 {{#each entries}}<article class="hqr-quest-record hqr-panel" data-quest-id="{{id}}">
- <div class="hqr-record-heading"><div><h3>{{name}}</h3><p class="hqr-hint">{{faction}} · {{assigned}}</p></div><span class="hqr-pill">{{statusLabel}}{{#if claimed}} · Rewards issued{{/if}}</span></div>
- <div class="hqr-record-actions"><button type="button" data-action="open" title="Open Journal"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
- {{#if canToggle}}<button type="button" data-action="toggle">{{#if isAvailable}}<i class="fa-solid fa-lock"></i> Make Unavailable{{else}}<i class="fa-solid fa-lock-open"></i> Make Available{{/if}}</button>{{/if}}
+ <div class="hqr-record-heading"><div><h3>{{name}}</h3><p class="hqr-hint">{{faction}} · {{completed}} Completed · {{failed}} Failed · {{active}} Active ({{total}} assigned)</p></div><span class="hqr-pill">{{statusLabel}}</span></div>
+ <div class="hqr-record-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
+ {{#if canMakeAvailable}}<button type="button" data-action="available"><i class="fa-solid fa-lock-open"></i> Make Available</button>{{/if}}
+ {{#if canMakeUnavailable}}<button type="button" data-action="unavailable"><i class="fa-solid fa-lock"></i> Make Unavailable</button>{{/if}}
+ {{#if canMakeInactive}}<button type="button" data-action="inactive"><i class="fa-solid fa-hourglass-end"></i> Inactivate</button>{{/if}}
  {{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Quest Giving</button>{{/if}}
  {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}
- {{#if canViewResults}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}</div>
+ {{#if hasHistory}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}
+ </div>
 </article>{{else}}<div class="hqr-panel"><p>No Quests yet. Create one to begin.</p></div>{{/each}}
 </div></div>

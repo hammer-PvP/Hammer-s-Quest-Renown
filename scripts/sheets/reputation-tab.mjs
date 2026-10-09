@@ -39,5 +39,5 @@ export function installReputationTabs(){
     const actor=app.actor??app.document;
     context.hqr={actorId:actor.id,isGM:game.user.isGM,isGroup:actor.type==='group',rows:rowsFor(actor)};
   });
-  console.info(`${ID} | Native Character/Group Reputation tabs installed (Actor-only v0.0.4).`);
+  console.info(`${ID} | Native Character/Group Reputation tabs installed (Actor-only v0.0.5).`);
 }

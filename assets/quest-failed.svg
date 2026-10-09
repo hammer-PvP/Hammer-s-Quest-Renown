@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Failed quest broken rusted seal">
+<defs><radialGradient id="rust"><stop stop-color="#996b49"/><stop offset=".6" stop-color="#694432"/><stop offset="1" stop-color="#2e2928"/></radialGradient></defs>
+<path d="M64 2 76 13 90 8 97 22 111 24 114 39 126 49 121 63 125 79 112 90 110 104 96 108 90 121 76 116 64 126 50 117 35 120 30 107 15 103 13 89 2 78 8 62 3 48 15 39 16 23 31 21 36 8 51 14Z" fill="url(#rust)" stroke="#2e241f" stroke-width="3"/>
+<circle cx="64" cy="64" r="43" fill="none" stroke="#a57c59" stroke-width="3" stroke-dasharray="18 5 8 3"/><path d="M41 41 87 87m0-46L41 87" fill="none" stroke="#201e1e" stroke-width="14" stroke-linecap="round"/><path d="M41 38 87 84m0-46L41 84" fill="none" stroke="#b27d59" stroke-width="8" stroke-linecap="round"/><path d="M63 5 57 27 70 39 53 53 65 69 57 86 69 125" stroke="#271d1b" stroke-width="3.5" fill="none"/><path d="M8 63 27 57 39 71 27 88" stroke="#321f1c" stroke-width="3" fill="none"/>
+</svg>
