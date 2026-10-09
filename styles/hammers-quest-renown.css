@@ -1,0 +1,53 @@
+.hqr-app {--hqr-gold:#d1b06b;--hqr-red:#8e2b31;--hqr-purple:#463255;--hqr-panel:#17171a;--hqr-border:rgba(209,176,107,.34);min-width:530px;color:#eee}
+.hqr-app .window-content{padding:0;overflow:hidden;background:#111113;color:#eee}
+.hqr-app .hqr-shell{height:100%;display:flex;flex-direction:column;min-height:400px}
+.hqr-app .hqr-banner{display:flex;align-items:center;gap:14px;padding:16px 20px;background:#17171a;border-bottom:1px solid var(--hqr-border)}
+.hqr-app .hqr-banner>i{font-size:29px;color:var(--hqr-gold)}
+.hqr-app .hqr-banner>div{flex:1;min-width:0}
+.hqr-app .hqr-banner h2{font:600 23px var(--dnd5e-font-roboto-slab,serif);margin:0;color:#e5c58b}
+.hqr-app .hqr-banner p{margin:2px 0 0;color:#c0b8ae;font-size:12px}
+.hqr-app .hqr-scroll{overflow:auto;padding:20px 22px;flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+.hqr-app .hqr-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.hqr-app label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#d9c38f;font-weight:600}
+.hqr-app input,.hqr-app select,.hqr-app textarea{box-sizing:border-box;width:100%;font-size:13px;color:#f5f1ea;background:#222226;border:1px solid #62533f;border-radius:4px;padding:8px 10px;min-height:34px}
+.hqr-app input[type=checkbox]{width:16px;min-height:16px;accent-color:#9b3338}
+.hqr-app textarea{min-height:94px;line-height:1.4;resize:vertical}
+.hqr-app input:focus,.hqr-app textarea:focus,.hqr-app select:focus{border-color:var(--hqr-gold);outline:1px solid var(--hqr-gold)}
+.hqr-app .hqr-panel{padding:15px 17px;background:#17171a;border:1px solid var(--hqr-border);border-radius:6px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.hqr-app .hqr-panel h3{color:var(--hqr-gold);font-family:var(--dnd5e-font-roboto-slab,serif);font-size:16px;border-bottom:1px solid var(--hqr-border);margin:0;padding-bottom:9px}
+.hqr-app .hqr-panel h4{font-size:12px;margin:3px 0 0;color:#e9e1ce;text-transform:uppercase}
+.hqr-app .hqr-private{background:#201a22;border-color:#765466}
+.hqr-app .hqr-private h3{color:#d8a4b0;border-color:#694b61}
+.hqr-app .hqr-hint{color:#aaa19b;font-weight:400;font-size:11px;line-height:1.5;margin:0}
+.hqr-app button{width:auto;min-height:31px;padding:5px 11px;background:#352e2e;border:1px solid var(--hqr-border);color:#eee;border-radius:4px;cursor:pointer;white-space:nowrap}
+.hqr-app button:hover:not(:disabled){background:#594544;border-color:var(--hqr-gold)}
+.hqr-app button:disabled{opacity:.4;cursor:not-allowed}
+.hqr-app .hqr-primary{background:#8e2b31;border-color:#bb6d62;color:white}
+.hqr-app .hqr-quiet{align-self:flex-start;background:#342d2b}
+.hqr-app .hqr-actions{display:flex;justify-content:flex-end;gap:9px;padding:13px 20px;background:#17171a;border-top:1px solid var(--hqr-border);flex-wrap:wrap}
+.hqr-app .hqr-actions .hqr-primary{min-width:130px}
+.hqr-app .hqr-rank-row,.hqr-app .hqr-objective,.hqr-app .hqr-item-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 33px;gap:8px;align-items:center}
+.hqr-app .hqr-objective{grid-template-columns:22px minmax(0,1fr) 33px}
+.hqr-app .hqr-item-row{grid-template-columns:minmax(170px,1.5fr) minmax(100px,1fr) 65px 33px 33px}
+.hqr-app .hqr-rank-row button,.hqr-app .hqr-objective button,.hqr-app .hqr-item-row button{padding:4px;min-width:33px}
+.hqr-app .hqr-list,.hqr-app .hqr-people{display:flex;flex-direction:column;gap:7px}
+.hqr-app .hqr-people{max-height:125px;overflow:auto;flex-direction:row;flex-wrap:wrap}
+.hqr-app label.hqr-check{flex-direction:row;align-items:center;gap:6px;background:#2a2428;padding:6px 9px;border-radius:4px}
+.hqr-app .hqr-chip{display:inline-block;padding:3px 6px;border-radius:4px;background:#3f3427;color:#e4c98f;margin:2px}
+.hqr-app .hqr-currencies{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.hqr-app .hqr-item-drop{border:1px dashed #7d6949;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.hqr-app .hqr-pill{padding:5px 8px;background:var(--hqr-purple);border-radius:5px;font-size:11px;color:#d6c3e1}
+.hqr-app .hqr-warning{padding:10px;background:#6e3538;border:1px solid #c56c6b;border-radius:4px}
+.hqr-app .hqr-balance,.hqr-app .hqr-history{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid rgba(255,255,255,.07);padding:8px 0}
+.hqr-app .hqr-balance strong:last-child{color:#e4c98f;font-size:18px}
+.hqr-app .hqr-balance small,.hqr-app .hqr-history small{display:block;color:#a9a4a0;font-weight:400;font-size:11px;margin-top:4px}
+.hqr-app .hqr-delta{color:#d6bb79;margin-left:8px}
+.hqr-directory-tools{display:flex;gap:5px;flex-wrap:wrap;margin:5px 2px;width:100%}
+.hqr-directory-tools .hqr-directory-button{font-size:11px;flex:1 1 70px;white-space:nowrap;padding:5px 4px;background:#40312b;border:1px solid #9f7856;color:#f8e9cb;border-radius:3px;cursor:pointer}
+.hqr-directory-tools .hqr-directory-button:hover{background:#8e2b31}
+.hqr-edit-journal{width:auto;max-width:180px;padding:4px 7px;background:#8e2b31;color:#fff;border:1px solid #c08c72;cursor:pointer;font-size:11px}
+.hqr-journal{line-height:1.5}.hqr-journal h1{font-family:var(--dnd5e-font-roboto-slab,serif)}.hqr-journal-subtitle{font-style:italic;color:#a99167}.hqr-faction-art{max-width:100%;max-height:180px;object-fit:contain}
+@media(max-width:720px){.hqr-app .hqr-two{grid-template-columns:1fr}.hqr-app .hqr-currencies{grid-template-columns:repeat(3,1fr)}.hqr-app .hqr-banner{flex-wrap:wrap}.hqr-app .hqr-item-row{grid-template-columns:1fr 1fr 65px 33px 33px}}
+.hqr-reward-tooltip{position:fixed;z-index:100000;display:flex;gap:10px;max-width:320px;min-width:180px;max-height:185px;overflow:auto;padding:10px;background:#17171a;color:#eee;border:1px solid #d1b06b;border-radius:5px;box-shadow:0 6px 24px #000a;pointer-events:none;font-size:12px}
+.hqr-reward-tooltip img{width:52px;height:52px;object-fit:cover;border-radius:3px;flex:0 0 auto}
+.hqr-reward-tooltip div{flex:1;min-width:0}.hqr-reward-tooltip strong{display:block;color:#e5c58b}.hqr-reward-tooltip small{display:block;color:#aaa;margin:2px 0 5px}.hqr-reward-tooltip p{margin:4px 0;line-height:1.35}
