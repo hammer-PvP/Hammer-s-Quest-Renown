@@ -1,5 +1,5 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><i class="fa-solid fa-award"></i><div><h2>Reputation Manager</h2><p>Group & Character Renown</p></div><span class="hqr-pill">{{#if gm}}GM Access{{else}}Read Only{{/if}}</span></header>
+<header class="hqr-banner"><img class="hqr-banner-identity" src="modules/hammer-s-quest-renown/assets/book-feather.svg" alt=""><div><h2>Reputation Manager</h2><p>Group & Character Renown</p></div><span class="hqr-pill">{{#if gm}}GM Access{{else}}Read Only{{/if}}</span></header>
 <div class="hqr-scroll">
 <label>Actor<select name="actorId">{{#each actors}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
 <div class="hqr-panel"><h3>Known Factions</h3>{{#each balances}}<div class="hqr-balance"><span><strong>{{name}}</strong><small>{{rank}}</small></span><strong>{{value}}</strong></div>{{else}}<p class="hqr-hint">This Actor has no recorded Renown yet.</p>{{/each}}</div>

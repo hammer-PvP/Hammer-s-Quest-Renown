@@ -30,7 +30,7 @@
     {{/if}}
     {{#if hasLoot}}<label>Currency & Item Inventory Recipient<select name="lootRecipientId"><option value="">Select Actor inventory</option>{{#each inventoryActors}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>{{/if}}
     {{#if payoutPlan}}<p class="hqr-warning">Partial reward transaction detected. Retry must use the same previously locked recipients.</p>{{/if}}
-    <button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid fa-award"></i> Complete & Grant Rewards</button>
+    <button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid fa-book-open"></i> Complete & Grant Rewards</button>
   </div>{{/if}}
 {{/if}}
 </div>

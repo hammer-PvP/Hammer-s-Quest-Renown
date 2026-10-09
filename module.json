@@ -2,7 +2,7 @@
   "id": "hammer-s-quest-renown",
   "title": "Hammer's Quest & Renown",
   "description": "Native Foundry quests and faction journals; quest designing, GM Quest Giving & Turn-In, party/character renown and managed rewards for D&D5e 6.x.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "authors": [
     {
       "name": "Raphael Andrade"
@@ -42,7 +42,7 @@
   "readme": "README.md",
   "url": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown",
   "manifest": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json",
-  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.2/hammer-s-quest-renown.zip",
+  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.3/hammer-s-quest-renown.zip",
   "bugs": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/issues",
-  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.2"
+  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.3"
 }

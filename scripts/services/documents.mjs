@@ -23,7 +23,7 @@ function sortedRanks(ranks) {
   return valid.length ? valid.map(r=>({name:String(r.name).trim(),min:Math.trunc(Number(r.min))})).sort((a,b)=>a.min-b.min) : DEFAULT_RANKS;
 }
 function factionHTML(name, description, image, ranks) {
-  return `<section class="hqr-journal"><h1>${esc(name)}</h1>${image?`<img class="hqr-faction-art" src="${esc(image)}" alt="">`:""}<div>${htmlText(description)}</div><h2>Renown Ranks</h2><table><thead><tr><th>Rank</th><th>Minimum Renown</th></tr></thead><tbody>${ranks.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.min}</td></tr>`).join("")}</tbody></table></section>`;
+  return `<section class="hqr-journal"><h1>${esc(name)}</h1>${image?`<figure class="hqr-faction-media"><img class="hqr-faction-art" src="${esc(image)}" alt="${esc(name)}"></figure>`:""}<div>${htmlText(description)}</div><h2>Renown Ranks</h2><table><thead><tr><th>Rank</th><th>Minimum Renown</th></tr></thead><tbody>${ranks.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.min}</td></tr>`).join("")}</tbody></table></section>`;
 }
 export function questHTML(name,data) {
   const faction=getFaction(data.factionUuid);

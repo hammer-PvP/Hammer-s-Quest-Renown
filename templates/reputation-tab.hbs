@@ -1,9 +1,43 @@
 <section class="tab hqr-native-reputation {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
   <div class="hqr-sheet-reputation-content">
-    <header class="hqr-reputation-head"><h2><i class="fa-solid fa-award"></i> Reputation</h2><button type="button" class="hqr-open-reputation" data-hqr-actor-id="{{actor.id}}"><i class="fa-solid fa-list"></i> {{#if hqr.isGM}}Manage{{else}}Details{{/if}}</button></header>
-    <h3>{{#if hqr.isGroup}}Party Renown{{else}}Personal Renown{{/if}}</h3>
-    {{#each hqr.personal}}<div class="hqr-sheet-balance"><span><strong>{{name}}</strong><small>{{rank}}</small></span><strong>{{score}}</strong></div>{{else}}<p class="hqr-sheet-empty">No reputation recorded yet.</p>{{/each}}
-    {{#unless hqr.isGroup}}<h3>Party Renown</h3>{{#each hqr.shared}}<div class="hqr-sheet-balance"><span><strong>{{name}}</strong><small>{{groupName}} · {{rank}}</small></span><strong>{{score}}</strong></div>{{else}}<p class="hqr-sheet-empty">No shared renown is visible from this character's Group Actor.</p>{{/each}}{{/unless}}
-    <p class="hqr-sheet-hint">Personal and Party scores remain independent. Only the GM can adjust Renown.</p>
+    <header class="hqr-reputation-head">
+      <h2><img src="modules/hammer-s-quest-renown/assets/book-feather.svg" class="hqr-identity-icon" alt=""> Reputation</h2>
+      {{#if hqr.isGM}}<button type="button" class="hqr-open-reputation" data-hqr-actor-id="{{hqr.actorId}}" aria-label="Manage Renown"><i class="fa-solid fa-sliders"></i> Manage</button>{{/if}}
+    </header>
+    <div class="hqr-renown-scroll" role="region" aria-label="Faction reputation table" tabindex="0">
+      <div class="hqr-renown-table {{#if hqr.isGroup}}hqr-renown-table--group{{/if}}" role="table">
+        <div class="hqr-renown-row hqr-renown-row--head" role="row">
+          <span class="hqr-renown-name" role="columnheader">Faction</span>
+          {{#unless hqr.isGroup}}<span class="hqr-renown-scope hqr-renown-personal" role="columnheader">Personal</span>{{/unless}}
+          <span class="hqr-renown-scope hqr-renown-shared" role="columnheader">Group</span>
+        </div>
+        {{#each hqr.rows}}
+        <div class="hqr-renown-row" role="row">
+          <span class="hqr-renown-name" role="cell" title="{{name}}">{{name}}</span>
+          {{#unless ../hqr.isGroup}}
+            {{#if personal}}
+              <span class="hqr-renown-rank" role="cell" title="{{personal.rank}}">{{personal.rank}}</span>
+              <span class="hqr-renown-current" role="cell">{{personal.current}}</span>
+              <span class="hqr-renown-slash" aria-hidden="true">/</span>
+              <span class="hqr-renown-max" role="cell">{{personal.max}}</span>
+            {{else}}
+              <span class="hqr-renown-absent" role="cell" title="No personal Renown record">—</span>
+            {{/if}}
+          {{/unless}}
+          {{#if shared}}
+            <span class="hqr-renown-rank" role="cell" title="{{shared.rank}}">{{shared.rank}}</span>
+            <span class="hqr-renown-current" role="cell" title="{{../groupName}}">{{shared.current}}</span>
+            <span class="hqr-renown-slash" aria-hidden="true">/</span>
+            <span class="hqr-renown-max" role="cell">{{shared.max}}</span>
+          {{else}}
+            <span class="hqr-renown-absent" role="cell" title="No shared Renown record">—</span>
+          {{/if}}
+        </div>
+        {{else}}
+          <div class="hqr-renown-empty" role="row">No reputation recorded yet.</div>
+        {{/each}}
+      </div>
+    </div>
+    <p class="hqr-sheet-hint">{{#if hqr.isGroup}}Group Renown is shared.{{else}}Personal and Group scores are independent.{{/if}} Only the GM can change Renown.</p>
   </div>
 </section>

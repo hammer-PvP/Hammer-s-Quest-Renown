@@ -2,8 +2,20 @@
   <header class="hqr-banner"><i class="fa-solid fa-shield-halved"></i><div><h2>Faction Manager</h2><p>World Journal • Public Profile & GM Notes</p></div><button type="button" data-action="new"><i class="fa-solid fa-plus"></i> New Faction</button></header>
   <div class="hqr-scroll">
     <div class="hqr-two"><label>Existing Factions<select name="existing"><option value="">Create New</option>{{#each factions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label><label>Faction Name<input name="name" type="text" value="{{name}}" placeholder="Council of the Eastern Coast"></label></div>
-    <div class="hqr-panel"><h3><i class="fa-solid fa-eye"></i> Public Content</h3><label>Emblem / Image URL<input name="image" type="text" value="{{image}}" placeholder="worlds/.../faction.webp"></label><label>Flavor Text / Description<textarea name="description" rows="5">{{description}}</textarea></label></div>
-    <div class="hqr-panel"><h3><i class="fa-solid fa-award"></i> Renown Ranks</h3><p class="hqr-hint">Each faction has independent thresholds. Renown can be negative.</p><div class="hqr-list">{{#each ranks}}<div class="hqr-rank-row"><input type="text" data-field="rank-name" value="{{name}}" placeholder="Rank"><input type="number" data-field="rank-min" value="{{min}}"><button type="button" data-action="remove-rank" data-index="{{index}}" title="Remove Rank"><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div><button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button></div>
+    <div class="hqr-panel"><h3><i class="fa-solid fa-eye"></i> Public Content</h3><div class="hqr-faction-image-field">
+      <label>Faction Emblem / Image</label>
+      <div class="hqr-faction-preview" aria-label="Faction emblem preview">
+        <img alt="Faction emblem" hidden>
+        <div class="hqr-faction-preview-empty"><i class="fa-regular fa-image"></i><span>Choose an image from Foundry's File Picker</span></div>
+      </div>
+      <div class="hqr-file-picker-row">
+        <input name="image" type="text" value="{{image}}" placeholder="worlds/.../faction.webp" aria-label="Faction image path">
+        <button type="button" data-action="browse-image" title="Browse with native Foundry File Picker"><i class="fa-solid fa-folder-open"></i> Browse</button>
+        <button type="button" data-action="clear-image" title="Remove emblem"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="hqr-hint">Native Foundry File Picker · 5:3 preview · image preserved without cropping or stretching.</p>
+    </div><label>Flavor Text / Description<textarea name="description" rows="5">{{description}}</textarea></label></div>
+    <div class="hqr-panel"><h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3><p class="hqr-hint">Each faction has independent thresholds. Renown can be negative.</p><div class="hqr-list">{{#each ranks}}<div class="hqr-rank-row"><input type="text" data-field="rank-name" value="{{name}}" placeholder="Rank"><input type="number" data-field="rank-min" value="{{min}}"><button type="button" data-action="remove-rank" data-index="{{index}}" title="Remove Rank"><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div><button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button></div>
     <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots, key NPCs, contingencies...">{{notes}}</textarea></label><p class="hqr-hint">This text is stored only on a private JournalEntryPage, never in public Journal flags.</p></div>
   </div>
   <footer class="hqr-actions"><button type="button" data-action="open-journal" {{#unless isEdit}}disabled{{/unless}}>Open Journal</button><button type="button" data-action="save" class="hqr-primary"><i class="fa-solid fa-floppy-disk"></i> Save Faction</button></footer>

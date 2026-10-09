@@ -1,17 +1,26 @@
-# Hammer's Quest & Renown — v0.0.2
+# Hammer's Quest & Renown — v0.0.3
 
 A Foundry VTT v14 (verified 14.368) / D&D5e 6.0.6 quest, faction and reputation module. **This is a GM-controlled journal workflow. Player journal permissions are Observer only, never Owner.**
 
 ## GitHub Release
 
-Create a release with tag `v0.0.2` in `https://github.com/hammer-PvP/Hammer-s-Quest-Renown` and upload exactly two assets:
+Create a release with tag `v0.0.3` in `https://github.com/hammer-PvP/Hammer-s-Quest-Renown` and upload exactly two assets:
 
 - `hammer-s-quest-renown.zip` — ZIP containing module files at archive root, installed by Foundry into `Data/modules/hammer-s-quest-renown/`.
 - `module.json` — release manifest pointing to the versioned ZIP.
 
 Install/update manifest: `https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json`
 
-## Workflow (v0.0.2)
+## v0.0.3 UI + Bugfix Release
+
+- Native Character and Group Reputation tabs now use a **single compact, non-wrapping row per faction**, with Rank and Current/Maximum for each relevant scope. Numerical columns, including each slash, have a fixed horizontal position. The maximum is the faction's highest configured Renown threshold; it does not cap stored Renown.
+- Character sheet displays Personal and Group side by side; a Group sheet displays Group only. Where a Character belongs to multiple Group Actors, the designated Party is preferred; no Group balances are summed.
+- `Manage` button is GM-only and opens the Reputation Manager preselected to the current Actor via a delegated click listener that survives partial sheet rerenders.
+- Faction image input now has the native Foundry v14 FilePicker (`Browse`), `Clear`, instant 5:3 contain preview, and a consistent contain-framed image in the public Journal. Unsaved Faction edits are preserved when picking images.
+- Distinctive book-and-quill SVG icon replaces medal-style Renown icons.
+- No migration: existing Journals, UUIDs, flags, assignments, ledger/history and claimed rewards remain compatible with v0.0.2.
+
+## Workflow (v0.0.3)
 
 1. **Factions** in Journal Directory: create a Faction Journal with public lore, configurable Renown ranks and a private GM Notes page.
 2. **New Quest** in Journal Directory: design name, Faction, public Flavor, Objectives, Currency, Items (drag & drop from World/Compendium; editable quantities) and Renown. Add private GM Notes. The new Quest is **Unavailable** and **requires no recipients**.

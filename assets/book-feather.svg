@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+<title>Hammer's Quest &amp; Renown — Book and Quill</title>
+<g stroke="#D9B97A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M8 15c9-3 16-2 24 3v35C23 48 16 47 8 50V15Z" fill="#4C3040"/>
+<path d="M32 18c7-5 14-6 23-3v35c-9-3-16-2-23 3V18Z" fill="#4C3040"/>
+<path d="M32 18v35M13 23c5-1 10 0 14 2M13 31c5-1 10 0 14 2M13 39c5-1 10 0 14 2" stroke-width="2" opacity=".85"/>
+<path d="M47 8C36 12 33 25 40 34c4-6 11-11 14-24l-7-2Z" fill="#F4E4B7" stroke="#F4E4B7" stroke-width="1.5"/>
+<path d="M52 12 29 48" stroke="#8E2B31" stroke-width="3"/>
+<path d="M39 34 49 18" stroke="#8E2B31" stroke-width="1.5"/>
+</g></svg>
