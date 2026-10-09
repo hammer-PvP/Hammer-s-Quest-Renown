@@ -71,7 +71,7 @@ function isDndActorSheet(app){
   return !!(actor && ['group','character'].includes(actor.type) && app?.document===actor && (sheetClass ? app instanceof sheetClass : /ActorSheet/.test(app?.constructor?.name??'')));
 }
 Hooks.once('init',()=>{
-  console.info(`${ID} | Initializing v0.0.3`);
+  console.info(`${ID} | Initializing v0.0.4`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}

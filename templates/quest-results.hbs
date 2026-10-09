@@ -1,0 +1,21 @@
+<div class="hqr-shell">
+<header class="hqr-banner"><i class="fa-solid fa-clipboard-check"></i><div><h2>Quest Results</h2><p>{{name}} · {{status}}</p></div><span class="hqr-pill">Read Only</span></header>
+<div class="hqr-scroll">
+  <div class="hqr-panel"><h3>Completion</h3>
+    <p>{{#if claimed}}Completed · Rewards Issued{{else}}Rewards not issued{{/if}}</p>
+    {{#if completedAt}}<p class="hqr-hint">Issued at {{completedAt}}</p>{{/if}}
+    {{#unless hasPlan}}<p class="hqr-hint">No v0.0.4 payout snapshot is available for this Quest.</p>{{/unless}}
+  </div>
+  {{#if hasPlan}}
+  <div class="hqr-panel"><h3>Participating Characters</h3>{{#each participants}}<p>{{this}}</p>{{else}}<p class="hqr-hint">None</p>{{/each}}
+  <h3>Represented Groups</h3>{{#each groups}}<p>{{this}}</p>{{else}}<p class="hqr-hint">No Group credited.</p>{{/each}}</div>
+  <div class="hqr-panel"><h3>Renown Transactions</h3>
+    {{#each rows}}<div class="hqr-balance"><span>{{faction}} — {{amount}}</span><small>{{#if personal}}Characters{{/if}} {{#if group}}Groups{{/if}}</small></div>{{else}}<p class="hqr-hint">No Renown changes.</p>{{/each}}
+  </div>
+  <div class="hqr-panel"><h3>Currency & Items</h3><p class="hqr-hint">Inventory recipient: {{lootRecipient}}</p>
+    {{#each currency}}<div class="hqr-balance"><span>{{name}}</span><strong>{{amount}}</strong></div>{{/each}}
+    {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}}</strong></div>{{/each}}
+  </div>{{/if}}
+</div>
+<footer class="hqr-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button></footer>
+</div>

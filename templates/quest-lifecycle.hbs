@@ -3,35 +3,51 @@
 <div class="hqr-scroll">
 {{#if isGiving}}
   {{#if canGive}}
-  <div class="hqr-panel"><h3><i class="fa-solid fa-users"></i> Assign Quest</h3>
-  <label>Give To<select name="assignment"><option value="group" {{#if groupMode}}selected{{/if}}>Group Actor</option><option value="individual" {{#unless groupMode}}selected{{/unless}}>Individual Characters (Player Owner)</option></select></label>
-  {{#if groupMode}}<label>Group Actor<select name="groupId"><option value="">Select Group</option>{{#each groups}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label><p class="hqr-hint">Eligible Group Characters: {{#each groupPeople}}<span class="hqr-chip">{{this}}</span>{{else}}No player-owned members. The GM can still assign the Group.{{/each}}</p>
-  {{else}}<div class="hqr-people">{{#each pcs}}<label class="hqr-check"><input type="checkbox" name="assignees" value="{{id}}" {{#if checked}}checked{{/if}}>{{name}}</label>{{else}}<p class="hqr-hint">No Player-Owned Characters currently exist.</p>{{/each}}</div>{{/if}}
-  <label>Initial State<select name="givenStatus"><option value="offered">Offered</option><option value="accepted">Accepted</option><option value="in-progress">In Progress</option></select></label>
-  <p class="hqr-hint">The public Journal becomes Observer-visible only for the associated players. No player receives Owner access.</p>
+  <div class="hqr-panel"><h3><i class="fa-solid fa-user-check"></i> Assign Quest to Characters</h3>
+    <p class="hqr-hint">Characters with a non-GM Player Owner. Group selection is not required for Quest Giving.</p>
+    <div class="hqr-people">{{#each pcs}}<label class="hqr-check"><input type="checkbox" name="assignees" value="{{id}}" {{#if checked}}checked{{/if}}>{{name}}</label>{{else}}<p class="hqr-hint">No Player-Owned Characters currently exist.</p>{{/each}}</div>
+    <label>Initial State<select name="givenStatus"><option value="offered">Offered</option><option value="accepted">Accepted</option><option value="in-progress">In Progress</option></select></label>
+    <p class="hqr-hint">Only assigned Characters' Users receive Journal Observer access, never Owner.</p>
   </div>
-  {{else}}<div class="hqr-warning">This Quest must be Available to assign. Change its availability in Quest Manager.</div>{{/if}}
+  {{else}}<div class="hqr-warning">This Quest must be Available to assign. Change availability in Quest Manager.</div>{{/if}}
 {{else}}
-  <div class="hqr-panel"><h3>Quest Progress</h3>
-  {{#if canProgress}}<label>Change Status<select name="progressStatus"><option value="accepted">Accepted</option><option value="in-progress">In Progress</option><option value="completed">Completed (without automatic rewards)</option><option value="failed">Failed</option><option value="abandoned">Abandoned</option></select></label><button data-action="change-status" type="button">Save Status Only</button>{{else}}<p class="hqr-hint">Current: {{statusLabel}}. Rewards can be granted only after completion.</p>{{/if}}
-  </div>
-  <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Quest Rewards</h3>
-    {{#each currency}}<div class="hqr-balance"><span>{{key}}</span><strong>{{amount}}</strong></div>{{/each}}
-    {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}}</strong></div>{{/each}}
-    {{#if hasRenown}}<div class="hqr-balance"><span>Faction Renown</span><strong>{{renown}}</strong></div>{{/if}}
-    {{#unless hasLoot}}{{#unless hasRenown}}<p class="hqr-hint">No configured rewards. The Quest may still be completed.</p>{{/unless}}{{/unless}}
-  </div>
-  {{#if claimed}}<div class="hqr-warning">Rewards already issued. This Quest cannot be paid twice.</div>
-  {{else}}<div class="hqr-panel"><h3>Turn-In Recipients</h3>
-    {{#if hasRenown}}
-      <label>Renown Distribution<select name="renownScope"><option value="group" {{#if scopeGroup}}selected{{/if}}>Party Reputation (Group Actor)</option><option value="individual" {{#unless scopeGroup}}selected{{/unless}}>Individual Participants</option></select></label>
-      {{#if scopeGroup}}<p class="hqr-hint">Renown will go to the assigned Group Actor. Use individual mode if this Quest was given to Characters directly.</p>
-      {{else}}<div class="hqr-people">{{#each participants}}<label class="hqr-check"><input name="participants" value="{{id}}" type="checkbox" {{#if checked}}checked{{/if}}>{{name}}</label>{{else}}<p class="hqr-hint">No eligible Character participants.</p>{{/each}}</div>{{/if}}
+  {{#if claimed}}<div class="hqr-warning">Rewards already issued. Turn-In is closed. Use View Results from Quest Manager.</div>
+  {{else}}
+    <div class="hqr-panel"><h3>Quest Progress</h3>
+      {{#if canProgress}}<label>Change Status<select name="progressStatus"><option value="accepted">Accepted</option><option value="in-progress">In Progress</option><option value="completed">Completed (without automatic rewards)</option><option value="failed">Failed</option><option value="abandoned">Abandoned</option></select></label><button data-action="change-status" type="button">Save Status Only</button>{{else}}<p class="hqr-hint">Current: {{statusLabel}}.</p>{{/if}}
+    </div>
+    {{#if canTurnIn}}
+    <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Quest Rewards</h3>
+      {{#each currency}}<div class="hqr-balance"><span>{{key}}</span><strong>{{amount}}</strong></div>{{/each}}
+      {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}}</strong></div>{{/each}}
+      {{#unless hasRenown}}{{#unless hasLoot}}<p class="hqr-hint">No configured rewards. The Quest may still be completed.</p>{{/unless}}{{/unless}}
+    </div>
+    {{#if payoutPlan}}
+    <div class="hqr-warning">A partial reward transaction exists. Retry uses its previously locked recipients and Renown targets, regardless of new selections.</div>
+    {{else}}
+    <div class="hqr-panel"><h3><i class="fa-solid fa-users"></i> Participating Characters</h3>
+      <p class="hqr-hint">Only checked participants receive personal Renown. Membership alone never earns personal points.</p>
+      <div class="hqr-people">{{#each participants}}<label class="hqr-check"><input type="checkbox" name="participants" value="{{id}}" {{#if checked}}checked{{/if}}>{{name}}</label>{{else}}<p class="hqr-hint">No eligible Characters assigned to this Quest.</p>{{/each}}</div>
+    </div>
+    {{#unless noGroups}}
+    <div class="hqr-panel"><h3>Represented Groups <small>(Optional)</small></h3>
+      <p class="hqr-hint">Only Groups containing at least one checked participant are listed. No Group is auto-selected.</p>
+      <div class="hqr-people">{{#each groups}}<label class="hqr-check"><input type="checkbox" name="groups" value="{{id}}" {{#if checked}}checked{{/if}}><span>{{name}}<small class="hqr-group-members">{{people}}</small></span></label>{{/each}}</div>
+      <p class="hqr-hint">Leave all unchecked to grant only personal Renown.</p>
+    </div>
+    {{/unless}}
     {{/if}}
-    {{#if hasLoot}}<label>Currency & Item Inventory Recipient<select name="lootRecipientId"><option value="">Select Actor inventory</option>{{#each inventoryActors}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>{{/if}}
-    {{#if payoutPlan}}<p class="hqr-warning">Partial reward transaction detected. Retry must use the same previously locked recipients.</p>{{/if}}
-    <button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid fa-book-open"></i> Complete & Grant Rewards</button>
-  </div>{{/if}}
+    {{#if hasRenown}}<div class="hqr-panel"><h3>Faction Renown Rewards</h3>
+      <p class="hqr-hint">Each line changes selected Characters and/or checked Groups. A Group receives each change once.</p>
+      {{#each renown}}
+      <div class="hqr-turnin-renown-row" data-reward-id="{{id}}"><strong>{{factionName}}</strong><span class="{{#if positive}}hqr-positive{{else}}hqr-negative{{/if}}">{{amountLabel}}</span>
+        {{#unless ../payoutPlan}}<label class="hqr-check"><input type="checkbox" name="targetPersonal" {{#if personal}}checked{{/if}}>Characters</label><label class="hqr-check"><input type="checkbox" name="targetGroup" {{#if group}}checked{{/if}}>Groups</label>{{/unless}}
+      </div>{{/each}}
+    </div>{{/if}}
+    {{#if hasLoot}}<div class="hqr-panel"><label>Currency & Item Inventory Recipient<select name="lootRecipientId" {{#if payoutPlan}}disabled{{/if}}><option value="">Select Actor inventory</option>{{#each inventoryActors}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label></div>{{/if}}
+    <div class="hqr-panel"><button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid fa-check"></i> {{#if payoutPlan}}Resume Locked Rewards{{else}}Complete & Grant Rewards{{/if}}</button></div>
+    {{/if}}
+  {{/if}}
 {{/if}}
 </div>
 <footer class="hqr-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button>{{#if isGiving}}{{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Give Quest</button>{{/if}}{{/if}}</footer>

@@ -4,40 +4,18 @@ import {reputationOf,historyFor} from '../services/reputation.mjs';
 const TEMPLATE=`modules/${ID}/templates/reputation-tab.hbs`;
 const ICON=`modules/${ID}/assets/book-feather.svg`;
 let installed=false;
-
-function maximumFor(faction) {
-  const thresholds=faction.getFlag(ID,'ranks') ?? DEFAULT_RANKS;
+function maximumFor(faction){
+  const thresholds=faction.getFlag(ID,'ranks')??DEFAULT_RANKS;
   return Math.max(0,...thresholds.map(r=>Number(r.min)).filter(Number.isFinite));
 }
-function recorded(actor,uuid){
-  return !!actor && historyFor(actor).some(row=>row.factionUuid===uuid);
-}
-function scoreFor(actor,faction){
-  if(!recorded(actor,faction.uuid))return null;
-  const score=reputationOf(actor,faction.uuid);
-  return {rank:rankFor(faction,score),current:score,max:maximumFor(faction)};
-}
-function relatedGroup(actor){
-  if(actor?.type!=='character')return null;
-  const groups=game.actors.filter(group=>group.type==='group' &&
-    (game.user.isGM || group.testUserPermission(game.user,'OBSERVER')) &&
-    (group.system?.members??[]).some(member=>(member.actor?.id??member.actor)===actor.id));
-  // Only the designated Party's renown is shown when present: never merge balances from separate groups.
-  const party=game.actors.party;
-  return groups.find(group=>group.id===party?.id) ?? groups.sort((a,b)=>a.name.localeCompare(b.name))[0] ?? null;
-}
 function rowsFor(actor){
-  const group=relatedGroup(actor);
-  const isGroup=actor?.type==='group';
-  return factions().flatMap(faction=>{
-    const personal=isGroup?null:scoreFor(actor,faction);
-    const shared=scoreFor(isGroup?actor:group,faction);
-    if(!personal&&!shared)return [];
-    return [{name:faction.name,uuid:faction.uuid,personal,shared,groupName:group?.name??''}];
+  const ledger=historyFor(actor);
+  return factions().filter(f=>ledger.some(entry=>entry.factionUuid===f.uuid)).map(f=>{
+    const value=reputationOf(actor,f.uuid);
+    return {name:f.name,uuid:f.uuid,rank:rankFor(f,value),current:value,max:maximumFor(f)};
   });
 }
-
-/** Scope this extension exclusively to the native D&D5e 6.x Character/Group sheets. */
+/** Native D&D5e 6.0.6 Character and Group sheets: each Actor shows ONLY its own ledger. */
 export function installReputationTabs(){
   if(installed)return;
   const target=game.dnd5e?.applications?.actor;
@@ -61,5 +39,5 @@ export function installReputationTabs(){
     const actor=app.actor??app.document;
     context.hqr={actorId:actor.id,isGM:game.user.isGM,isGroup:actor.type==='group',rows:rowsFor(actor)};
   });
-  console.info(`${ID} | Native Character/Group Reputation tabs installed (compact 0.0.3).`);
+  console.info(`${ID} | Native Character/Group Reputation tabs installed (Actor-only v0.0.4).`);
 }

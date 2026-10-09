@@ -37,9 +37,14 @@ export function questHTML(name,data) {
     // Foundry's native UUID enrichment creates inline links with Item previews where supported.
     rewards.push(`<li><strong>Item:</strong> @UUID[${esc(item.uuid)}]{${esc(item.name||"Item")}} × ${Math.max(1,Number(item.quantity)||1)}</li>`);
   }
-  if (Number(data.renown)) rewards.push(`<li><strong>Renown:</strong> ${Number(data.renown)>0?"+":""}${Number(data.renown)}${faction?` — ${esc(faction.name)}`:""}</li>`);
+  for (const reward of (data.renownRewards??[])) {
+    const affected=getFaction(reward.factionUuid);
+    const amount=Number(reward.amount);
+    if (!affected || !Number.isInteger(amount) || amount===0) continue;
+    rewards.push(`<li><strong>Renown:</strong> ${amount>0?"+":""}${amount} — ${esc(affected.name)}</li>`);
+  }
   const names = (data.assignees??[]).map(id=>game.actors.get(id)?.name).filter(Boolean);
-  const assigned = data.assignment === "group" ? (game.actors.get(data.groupId)?.name ?? "Unassigned") : data.assignment === "individual" ? (names.join(", ") || "Unassigned") : "Not yet assigned";
+  const assigned = data.assignment === "individual" ? (names.join(", ") || "Unassigned") : "Not yet assigned";
   return `<section class="hqr-journal"><h1>${esc(name)}</h1><p class="hqr-journal-subtitle">${esc(faction?.name??"No Faction")} · ${esc(status)}</p><h2>Quest Briefing</h2><div>${htmlText(data.flavor??"")}</div><h2>Objectives</h2><ul>${objectives||"<li>No objectives listed.</li>"}</ul><h2>Accepted By</h2><p>${esc(assigned)}</p><h2>Rewards</h2><ul>${rewards.join("")||"<li>No announced rewards.</li>"}</ul></section>`;
 }
 async function setPage(doc, gmOnly, name, html) {
@@ -80,13 +85,27 @@ export async function saveFaction(doc, {name,description,image,notes,ranks}) {
 export async function saveQuest(doc, {name,notes,...data}) {
   assertGM();
   if (!name?.trim()) throw new Error("Quest name is required.");
-  if (doc?.getFlag(ID,"claimed")) {
-    const original=doc.flags[ID];
-    const comparable=k=>JSON.stringify(data[k]??null)===JSON.stringify(original[k]??null);
-    const compactItems=arr=>(arr??[]).map(({uuid,quantity,name})=>({uuid,quantity:Number(quantity),name}));
-    if (!["currency","renown","factionUuid"].every(comparable)
-        || JSON.stringify(compactItems(data.items))!==JSON.stringify(compactItems(original.items)))
-      throw new Error("Rewards have been issued. Reward and Faction values are locked to prevent discrepancies.");
+  const rewardRows=Array.isArray(data.renownRewards)?data.renownRewards:[];
+  const seen=new Set();
+  const renownRewards=rewardRows.map(row=>({
+    id:String(row.id??"").trim() || foundry.utils.randomID(),
+    factionUuid:String(row.factionUuid??""),
+    amount:Number(row.amount)
+  }));
+  for(const reward of renownRewards){
+    if(!getFaction(reward.factionUuid))throw new Error("Choose an existing Faction for each Renown reward.");
+    if(!Number.isInteger(reward.amount))throw new Error("Renown values must be whole numbers.");
+    if(seen.has(reward.factionUuid))throw new Error("Each Faction may appear only once in Renown rewards.");
+    seen.add(reward.factionUuid);
+  }
+  if(doc?.getFlag(ID,"claimed") || doc?.getFlag(ID,"payoutPlan")) {
+    const orig=doc.flags[ID];
+    const normalizedItems=rows=>(rows??[]).map(({uuid,quantity})=>({uuid,quantity:Number(quantity)}));
+    if(data.factionUuid!==orig.factionUuid ||
+       JSON.stringify(data.currency??{})!==JSON.stringify(orig.currency??{}) ||
+       JSON.stringify(normalizedItems(data.items))!==JSON.stringify(normalizedItems(orig.items)) ||
+       JSON.stringify(renownRewards)!==JSON.stringify(orig.renownRewards??[]))
+      throw new Error("Rewards have already been issued; reward definitions are locked.");
   }
   const root=(await roots()).quests;
   const faction=getFaction(data.factionUuid);
@@ -94,12 +113,12 @@ export async function saveQuest(doc, {name,notes,...data}) {
   const folder = faction ? await ensureFolder(faction.name,root):root;
   const normalized={
     factionUuid:faction?.uuid??"", status:doc?.getFlag(ID,"status")??"unavailable", flavor:String(data.flavor??""),
-    assignment:doc?.getFlag(ID,"assignment")??"none", groupId:doc?.getFlag(ID,"groupId")??"",
+    assignment:doc?.getFlag(ID,"assignment")==="individual"?"individual":"none",
     assignees:doc?.getFlag(ID,"assignees")??[],
     objectives:Array.isArray(data.objectives)?data.objectives:[],
     currency:Object.fromEntries(CURRENCIES.map(k=>[k,Math.max(0,Math.trunc(Number(data.currency?.[k])||0))])),
-    items:Array.isArray(data.items)?data.items:[], renown:Math.trunc(Number(data.renown)||0),
-    renownScope:doc?.getFlag(ID,"renownScope")??"group", lootRecipientId:doc?.getFlag(ID,"lootRecipientId")??""
+    items:Array.isArray(data.items)?data.items:[], renownRewards,
+    lootRecipientId:doc?.getFlag(ID,"lootRecipientId")??""
   };
   if (!doc) {
     doc = await JournalEntry.create({name:name.trim(),folder:folder.id,ownership:{default:OWN_NONE},
@@ -122,11 +141,7 @@ export function isDiscoverable(actor,factionUuid) {
 }
 function questCharacters(journal) {
   if (!["offered","accepted","in-progress","completed","failed","abandoned"].includes(journal.getFlag(ID,"status"))) return [];
-  // Quest flags are stored flat in the managed namespace.
-  const mode=journal.getFlag(ID,"assignment")??"group";
-  if(mode==="group") return groupMembers(game.actors.get(journal.getFlag(ID,"groupId")));
-  if(mode==="individual") return (journal.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(eligible);
-  return [];
+  return getQuestParticipants(journal);
 }
 export async function reconcileAccess() {
   if (!game.user?.isGM || syncing) return;
@@ -178,26 +193,19 @@ export async function setQuestAvailability(doc, available) {
   await reconcileAccess();
 }
 export function getQuestParticipants(doc) {
-  const mode=doc?.getFlag(ID,"assignment");
-  if (mode==="group") return groupMembers(game.actors.get(doc.getFlag(ID,"groupId")));
-  if (mode==="individual") return (doc.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(eligible);
-  return [];
+  return [...new Set(doc?.getFlag(ID,"assignees")??[])]
+    .map(id=>game.actors.get(id)).filter(eligible);
 }
-export async function giveQuest(doc,{assignment,groupId,assignees,status="offered"}) {
+export async function giveQuest(doc,{assignees,status="offered"}) {
   assertGM();
-  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
-  if (doc.getFlag(ID,"status")!=="available") throw new Error("Quest must be Available before Giving.");
-  if (!["offered","accepted","in-progress"].includes(status)) throw new Error("Invalid Giving status.");
-  if (assignment==="group") {
-    if (game.actors.get(groupId)?.type!=="group") throw new Error("Select a valid Group Actor.");
-    assignees=[];
-  } else if(assignment==="individual") {
-    assignees=[...new Set(assignees??[])].filter(id=>eligible(game.actors.get(id)));
-    if (!assignees.length) throw new Error("Select at least one Character with explicit non-GM Owner.");
-    groupId="";
-  } else throw new Error("Choose Group or Individual Characters.");
-  await doc.update({[`flags.${ID}.assignment`]:assignment,[`flags.${ID}.groupId`]:groupId??"",
-    [`flags.${ID}.assignees`]:assignees,[`flags.${ID}.status`]:status});
+  if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
+  if(doc.getFlag(ID,"status")!=="available")throw new Error("Quest must be Available before Giving.");
+  if(!["offered","accepted","in-progress"].includes(status))throw new Error("Invalid Giving status.");
+  const ids=[...new Set(assignees??[])];
+  if(!ids.length || ids.some(id=>!eligible(game.actors.get(id))))
+    throw new Error("Select at least one eligible Character with an explicit non-GM Owner.");
+  await doc.update({[`flags.${ID}.assignment`]:"individual",[`flags.${ID}.groupId`]:"",
+    [`flags.${ID}.assignees`]:ids,[`flags.${ID}.status`]:status});
   await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
   await reconcileAccess();
 }

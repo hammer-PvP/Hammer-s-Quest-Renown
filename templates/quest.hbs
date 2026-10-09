@@ -12,7 +12,14 @@
     {{#if claimed}}<div class="hqr-warning">Rewards have already been issued; Faction and reward values are locked.</div>{{/if}}
     <h4>Currency</h4><div class="hqr-currencies">{{#each currencies}}<label>{{label}}<input name="currency_{{id}}" type="number" value="{{value}}" min="0" step="1" {{#if ../claimed}}readonly{{/if}}></label>{{/each}}</div>
     <h4>Items</h4><div class="hqr-item-drop" data-locked="{{claimed}}"><div class="hqr-drop-prompt"><i class="fa-solid fa-box-open"></i> Drag & Drop Items from the World or Compendiums here</div><div class="hqr-items hqr-list">{{#each items}}<div class="hqr-item-row"><div class="hqr-item-label"><img class="hqr-item-img" src="{{img}}" alt=""><span class="hqr-item-name">{{name}}</span><input type="hidden" data-field="uuid" value="{{uuid}}"></div><label class="hqr-qty">Qty.<input type="number" data-field="quantity" min="1" step="1" value="{{quantity}}" {{#if ../claimed}}readonly{{/if}}></label><button type="button" data-action="remove-item" title="Remove Item" {{#if ../claimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div></div>
-    <label>Faction Renown (+/-)<input name="renown" type="number" step="1" value="{{renown}}" {{#if claimed}}readonly{{/if}}></label>
+    <h4>Faction Renown Rewards</h4>
+    <div class="hqr-renown-rewards hqr-list">{{#each renownRewards}}
+      <div class="hqr-renown-reward" data-reward-id="{{id}}">
+        <label class="hqr-renown-faction">Faction<select data-field="faction" {{#if ../claimed}}disabled{{/if}}>{{#each choices}}<option value="{{uuid}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+        <label class="hqr-renown-amount">Renown (+/-)<input data-field="amount" type="number" step="1" value="{{amount}}" {{#if ../claimed}}readonly{{/if}}></label>
+        <button type="button" data-action="remove-renown" title="Remove Renown reward" {{#if ../claimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button>
+      </div>{{/each}}</div>
+    <button type="button" class="hqr-quiet" data-action="add-renown" {{#if claimed}}disabled{{/if}}><i class="fa-solid fa-plus"></i> Add Renown Reward</button>
     <p class="hqr-hint">The recipients and reward distribution mode will be selected when the Quest is turned in.</p>
   </div>
   <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots and GM-only notes...">{{notes}}</textarea></label><p class="hqr-hint">Separate private Journal page, unavailable to players.</p></div>

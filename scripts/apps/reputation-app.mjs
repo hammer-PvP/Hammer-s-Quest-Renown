@@ -15,19 +15,7 @@ export class ReputationApp extends HandlebarsApplicationMixin(ApplicationV2) {
       deltaLabel:x.delta>0?`+${x.delta}`:String(x.delta)
     }));
     const balances=facs.filter(f=>ledger.some(x=>x.factionUuid===f.uuid)).map(f=>({name:f.name,uuid:f.uuid,value:reputationOf(this.actor,f.uuid),rank:rankFor(f,reputationOf(this.actor,f.uuid))}));
-    const partyBalances=[];
-    if(this.actor?.type==='character') {
-      for (const group of game.actors.filter(a=>a.type==='group')) {
-        if(!group.system?.members?.some(m=>m.actor?.id===this.actor.id))continue;
-        if(!game.user.isGM && !group.testUserPermission(game.user,'OBSERVER'))continue;
-        for (const faction of facs) {
-          if(!(group.getFlag(ID,'ledger')??[]).some(row=>row.factionUuid===faction.uuid))continue;
-          const value=reputationOf(group,faction.uuid);
-          partyBalances.push({name:faction.name,groupName:group.name,value,rank:rankFor(faction,value)});
-        }
-      }
-    }
-    return {gm:game.user.isGM,actors:actors.map(a=>({id:a.id,name:`${a.name} (${a.type})`,selected:a===this.actor})),factions:facs.map(f=>({uuid:f.uuid,name:f.name})),selected:this.actor?.id??"",balances,partyBalances,ledger,hasActor:!!this.actor};
+    return {gm:game.user.isGM,actors:actors.map(a=>({id:a.id,name:`${a.name} (${a.type})`,selected:a===this.actor})),factions:facs.map(f=>({uuid:f.uuid,name:f.name})),selected:this.actor?.id??"",balances,ledger,hasActor:!!this.actor};
   }
   _onRender(){
     const root=this.element;

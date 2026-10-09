@@ -7,6 +7,7 @@
  <div class="hqr-record-actions"><button type="button" data-action="open" title="Open Journal"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
  {{#if canToggle}}<button type="button" data-action="toggle">{{#if isAvailable}}<i class="fa-solid fa-lock"></i> Make Unavailable{{else}}<i class="fa-solid fa-lock-open"></i> Make Available{{/if}}</button>{{/if}}
  {{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Quest Giving</button>{{/if}}
- {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}</div>
+ {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}
+ {{#if canViewResults}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}</div>
 </article>{{else}}<div class="hqr-panel"><p>No Quests yet. Create one to begin.</p></div>{{/each}}
 </div></div>

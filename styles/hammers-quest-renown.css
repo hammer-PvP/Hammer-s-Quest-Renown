@@ -79,13 +79,13 @@
 .hqr-reputation-head button{width:auto;min-width:78px;cursor:pointer;background:#5b3838;border:1px solid #bb9365;color:#fff;padding:4px 9px;border-radius:4px;font-size:12px;white-space:nowrap}
 .hqr-reputation-head button:hover{background:#754444}
 .hqr-renown-scroll{overflow-x:auto;overflow-y:hidden;max-width:100%;scrollbar-width:thin}
-.hqr-renown-table{min-width:540px;width:100%;display:grid;grid-template-columns:minmax(120px,1fr) minmax(67px,max-content) minmax(4ch,max-content) 9px minmax(3ch,max-content) minmax(67px,max-content) minmax(4ch,max-content) 9px minmax(3ch,max-content);gap:0;font-size:12px;line-height:1.25}
-.hqr-renown-row{box-sizing:border-box;display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:center;column-gap:5px;min-height:28px;padding:3px 5px;border-bottom:1px solid rgba(180,159,123,.16);white-space:nowrap}
+/* v0.0.4 — one Actor / one Renown ledger; shared column tracks per row */
+.hqr-renown-table{min-width:290px;width:100%;display:grid;grid-template-columns:minmax(120px,1fr) minmax(76px,max-content) minmax(4ch,max-content) 9px minmax(3ch,max-content);gap:0;font-size:12px;line-height:1.25}
+.hqr-renown-row{box-sizing:border-box;display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:center;column-gap:6px;min-height:28px;padding:3px 5px;border-bottom:1px solid rgba(180,159,123,.16);white-space:nowrap}
 .hqr-renown-row:nth-child(2n){background:rgba(170,145,107,.055)}
 .hqr-renown-row--head{min-height:27px;color:#d9be89;font-size:11px;font-weight:600;border-bottom:1px solid #806a4c;background:transparent!important}
-.hqr-renown-scope{text-align:center}
-.hqr-renown-personal{grid-column:2 / span 4}
-.hqr-renown-shared{grid-column:6 / span 4}
+.hqr-renown-row--head .hqr-renown-rank{color:#d9be89}
+.hqr-renown-total{grid-column:3 / span 3;text-align:center}
 .hqr-renown-name,.hqr-renown-rank{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hqr-renown-name{font-weight:600;color:#f1e9db}
 .hqr-renown-rank{color:#c4b9a8}
@@ -93,9 +93,6 @@
 .hqr-renown-current{text-align:right;color:#e7cd97;font-weight:600}
 .hqr-renown-slash{text-align:center;color:#978978}
 .hqr-renown-max{text-align:left;color:#d5c8ad}
-.hqr-renown-absent{grid-column:span 4;text-align:center;color:#8a8180}
-.hqr-renown-table--group{min-width:290px;grid-template-columns:minmax(120px,1fr) minmax(75px,max-content) minmax(4ch,max-content) 9px minmax(3ch,max-content)}
-.hqr-renown-table--group .hqr-renown-shared{grid-column:2 / span 4}
 .hqr-renown-empty{grid-column:1/-1;padding:12px 5px;color:#a9a099;font-size:12px}
 .hqr-sheet-hint{color:#aba093;font-size:11px;line-height:1.4;margin:9px 0 0}
 /* Foundry V14 FilePicker profile, including 5:3 preview and keyboard-accessible browsing */
@@ -115,3 +112,14 @@
 /* Custom quest-book/quill mark in directory and native Group tab */
 .hqr-directory-tools .hqr-directory-identity{width:16px;height:16px;vertical-align:middle;object-fit:contain}
 .hqr-book-feather-tab-icon{display:inline-block;width:17px;height:17px;vertical-align:middle;background:url('../assets/book-feather.svg') center/contain no-repeat}
+
+/* v0.0.4 — compact editable multiple-Renown rows, without full rerenders */
+.hqr-app .hqr-renown-reward{display:grid;grid-template-columns:minmax(0,1fr) 112px 36px;gap:9px;align-items:end;padding:4px 0}
+.hqr-app .hqr-renown-reward>button{height:34px;min-width:33px}
+.hqr-app .hqr-renown-reward select,.hqr-app .hqr-renown-reward input{width:100%;min-width:0}
+.hqr-app .hqr-turnin-renown-row{display:grid;grid-template-columns:minmax(0,1fr) 70px auto auto;gap:9px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(200,170,120,.2)}
+.hqr-app .hqr-turnin-renown-row .hqr-check{white-space:nowrap}
+.hqr-app .hqr-positive{color:#8fd2a0;font-weight:bold}
+.hqr-app .hqr-negative{color:#e69292;font-weight:bold}
+.hqr-app .hqr-group-members{display:block;color:#b7aaa1;font-size:10px;margin-top:2px}
+@media(max-width:600px){.hqr-app .hqr-turnin-renown-row{grid-template-columns:minmax(0,1fr) 65px;row-gap:7px}}
