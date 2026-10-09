@@ -1,0 +1,9 @@
+<section class="tab hqr-native-reputation {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  <div class="hqr-sheet-reputation-content">
+    <header class="hqr-reputation-head"><h2><i class="fa-solid fa-award"></i> Reputation</h2><button type="button" class="hqr-open-reputation" data-hqr-actor-id="{{actor.id}}"><i class="fa-solid fa-list"></i> {{#if hqr.isGM}}Manage{{else}}Details{{/if}}</button></header>
+    <h3>{{#if hqr.isGroup}}Party Renown{{else}}Personal Renown{{/if}}</h3>
+    {{#each hqr.personal}}<div class="hqr-sheet-balance"><span><strong>{{name}}</strong><small>{{rank}}</small></span><strong>{{score}}</strong></div>{{else}}<p class="hqr-sheet-empty">No reputation recorded yet.</p>{{/each}}
+    {{#unless hqr.isGroup}}<h3>Party Renown</h3>{{#each hqr.shared}}<div class="hqr-sheet-balance"><span><strong>{{name}}</strong><small>{{groupName}} · {{rank}}</small></span><strong>{{score}}</strong></div>{{else}}<p class="hqr-sheet-empty">No shared renown is visible from this character's Group Actor.</p>{{/each}}{{/unless}}
+    <p class="hqr-sheet-hint">Personal and Party scores remain independent. Only the GM can adjust Renown.</p>
+  </div>
+</section>

@@ -1,7 +1,9 @@
 export const ID = "hammer-s-quest-renown";
 export const FOLDER_FACTIONS = "Factions - Hammer's Quest & Renown";
 export const FOLDER_QUESTS = "Quests - Hammer's Quest & Renown";
-export const STATUS = ["available", "accepted", "in-progress", "completed", "failed", "abandoned"];
+export const STATUS = ["unavailable", "available", "offered", "accepted", "in-progress", "completed", "failed", "abandoned"];
+export const OFFER_STATES = ["offered", "accepted", "in-progress"];
+export const TERMINAL_STATES = ["completed", "failed", "abandoned"];
 export const DEFAULT_RANKS = [
   {name:"Hostile", min:-25}, {name:"Unfriendly",min:-10},
   {name:"Neutral",min:0}, {name:"Friendly",min:10},

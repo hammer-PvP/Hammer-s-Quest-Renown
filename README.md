@@ -1,47 +1,46 @@
-# Hammer's Quest & Renown — v0.0.1
+# Hammer's Quest & Renown — v0.0.2
 
-Foundry VTT v14 + D&D5e 6.0.x module for organizing quests and factions directly in the native Journal directory. **GM controls all writes; players only receive Observer access** to documents intended for them.
+A Foundry VTT v14 (verified 14.368) / D&D5e 6.0.6 quest, faction and reputation module. **This is a GM-controlled journal workflow. Player journal permissions are Observer only, never Owner.**
 
-## Installing from GitHub Releases
+## GitHub Release
 
-Create the GitHub release with tag `v0.0.1`. Upload the assets `hammer-s-quest-renown.zip` and `module.json` (both supplied separately). Paste this URL in the Foundry Module Installer:
+Create a release with tag `v0.0.2` in `https://github.com/hammer-PvP/Hammer-s-Quest-Renown` and upload exactly two assets:
 
-`https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json`
+- `hammer-s-quest-renown.zip` — ZIP containing module files at archive root, installed by Foundry into `Data/modules/hammer-s-quest-renown/`.
+- `module.json` — release manifest pointing to the versioned ZIP.
 
-The release archive contains the module files at the ZIP root, as expected by the Foundry package installer. Foundry installs it into `Data/modules/hammer-s-quest-renown/`.
+Install/update manifest: `https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json`
 
-## Getting started
+## Workflow (v0.0.2)
 
-1. Enable the module as a GM, open the **Journal** directory, and click **Factions**.
-2. Create a faction, its public lore, optional emblem URL, renown ranks, and private GM notes.
-3. Click **Quest**, choose its faction, group or individual player characters, objectives, public rewards, and GM-only notes.
-4. Change the Quest status to **Accepted** or **In Progress**, then Save. Eligible players gain Observer access to its Journal. An **Available** quest is not automatically shared.
-5. Complete the quest, Save, then use **Grant Rewards** after selecting an Item/Currency destination. This is a distinct GM action, recorded against the quest to prevent normal repeat claiming.
-6. Click **Renown** in the Journal directory or **Reputation** in a D&D5e Character/Group sheet header to view reputation and record manual changes (with a required reason).
+1. **Factions** in Journal Directory: create a Faction Journal with public lore, configurable Renown ranks and a private GM Notes page.
+2. **New Quest** in Journal Directory: design name, Faction, public Flavor, Objectives, Currency, Items (drag & drop from World/Compendium; editable quantities) and Renown. Add private GM Notes. The new Quest is **Unavailable** and **requires no recipients**.
+3. **Quest Manager** in Journal Directory: edit the Quest, mark it Available or Unavailable, then select **Quest Giving** on an Available Quest.
+4. **Quest Giving**: assign to a Group Actor or choose individual Characters with explicit non-GM Player Owner; set initial progress Offered/Accepted/In Progress. This reveals the public Journal only to the permitted Users.
+5. **Quest Turn-In**: change progress to Accepted/In Progress/Completed/Failed/Abandoned, or choose **Complete & Grant Rewards**. At Turn-In, select shared Group Renown or eligible individual participants, plus the Actor inventory for physical Items/Currency. Rewards are applied at most once per Quest; partially applied grants use an immutable payout plan and per-reward idempotency keys.
+6. **Renown**: use Journal Directory's Reputation Manager to adjust any Character or Group with a mandatory reason, including negative and zero values (zero records discovery). A dedicated **Reputation** tab is added to the default native D&D5e 6.0.6 Character and Group Actor sheets, showing their stored scores; Character sheets also show visible Group scores without merging them.
 
-## Journal structure
+## Native Journal folders
 
-- `Factions - Hammer's Quest & Renown` — one native Journal per faction, public profile + GM-only Journal page.
-- `Quests - Hammer's Quest & Renown` — one folder per faction containing native Quest Journals, public briefing + GM-only Journal page.
-- Factions are revealed to users when eligible player characters or their assigned group first receive any recorded renown entry (including zero).
-- Individual participants must have a non-GM user with **explicit Owner** on the Character Actor. Merely being a `character` type or having GM access is insufficient.
-- Faction and quest permission grants are **Observer only** for users, never Owner. Private pages have explicit NONE permissions.
+- `Factions - Hammer's Quest & Renown` — managed Faction journals with Public and GM Only pages.
+- `Quests - Hammer's Quest & Renown` — one folder per Faction, containing Quest journals with Public and GM Only pages.
 
-## Rewards
+Fação discovery is triggered by the first recorded Renown event, even zero or negative. Quest viewing is controlled by assignment, not merely Available status. The same journal is shared; no duplicated player copies.
 
-- Currency denominations: PP, GP, EP, SP, CP. These are transferred to the explicitly selected Actor, not silently divided.
-- Item rewards: world / compendium Item UUID, quantity, native `@UUID` links and Item drop zone. The Item will be copied into the selected Actor inventory on **Grant Rewards**.
-- Renown: assigned to the Group Actor or eligible participants. History records each grant and prevents rerunning identical renown award IDs.
-- Manual renown changes accept positive, negative, or zero integer amounts; zero is useful to discover a faction.
-- Quest public information is generated from structured fields; GM notes are stored in a separate restricted Journal page.
+## Migration from v0.0.1
 
-## v0.0.1 known limits and test priorities
+- Existing Quests, Factions, Journal UUIDs, Actor Renown history and reward-issued flags are preserved.
+- Existing Quest status/assignments remain intact, but Quest Editor stops editing recipients and reward destinations; use Quest Manager and Turn-In instead.
+- Existing Available quests remain Available and become visible only when subsequently assigned using Quest Giving.
+- Existing completed quests whose rewards were granted remain locked against a second grant.
 
-- Editors use multiline plain-text inputs for flavor and GM-only notes, then generate formatted native Journal pages. Rich-text editing within the custom editor is not yet provided.
-- Reputation is opened by a sheet **header action**, not yet embedded as a native D&D5e Character/Group sheet tab.
-- Permission enforcement is GM-side. Test JournalEntryPage page-level visibility with an actual player client on Foundry 14.368 before using sensitive campaign secrets.
-- Custom rewards are delivered to **one chosen Actor inventory**; no currency splitting or claimed-item choice UI in this version.
-- Avoid concurrently claiming the same quest from two GM clients. Partial reward application is designed for retry, but a restart during a non-atomic multi-document operation should be reviewed before retrying.
-- Do not delete a faction journal before managing its quests; deletion / migration workflows are future scope.
-- When editing GM notes directly in the native Journal text editor, opening and saving the custom editor normalizes them to plain text; keep initial editing inside the custom editor to avoid losing rich formatting.
-- Interactive Foundry runtime and multi-client permission tests are required; package validation alone does not certify Foundry compatibility.
+## Known limitations / QA
+
+- The app's Quest/Faction public text and GM Notes editors remain plain multiline text fields. The output is formatted native Journal pages.
+- This release supports a single assignment/progress state per Quest. Multi-party independent quest instances and prerequisite chains are not included.
+- Currency and Items are given to one chosen Actor inventory; splitting money or choosing independent Item recipients is not yet supported.
+- Native Reputation tabs are integrated into **default D&D5e 6.0.6** Character/Group sheets. Third-party replacement sheets may only show the header Reputation control.
+- A player can only see Group Renown in their Character sheet when that Group Actor is itself Observer-accessible to them. The module deliberately does not broaden Group Actor permissions (which could expose its other data).
+- Page-level GM-only security and live Quest permissions must be tested with a real player client; code validation is not a substitute for Foundry multi-client testing.
+- Avoid simultaneous grants by multiple GMs. Partial multi-document awards are protected for normal retries but aren't a database transaction.
+- Do not delete faction journals before their dependent quests; deletion/migration tooling is future scope.

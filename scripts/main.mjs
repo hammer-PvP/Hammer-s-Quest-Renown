@@ -3,9 +3,14 @@ import {roots,reconcileAccess} from "./services/documents.mjs";
 import {FactionApp} from "./apps/faction-app.mjs";
 import {QuestApp} from "./apps/quest-app.mjs";
 import {ReputationApp} from "./apps/reputation-app.mjs";
+import {QuestManagerApp} from "./apps/quest-manager-app.mjs";
+import {QuestLifecycleApp} from "./apps/quest-lifecycle-app.mjs";
+import {installReputationTabs} from "./sheets/reputation-tab.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
 function startQuest(doc=null){ if(!isGM())return;new QuestApp(doc).render(true); }
+function startQuestManager(){if(!isGM())return;new QuestManagerApp().render(true);}
+function startQuestLifecycle(doc,mode='giving'){if(!isGM())return;new QuestLifecycleApp(doc,mode).render(true);}
 function startReputation(actor=null){new ReputationApp(actor).render(true);}
 function addDirectoryButtons(app,html){
   if(!isGM())return;
@@ -14,7 +19,7 @@ function addDirectoryButtons(app,html){
   const host=root.querySelector('.directory-header .header-actions') ?? root.querySelector('.directory-header') ?? root.querySelector('header');
   if(!host)return;
   const row=document.createElement('div');row.className='hqr-directory-tools';
-  const buttons=[['fa-scroll','Quest',()=>startQuest()],['fa-shield-halved','Factions',()=>startFaction()],['fa-award','Renown',()=>startReputation()]];
+  const buttons=[['fa-scroll','New Quest',()=>startQuest()],['fa-list-check','Quest Manager',()=>startQuestManager()],['fa-shield-halved','Factions',()=>startFaction()],['fa-award','Renown',()=>startReputation()]];
   for(const [icon,label,cb] of buttons){const btn=document.createElement('button');btn.type='button';btn.className='hqr-directory-button';btn.innerHTML=`<i class="fa-solid ${icon}"></i> ${label}`;btn.title=`Hammer's Quest & Renown — ${label}`;btn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();cb();});row.append(btn);}
   host.append(row);
 }
@@ -66,11 +71,13 @@ function isDndActorSheet(app){
   return !!(actor && ['group','character'].includes(actor.type) && app?.document===actor && (sheetClass ? app instanceof sheetClass : /ActorSheet/.test(app?.constructor?.name??'')));
 }
 Hooks.once('init',()=>{
-  console.info(`${ID} | Initializing v0.0.1`);
+  console.info(`${ID} | Initializing v0.0.2`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
-  game.modules.get(ID).api={openFactions:startFaction,newQuest:()=>startQuest(),editQuest:startQuest,openReputation:startReputation,reconcileAccess};
+  installReputationTabs();
+  game.modules.get(ID).api={openFactions:startFaction,newQuest:()=>startQuest(),editQuest:startQuest,
+    openQuestManager:startQuestManager,openQuestLifecycle:startQuestLifecycle,openReputation:startReputation,reconcileAccess};
   if(!isGM())return;
   try {await roots();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
 });
@@ -78,6 +85,12 @@ Hooks.once('ready',async()=>{
 // Native Journal Directory, including the V14 ApplicationV2 sidebar.
 Hooks.on('renderJournalDirectory',(app,html)=>addDirectoryButtons(app,html));
 Hooks.on('renderApplicationV2',(app,element)=>{
+  if(isDndActorSheet(app)) {
+    const root=element?.[0]??element??app?.element;
+    if(root instanceof HTMLElement) root.querySelectorAll('.hqr-open-reputation').forEach(button=>{
+      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();startReputation(app.actor??app.document);});
+    });
+  }
   if(app?.constructor?.name==='JournalDirectory')addDirectoryButtons(app,element);
   if(app?.document?.documentName==='JournalEntry')addJournalSheetButton(app,element);
 });

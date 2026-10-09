@@ -1,21 +1,48 @@
 {
   "id": "hammer-s-quest-renown",
   "title": "Hammer's Quest & Renown",
-  "description": "Foundry-native quest and faction journals, GM-only notes, party/character assignment, configurable renown ranks, reputation history and rewards for D&D5e 6.x.",
-  "version": "0.0.1",
-  "authors": [{"name":"Raphael Andrade"}],
-  "compatibility": {"minimum":"14.367", "verified":"14.368"},
-  "relationships": {
-    "systems": [{"id":"dnd5e", "type":"system", "compatibility":{"minimum":"6.0.0","verified":"6.0.6","maximum":"6.0.999"}}]
+  "description": "Native Foundry quests and faction journals; quest designing, GM Quest Giving & Turn-In, party/character renown and managed rewards for D&D5e 6.x.",
+  "version": "0.0.2",
+  "authors": [
+    {
+      "name": "Raphael Andrade"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14.367",
+    "verified": "14.368"
   },
-  "esmodules": ["scripts/main.mjs"],
-  "styles": ["styles/hammers-quest-renown.css"],
-  "languages": [{"lang":"en","name":"English","path":"lang/en.json"}],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "verified": "6.0.6",
+          "maximum": "6.0.999"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/hammers-quest-renown.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
   "license": "LICENSE",
   "readme": "README.md",
   "url": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown",
   "manifest": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json",
-  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.1/hammer-s-quest-renown.zip",
+  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.2/hammer-s-quest-renown.zip",
   "bugs": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/issues",
-  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.1"
+  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.2"
 }

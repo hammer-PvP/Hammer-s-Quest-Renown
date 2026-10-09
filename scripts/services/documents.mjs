@@ -39,7 +39,7 @@ export function questHTML(name,data) {
   }
   if (Number(data.renown)) rewards.push(`<li><strong>Renown:</strong> ${Number(data.renown)>0?"+":""}${Number(data.renown)}${faction?` — ${esc(faction.name)}`:""}</li>`);
   const names = (data.assignees??[]).map(id=>game.actors.get(id)?.name).filter(Boolean);
-  const assigned = data.assignment === "group" ? (game.actors.get(data.groupId)?.name ?? "Unassigned") : (names.join(", ") || "Unassigned");
+  const assigned = data.assignment === "group" ? (game.actors.get(data.groupId)?.name ?? "Unassigned") : data.assignment === "individual" ? (names.join(", ") || "Unassigned") : "Not yet assigned";
   return `<section class="hqr-journal"><h1>${esc(name)}</h1><p class="hqr-journal-subtitle">${esc(faction?.name??"No Faction")} · ${esc(status)}</p><h2>Quest Briefing</h2><div>${htmlText(data.flavor??"")}</div><h2>Objectives</h2><ul>${objectives||"<li>No objectives listed.</li>"}</ul><h2>Accepted By</h2><p>${esc(assigned)}</p><h2>Rewards</h2><ul>${rewards.join("")||"<li>No announced rewards.</li>"}</ul></section>`;
 }
 async function setPage(doc, gmOnly, name, html) {
@@ -80,17 +80,26 @@ export async function saveFaction(doc, {name,description,image,notes,ranks}) {
 export async function saveQuest(doc, {name,notes,...data}) {
   assertGM();
   if (!name?.trim()) throw new Error("Quest name is required.");
+  if (doc?.getFlag(ID,"claimed")) {
+    const original=doc.flags[ID];
+    const comparable=k=>JSON.stringify(data[k]??null)===JSON.stringify(original[k]??null);
+    const compactItems=arr=>(arr??[]).map(({uuid,quantity,name})=>({uuid,quantity:Number(quantity),name}));
+    if (!["currency","renown","factionUuid"].every(comparable)
+        || JSON.stringify(compactItems(data.items))!==JSON.stringify(compactItems(original.items)))
+      throw new Error("Rewards have been issued. Reward and Faction values are locked to prevent discrepancies.");
+  }
   const root=(await roots()).quests;
   const faction=getFaction(data.factionUuid);
+  if(!faction) throw new Error("Select an existing Faction for this Quest.");
   const folder = faction ? await ensureFolder(faction.name,root):root;
   const normalized={
-    factionUuid:faction?.uuid??"", status:data.status??"available", flavor:String(data.flavor??""),
-    assignment:data.assignment==="individual"?"individual":"group", groupId:data.groupId??"",
-    assignees:Array.isArray(data.assignees)?data.assignees:[],
+    factionUuid:faction?.uuid??"", status:doc?.getFlag(ID,"status")??"unavailable", flavor:String(data.flavor??""),
+    assignment:doc?.getFlag(ID,"assignment")??"none", groupId:doc?.getFlag(ID,"groupId")??"",
+    assignees:doc?.getFlag(ID,"assignees")??[],
     objectives:Array.isArray(data.objectives)?data.objectives:[],
     currency:Object.fromEntries(CURRENCIES.map(k=>[k,Math.max(0,Math.trunc(Number(data.currency?.[k])||0))])),
     items:Array.isArray(data.items)?data.items:[], renown:Math.trunc(Number(data.renown)||0),
-    renownScope:data.renownScope==="individual"?"individual":"group", lootRecipientId:data.lootRecipientId??""
+    renownScope:doc?.getFlag(ID,"renownScope")??"group", lootRecipientId:doc?.getFlag(ID,"lootRecipientId")??""
   };
   if (!doc) {
     doc = await JournalEntry.create({name:name.trim(),folder:folder.id,ownership:{default:OWN_NONE},
@@ -112,11 +121,12 @@ export function isDiscoverable(actor,factionUuid) {
   return (actor?.getFlag(ID,"ledger")??[]).some(x=>x.factionUuid===factionUuid);
 }
 function questCharacters(journal) {
-  if (journal.getFlag(ID,"status")==="available") return [];
+  if (!["offered","accepted","in-progress","completed","failed","abandoned"].includes(journal.getFlag(ID,"status"))) return [];
   // Quest flags are stored flat in the managed namespace.
   const mode=journal.getFlag(ID,"assignment")??"group";
   if(mode==="group") return groupMembers(game.actors.get(journal.getFlag(ID,"groupId")));
-  return (journal.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(eligible);
+  if(mode==="individual") return (journal.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(eligible);
+  return [];
 }
 export async function reconcileAccess() {
   if (!game.user?.isGM || syncing) return;
@@ -154,4 +164,50 @@ export function getGMNotes(doc) {
   const html=docPage(doc,true)?.text?.content??"";
   const div=document.createElement("div"); div.innerHTML=html;
   return div.innerText??div.textContent??"";
+}
+
+/** GM-only quest lifecycle operations, separate from editing quest definitions. */
+export async function setQuestAvailability(doc, available) {
+  assertGM();
+  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
+  const current=doc.getFlag(ID,"status");
+  if (!["available","unavailable"].includes(current)) throw new Error("Only unassigned Quests can be made available/unavailable.");
+  const status=available?"available":"unavailable";
+  await doc.setFlag(ID,"status",status);
+  await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
+  await reconcileAccess();
+}
+export function getQuestParticipants(doc) {
+  const mode=doc?.getFlag(ID,"assignment");
+  if (mode==="group") return groupMembers(game.actors.get(doc.getFlag(ID,"groupId")));
+  if (mode==="individual") return (doc.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(eligible);
+  return [];
+}
+export async function giveQuest(doc,{assignment,groupId,assignees,status="offered"}) {
+  assertGM();
+  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
+  if (doc.getFlag(ID,"status")!=="available") throw new Error("Quest must be Available before Giving.");
+  if (!["offered","accepted","in-progress"].includes(status)) throw new Error("Invalid Giving status.");
+  if (assignment==="group") {
+    if (game.actors.get(groupId)?.type!=="group") throw new Error("Select a valid Group Actor.");
+    assignees=[];
+  } else if(assignment==="individual") {
+    assignees=[...new Set(assignees??[])].filter(id=>eligible(game.actors.get(id)));
+    if (!assignees.length) throw new Error("Select at least one Character with explicit non-GM Owner.");
+    groupId="";
+  } else throw new Error("Choose Group or Individual Characters.");
+  await doc.update({[`flags.${ID}.assignment`]:assignment,[`flags.${ID}.groupId`]:groupId??"",
+    [`flags.${ID}.assignees`]:assignees,[`flags.${ID}.status`]:status});
+  await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
+  await reconcileAccess();
+}
+export async function setQuestOutcome(doc,status) {
+  assertGM();
+  if (doc?.getFlag(ID,"kind")!=="quest") throw new Error("Choose a Quest.");
+  if (!["offered","accepted","in-progress","completed","failed","abandoned"].includes(doc.getFlag(ID,"status"))) throw new Error("Quest has not been assigned.");
+  if (!["accepted","in-progress","completed","failed","abandoned"].includes(status)) throw new Error("Invalid Quest state.");
+  if (doc.getFlag(ID,"claimed") && status!=="completed") throw new Error("Rewards have already been claimed. Cannot change away from Completed.");
+  await doc.setFlag(ID,"status",status);
+  await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
+  await reconcileAccess();
 }

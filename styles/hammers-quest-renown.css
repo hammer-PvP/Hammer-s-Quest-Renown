@@ -51,3 +51,34 @@
 .hqr-reward-tooltip{position:fixed;z-index:100000;display:flex;gap:10px;max-width:320px;min-width:180px;max-height:185px;overflow:auto;padding:10px;background:#17171a;color:#eee;border:1px solid #d1b06b;border-radius:5px;box-shadow:0 6px 24px #000a;pointer-events:none;font-size:12px}
 .hqr-reward-tooltip img{width:52px;height:52px;object-fit:cover;border-radius:3px;flex:0 0 auto}
 .hqr-reward-tooltip div{flex:1;min-width:0}.hqr-reward-tooltip strong{display:block;color:#e5c58b}.hqr-reward-tooltip small{display:block;color:#aaa;margin:2px 0 5px}.hqr-reward-tooltip p{margin:4px 0;line-height:1.35}
+/* v0.0.2: Quest management & native sheet Reputation */
+.hqr-app .hqr-items{gap:8px}
+.hqr-app .hqr-item-drop{min-height:84px;background:#221f20;border-width:2px}
+.hqr-app .hqr-item-drop.dragover{border-color:#e7c887;background:#373127}
+.hqr-app .hqr-drop-prompt{text-align:center;color:#cab17d;padding:12px 7px;font-size:12px}
+.hqr-app .hqr-drop-prompt i{font-size:17px;margin-right:6px}
+.hqr-app .hqr-item-row{display:grid;grid-template-columns:minmax(0,1fr) 80px 38px;gap:10px;align-items:center;padding:7px 5px;background:#29262a;border-radius:4px}
+.hqr-app .hqr-item-label{display:flex;align-items:center;min-width:0;gap:9px}
+.hqr-app .hqr-item-img{width:37px;height:37px;object-fit:cover;border-radius:3px}
+.hqr-app .hqr-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eee;font-size:13px}
+.hqr-app .hqr-qty{font-size:10px}
+.hqr-app .hqr-qty input{min-height:30px;padding:4px 6px}
+.hqr-app .hqr-toolbar{display:flex;align-items:end;gap:10px;padding:12px 20px;border-bottom:1px solid var(--hqr-border);background:#211b1e}
+.hqr-app .hqr-toolbar label{flex:1}
+.hqr-app .hqr-record-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hqr-app .hqr-record-heading h3{border:0;padding:0}
+.hqr-app .hqr-record-actions{display:flex;flex-wrap:wrap;gap:7px}
+.hqr-app .hqr-quest-record[hidden]{display:none}
+.hqr-native-reputation{overflow:auto;padding:15px!important;color:#e4e0d7}
+.hqr-sheet-reputation-content{max-width:900px;margin:0 auto}
+.hqr-reputation-head{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid #806a4c;margin:0 0 16px;padding-bottom:8px}
+.hqr-reputation-head h2{font-size:20px!important;color:#e5c58b!important;margin:0}
+.hqr-reputation-head button{width:auto;min-width:86px;cursor:pointer;background:#5b3838;border:1px solid #bb9365;color:#fff;padding:6px 10px;border-radius:4px}
+.hqr-native-reputation h3{font-size:15px!important;color:#d3b679!important;margin:14px 0 4px}
+.hqr-sheet-balance{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;margin:7px 0;border:1px solid #806a4c;background:#222027;border-radius:5px}
+.hqr-sheet-balance span{display:flex;flex-direction:column;gap:3px}
+.hqr-sheet-balance span strong{font-size:14px;color:#f5f0e6}
+.hqr-sheet-balance small{font-size:12px;color:#b5a99b}
+.hqr-sheet-balance>strong{font-size:23px;color:#e5c58b}
+.hqr-sheet-empty,.hqr-sheet-hint{color:#aba093;font-size:12px;line-height:1.5}
+@media(max-width:720px){.hqr-app .hqr-item-row{grid-template-columns:minmax(0,1fr) 65px 34px}.hqr-app .hqr-toolbar{flex-wrap:wrap}}
