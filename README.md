@@ -9,6 +9,21 @@ Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entrie
 - **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
 - **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
 
+## v0.0.6 — Production-safe Manual Renown Batches
+
+**Compatible, additive update from v0.0.5.** This release does **not** convert, clear, rewrite or truncate any existing Actor `flags.hammer-s-quest-renown.ledger`, Journal, Quest/Faction UUID, Quest payout state or permission settings.
+
+- **Manual Reputation batch:** select multiple eligible Characters (non-GM explicit Owner) via checkboxes, with Select All, Clear and name filtering. Group Actors are in a **separate collapsible selector**, with independent checkboxes. Selecting Characters **never** selects their Groups.
+- **One signed adjustment + required reason per operation:** applied independently to every selected Actor. `0` remains supported to discover a Faction without changing its balance.
+- **Live impact preview:** for each chosen recipient, show their old and projected Renown total before confirmation.
+- **Durable resume:** before mutating any Actor, freeze the batch into a private world setting. Every recipient has a deterministic ledger key; a resumed batch skips Actors already recorded. When interruption occurs, new batches are blocked until the saved operation completes. Never manually clear a pending batch setting to retry.
+- **Known Factions:** closed by default; count shown, expanding reveals a list with a fixed-height internal scroll. No Faction data is discarded.
+- **History:** last 5 events by default; View Full History opens paginated 20-event pages with local scroll, preserving the complete ledger in the Actor.
+- **Inspect recipient:** each recipient has a View action for their existing Factions/History without changing which Actors will receive the adjustment.
+- **Versioned additive migration:** hidden world `dataVersion` moves to 1 on GM startup. `pendingRenownBatch` is a new world setting with an empty default. No existing documents need to be migrated; repeat startups are idempotent.
+
+**Operational safeguards:** back up your production World before installing any update. Do not execute batch adjustments concurrently from multiple GM clients. Foundry multi-document writes are not transactional; this release offers interruption recovery but cannot guarantee atomicity across multiple simultaneous GM sessions.
+
 ## v0.0.5 — Each Rewards & Individual Quest Outcomes
 
 **Prototype schema change:** No automatic migration of experimental v0.0.4 Quests. For predictable testing, create new Quests in a test World. Existing Faction Journals and Actor Renown ledgers are not intentionally deleted.

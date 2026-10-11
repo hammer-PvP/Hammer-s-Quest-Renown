@@ -1,8 +1,101 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><img class="hqr-banner-identity" src="modules/hammer-s-quest-renown/assets/book-feather.svg" alt=""><div><h2>Reputation Manager</h2><p>Group & Character Renown</p></div><span class="hqr-pill">{{#if gm}}GM Access{{else}}Read Only{{/if}}</span></header>
-<div class="hqr-scroll">
-<label>Actor<select name="actorId">{{#each actors}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
-<div class="hqr-panel"><h3>Known Factions</h3>{{#each balances}}<div class="hqr-balance"><span><strong>{{name}}</strong><small>{{rank}}</small></span><strong>{{value}}</strong></div>{{else}}<p class="hqr-hint">This Actor has no recorded Renown yet.</p>{{/each}}</div>
-{{#if gm}}<div class="hqr-panel"><h3><i class="fa-solid fa-pen-to-square"></i> Manual Adjustment</h3><div class="hqr-two"><label>Faction<select name="factionUuid">{{#each factions}}<option value="{{uuid}}">{{name}}</option>{{/each}}</select></label><label>Renown Change<input name="amount" type="number" step="1" value="0"></label></div><label>Reason (required)<textarea name="reason" rows="3" placeholder="What happened? Why is this faction reacting?"></textarea></label><p class="hqr-hint">Zero establishes a known Faction without changing the numerical balance.</p><button type="button" class="hqr-primary" data-action="apply" {{#unless hasActor}}disabled{{/unless}}>Record Adjustment</button></div>{{/if}}
-<div class="hqr-panel"><h3><i class="fa-solid fa-clock-rotate-left"></i> History</h3>{{#each ledger}}<div class="hqr-history"><span><strong>{{factionName}}</strong> <span class="hqr-delta">{{deltaLabel}}</span><small>{{reason}}</small><small>{{source}} · {{at}}</small></span></div>{{else}}<p class="hqr-hint">No reputation events recorded.</p>{{/each}}</div>
-</div></div>
+  <header class="hqr-banner">
+    <img class="hqr-banner-identity" src="modules/hammer-s-quest-renown/assets/book-feather.svg" alt="">
+    <div><h2>Reputation Manager</h2><p>Character & Group Renown · Safe Manual Adjustments</p></div>
+    <span class="hqr-pill">{{#if gm}}GM Access{{else}}Read Only{{/if}}</span>
+  </header>
+  <div class="hqr-scroll hqr-reputation-manager-scroll">
+    {{#if gm}}
+      {{#if pending}}
+        <div class="hqr-panel hqr-pending-batch">
+          <h3><i class="fa-solid fa-rotate"></i> Interrupted Adjustment — Resume Required</h3>
+          <p class="hqr-hint">An earlier operation was saved before changing Actor ledgers. Resume safely: recipients already recorded will be skipped. New adjustments are locked until this operation completes.</p>
+          <p><strong>{{pendingFaction}}</strong> · <strong>{{pendingDelta}}</strong> Renown · {{pendingCount}} recipient(s)</p>
+          <p class="hqr-hint">Reason: {{pendingReason}}</p>
+          <div class="hqr-batch-actions"><button type="button" class="hqr-primary" data-action="resume">Resume Pending Adjustment</button></div>
+        </div>
+      {{else}}
+        <div class="hqr-panel hqr-recipient-panel">
+          <h3><i class="fa-solid fa-users"></i> Recipients</h3>
+          <p class="hqr-hint">Check every Character or Group that should receive the same adjustment. Selecting a Character never selects their Group automatically.</p>
+          <div class="hqr-selection-toolbar">
+            <strong>Characters <span class="hqr-count" data-count="character">0 / {{characterCount}}</span></strong>
+            <div><button type="button" data-action="select-characters">Select All</button><button type="button" data-action="clear-characters">Clear</button></div>
+          </div>
+          <input class="hqr-recipient-search" name="recipientSearch" type="search" placeholder="Find a Character..." aria-label="Filter Characters">
+          <div class="hqr-recipient-list" data-list="character">
+            {{#each characters}}
+              <div class="hqr-recipient-row" data-search-name="{{name}}">
+                <label class="hqr-check"><input type="checkbox" name="recipient" value="{{id}}" data-recipient-type="character" {{#if checked}}checked{{/if}}><span title="{{name}}">{{name}}</span></label>
+                <button type="button" class="hqr-recipient-inspect" data-action="inspect" data-actor-id="{{id}}" title="Inspect {{name}}'s factions and history">{{#if inspecting}}Viewing{{else}}View{{/if}}</button>
+              </div>
+            {{else}}
+              <p class="hqr-hint">No Characters with an explicit non-GM Player Owner were found.</p>
+            {{/each}}
+          </div>
+          <details class="hqr-recipient-groups">
+            <summary><i class="fa-solid fa-users-rectangle"></i> Group Actors <span class="hqr-count" data-count="group">0 / {{groupCount}}</span><span class="hqr-summary-arrow">▾</span></summary>
+            <div class="hqr-selection-toolbar">
+              <span class="hqr-hint">Group selection is independent of Characters.</span>
+              <div><button type="button" data-action="select-groups">Select All</button><button type="button" data-action="clear-groups">Clear</button></div>
+            </div>
+            <div class="hqr-recipient-list" data-list="group">
+              {{#each groups}}
+                <div class="hqr-recipient-row">
+                  <label class="hqr-check"><input type="checkbox" name="recipient" value="{{id}}" data-recipient-type="group" {{#if checked}}checked{{/if}}><span title="{{name}}">{{name}}</span></label>
+                  <button type="button" class="hqr-recipient-inspect" data-action="inspect" data-actor-id="{{id}}" title="Inspect {{name}}'s factions and history">{{#if inspecting}}Viewing{{else}}View{{/if}}</button>
+                </div>
+              {{else}}
+                <p class="hqr-hint">No Group Actors exist in this World.</p>
+              {{/each}}
+            </div>
+          </details>
+        </div>
+      {{/if}}
+    {{/if}}
+
+    <details class="hqr-panel hqr-inspection-panel">
+      <summary><span><i class="fa-solid fa-shield"></i> Known Factions <span class="hqr-count">({{balanceCount}})</span></span><span class="hqr-summary-arrow">▾</span></summary>
+      <p class="hqr-hint">Inspecting: <strong>{{inspectedActorName}}</strong>. Use View beside a recipient to inspect another Actor; this does not change the recipient selection.</p>
+      <div class="hqr-inspection-scroll">
+        {{#each balances}}<div class="hqr-balance"><span><strong>{{name}}</strong><small>{{rank}}</small></span><strong>{{value}}</strong></div>
+        {{else}}<p class="hqr-hint">This Actor has no recorded Renown yet.</p>{{/each}}
+      </div>
+    </details>
+
+    {{#if gm}}
+      {{#unless pending}}
+        <div class="hqr-panel hqr-manual-adjustment">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Manual Adjustment</h3>
+          <div class="hqr-two">
+            <label>Faction<select name="factionUuid">{{#each factions}}<option value="{{uuid}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+            <label>Renown Change<input name="amount" type="number" step="1" value="{{draftAmount}}"></label>
+          </div>
+          <label>Reason (required)<textarea name="reason" rows="3" placeholder="What happened? Why is this faction reacting?">{{draftReason}}</textarea></label>
+          <p class="hqr-hint">Each selected Actor receives the full signed adjustment. Zero establishes a known Faction without changing the balance.</p>
+          <div class="hqr-batch-preview">
+            <div class="hqr-batch-preview-title"><strong>Adjustment Preview</strong><span data-preview-count>0 recipients selected</span></div>
+            <div class="hqr-batch-preview-list" data-preview-list aria-live="polite"><p class="hqr-hint">Select recipients to preview their new balances.</p></div>
+          </div>
+          <button type="button" class="hqr-primary" data-action="apply" disabled>Record Adjustment</button>
+        </div>
+      {{/unless}}
+    {{/if}}
+
+    <div class="hqr-panel hqr-history-panel">
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> History <span class="hqr-count">({{historyCount}})</span></h3>
+      <p class="hqr-hint">Inspecting: <strong>{{inspectedActorName}}</strong>. Showing the most recent records; the entire ledger remains stored.</p>
+      <div class="hqr-recent-history">
+        {{#each recentHistory}}<div class="hqr-history"><span><strong>{{factionName}}</strong> <span class="hqr-delta">{{deltaLabel}}</span><small>{{reason}}</small><small>{{source}} · {{at}}</small></span></div>
+        {{else}}<p class="hqr-hint">No reputation events recorded.</p>{{/each}}
+      </div>
+      {{#if hasMoreHistory}}
+        <button type="button" class="hqr-quiet" data-action="toggle-full-history">View Full History</button>
+        <div class="hqr-full-history" data-full-history hidden>
+          <div class="hqr-selection-toolbar"><strong data-history-page-label></strong><div><button type="button" data-action="history-prev">Previous</button><button type="button" data-action="history-next">Next</button></div></div>
+          <div class="hqr-full-history-list" data-history-list></div>
+        </div>
+      {{/if}}
+    </div>
+  </div>
+</div>

@@ -7,6 +7,7 @@ import {QuestManagerApp} from "./apps/quest-manager-app.mjs";
 import {QuestLifecycleApp} from "./apps/quest-lifecycle-app.mjs";
 import {installReputationTabs} from "./sheets/reputation-tab.mjs";
 import {renderQuestStatus} from "./sheets/quest-status.mjs";
+import {registerReputationSettings,migrateReputationSchema,isRenownBatchRunning} from "./services/batch-reputation.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
 function startQuest(doc=null){ if(!isGM())return;new QuestApp(doc).render(true); }
@@ -73,7 +74,8 @@ function isDndActorSheet(app){
   return !!(actor && ['group','character'].includes(actor.type) && app?.document===actor && (sheetClass ? app instanceof sheetClass : /ActorSheet/.test(app?.constructor?.name??'')));
 }
 Hooks.once('init',()=>{
-  console.info(`${ID} | Initializing v0.0.5`);
+  registerReputationSettings();
+  console.info(`${ID} | Initializing v0.0.6`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
@@ -82,7 +84,7 @@ Hooks.once('ready',async()=>{
   game.modules.get(ID).api={openFactions:startFaction,newQuest:()=>startQuest(),editQuest:startQuest,
     openQuestManager:startQuestManager,openQuestLifecycle:startQuestLifecycle,openReputation:startReputation,reconcileAccess};
   if(!isGM())return;
-  try {await roots();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
+  try {await migrateReputationSchema();await roots();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
 });
 
 // A single delegated listener survives D&D5e partial tab renders, F5 and any sheet redraw.
@@ -130,7 +132,7 @@ function queuePermissions(){
   queueMicrotask(async()=>{checkQueued=false;try{await reconcileAccess();}catch(e){console.error(`${ID} | permission check`,e);}});
 }
 Hooks.on('updateActor',(actor,change)=>{
-  if(change.ownership||change.system?.members||change.flags?.[ID]?.ledger)queuePermissions();
+  if(change.ownership||change.system?.members||(change.flags?.[ID]?.ledger && !isRenownBatchRunning()))queuePermissions();
 });
 Hooks.on('createUser',queuePermissions);
 Hooks.on('updateUser',queuePermissions);
