@@ -22,6 +22,21 @@
     <button type="button" class="hqr-quiet" data-action="add-renown" {{#if claimed}}disabled{{/if}}><i class="fa-solid fa-plus"></i> Add Renown Reward</button>
     <p class="hqr-hint">The recipients and reward distribution mode will be selected when the Quest is turned in.</p>
   </div>
+  <div class="hqr-panel hqr-failure-editor">
+    <h3><i class="fa-solid fa-shield-xmark"></i> Failure Penalties <small>(Optional · GM Only)</small></h3>
+    <label class="hqr-check"><input type="checkbox" name="failurePenaltiesEnabled" {{#if failurePenaltiesEnabled}}checked{{/if}} {{#if failureClaimed}}disabled{{/if}}>Enable Failure Penalties</label>
+    {{#if failureClaimed}}<p class="hqr-warning">A Failure Turn-In was already issued; failure penalty definitions are locked to protect the records.</p>{{/if}}
+    <div class="hqr-failure-penalty-controls" {{#unless failurePenaltiesEnabled}}hidden{{/unless}}>
+      <p class="hqr-hint">On a Failed Turn-In, apply these negative Renown amounts to selected Characters and optionally represented Groups. No normal Success rewards are paid. This section is not shown in player Journals.</p>
+      <div class="hqr-failure-penalties hqr-list">{{#each failurePenalties}}
+        <div class="hqr-renown-reward hqr-failure-penalty" data-penalty-id="{{id}}">
+          <label class="hqr-renown-faction">Faction<select data-field="faction" {{#if ../failureClaimed}}disabled{{/if}}>{{#each choices}}<option value="{{uuid}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+          <label class="hqr-renown-amount">Renown (negative)<input type="number" data-field="amount" max="-1" step="1" value="{{amount}}" {{#if ../failureClaimed}}readonly{{/if}}></label>
+          <button type="button" data-action="remove-failure" title="Remove penalty" {{#if ../failureClaimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button>
+        </div>{{/each}}</div>
+      <button type="button" class="hqr-quiet" data-action="add-failure" {{#if failureClaimed}}disabled{{/if}}><i class="fa-solid fa-plus"></i> Add Failure Penalty</button>
+    </div>
+  </div>
   <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots and GM-only notes...">{{notes}}</textarea></label><p class="hqr-hint">Separate private Journal page, unavailable to players.</p></div>
 </div>
 <footer class="hqr-actions"><button type="button" data-action="open-journal" {{#unless isEdit}}disabled{{/unless}}>Open Journal</button><button type="button" data-action="manage"><i class="fa-solid fa-list-check"></i> Quest Manager</button><button type="button" class="hqr-primary" data-action="save"><i class="fa-solid fa-floppy-disk"></i> Save Quest</button></footer>

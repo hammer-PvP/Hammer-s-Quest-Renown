@@ -33,6 +33,7 @@ export async function awardQuest(doc,options={}) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Not a Quest journal.");
   if(doc.getFlag(ID,"status")!=="available")throw new Error("Quest must be Available for Turn-In.");
+  if(doc.getFlag(ID,"activeFailureTurnIn"))throw new Error("Resume the pending Failure Turn-In before completing a Quest.");
   const pending=doc.getFlag(ID,"activeTurnIn");
   let plan=pending;
   if(!plan){
@@ -114,5 +115,79 @@ export async function awardQuest(doc,options={}) {
     [`flags.${ID}.payouts`]:payouts,[`flags.${ID}.-=activeTurnIn`]:null});
   await reconcileAccess();
   ui.notifications.info(`Quest rewards delivered to ${plan.participants.length} Character(s): ${doc.name}.`);
+  return true;
+}
+
+/** GM-authorized Failure Turn-In. A failure does not grant Success Currency/Items/Renown.
+ * Retains any v0.0.6 legacy auto-Failed result; an explicitly confirmed Fail Turn-In
+ * may formalize that pre-existing automatic failure without rewriting earlier history.
+ */
+export async function failQuest(doc, options={}) {
+  assertGM();
+  if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Not a Quest journal.");
+  if(!["available","inactive"].includes(doc.getFlag(ID,"status")))
+    throw new Error("Only Available or Inactive Quests can record a Failure Turn-In.");
+  if(doc.getFlag(ID,"activeTurnIn"))throw new Error("Resume the pending Success Turn-In first.");
+  let plan=doc.getFlag(ID,"activeFailureTurnIn");
+  if(!plan){
+    const progress=doc.getFlag(ID,"progress")??{};
+    const allowed=new Set(getQuestParticipants(doc).map(a=>a.id));
+    const participants=[...new Set(options.participantIds??[])];
+    if(!participants.length)throw new Error("Select at least one Character to fail the Quest.");
+    if(participants.some(id=>!allowed.has(id) || !(["accepted","in-progress"].includes(progress[id]?.status) ||
+      (progress[id]?.status==="failed" && progress[id]?.reason==="Quest became Inactive" && !progress[id]?.failurePayoutId))))
+      throw new Error("Only unfinished Characters (or legacy auto-Failed Characters) can be marked Failed.");
+    const candidates=new Set(candidateGroups(participants).map(g=>g.id));
+    const groups=[...new Set(options.groupIds??[])];
+    const previous=doc.getFlag(ID,"groupFailures")??{};
+    if(groups.some(id=>!candidates.has(id)||previous[id]))
+      throw new Error("A selected Group is ineligible or already penalized for this Quest.");
+    const settings=options.rowTargets??{};
+    const enabled=Boolean(doc.getFlag(ID,"failurePenaltiesEnabled"));
+    const rows=(enabled?(doc.getFlag(ID,"failurePenalties")??[]):[]).map(r=>({
+      id:String(r.id),factionUuid:r.factionUuid,amount:Number(r.amount),
+      personal:settings[r.id]?.personal!==false,group:settings[r.id]?.group!==false
+    }));
+    for(const row of rows){
+      if(!row.id||!getFaction(row.factionUuid)||!Number.isSafeInteger(row.amount)||row.amount>=0)
+        throw new Error("Invalid configured Failure Penalty. No status was changed.");
+    }
+    if(groups.length&&!rows.some(r=>r.group))
+      throw new Error("No Group Failure Penalty is enabled. Uncheck Groups for a no-penalty failure.");
+    plan={id:foundry.utils.randomID(),participants,groups,rows,
+      createdAt:new Date().toISOString(),gmUserId:game.user.id};
+    await doc.setFlag(ID,"activeFailureTurnIn",plan);
+  }
+  // Snapshot is frozen before the first Actor write. Each ledger key survives F5/retry.
+  for(const id of plan.participants){
+    const actor=game.actors.get(id);
+    if(!actor || actor.type!=="character")throw new Error(`Missing failed Character ${id}`);
+    for(const row of plan.rows){
+      if(row.personal)await adjust(actor,row.factionUuid,row.amount,`Quest failed: ${doc.name}`,
+        {source:doc.uuid,key:`quest:${doc.uuid}:failure:${row.id}:${actor.id}`,reconcile:false});
+    }
+  }
+  for(const id of plan.groups){
+    const group=game.actors.get(id);
+    if(group?.type!=="group")throw new Error(`Missing represented Group ${id}`);
+    for(const row of plan.rows){
+      if(row.group)await adjust(group,row.factionUuid,row.amount,`Quest failed: ${doc.name}`,
+        {source:doc.uuid,key:`quest:${doc.uuid}:failure:${row.id}:${group.id}`,reconcile:false});
+    }
+  }
+  const at=new Date().toISOString();
+  const progress={...(doc.getFlag(ID,"progress")??{})};
+  for(const id of plan.participants){
+    const former=progress[id]??{};
+    progress[id]={...former,status:"failed",failedAt:at,failurePayoutId:plan.id,
+      reason:"Quest Failure Turn-In",...(former.reason==="Quest became Inactive"?{legacyAutoFailedAt:former.failedAt}: {})};
+  }
+  const groupFailures={...(doc.getFlag(ID,"groupFailures")??{})};
+  for(const id of plan.groups)groupFailures[id]={payoutId:plan.id,at};
+  const failurePayouts=[...(doc.getFlag(ID,"failurePayouts")??[]),{...plan,failedAt:at}];
+  await doc.update({[`flags.${ID}.progress`]:progress,[`flags.${ID}.groupFailures`]:groupFailures,
+    [`flags.${ID}.failurePayouts`]:failurePayouts,[`flags.${ID}.-=activeFailureTurnIn`]:null});
+  await reconcileAccess();
+  ui.notifications.info(`Quest failure recorded for ${plan.participants.length} Character(s): ${doc.name}.`);
   return true;
 }

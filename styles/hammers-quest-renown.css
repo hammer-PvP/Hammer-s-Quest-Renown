@@ -189,3 +189,15 @@
 
 .hqr-reputation .hqr-recent-history{max-height:200px;overflow-y:auto;scrollbar-width:thin}
 .hqr-reputation .hqr-recent-history .hqr-history small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+
+/* v0.0.7: accessible single-color vector Quest outcome seals, no generated art. */
+.hqr-personal-quest-state{--hqr-outcome:#4ca575}
+.hqr-personal-quest-state.hqr-state-completed{border-color:rgba(76,165,117,.46);background:linear-gradient(110deg,rgba(33,88,58,.12),transparent)}
+.hqr-personal-quest-state.hqr-state-failed{--hqr-outcome:#be5151;border-color:rgba(190,81,81,.48);background:linear-gradient(110deg,rgba(116,45,45,.16),transparent)}
+.hqr-personal-quest-state .hqr-outcome-stamp{display:block;width:72px;height:72px;flex:0 0 72px;background:var(--hqr-outcome);filter:none;
+  -webkit-mask:url('../assets/quest-completed.svg') center/contain no-repeat;mask:url('../assets/quest-completed.svg') center/contain no-repeat}
+.hqr-personal-quest-state .hqr-outcome-stamp.hqr-stamp-failed{-webkit-mask-image:url('../assets/quest-failed.svg');mask-image:url('../assets/quest-failed.svg')}
+.hqr-app .hqr-failure-penalty-controls[hidden]{display:none!important}
+.hqr-app .hqr-failure-editor{border-color:#825050}
+.hqr-app .hqr-record-actions .hqr-danger-action{background:#573035;border-color:#9c5454;color:#f6dad9}
+.hqr-app .hqr-record-actions .hqr-danger-action:hover{background:#77363d}

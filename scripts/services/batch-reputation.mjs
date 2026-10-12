@@ -4,12 +4,12 @@
  * changes; each recipient has a deterministic ledger key for safe retry.
  */
 import {ID, assertGM, eligible} from "../constants.mjs";
-import {getFaction, reconcileAccess} from "./documents.mjs";
+import {getFaction, reconcileAccess, synchronizeQuestFolders} from "./documents.mjs";
 import {adjust, historyFor} from "./reputation.mjs";
 
 export const BATCH_SETTING = "pendingRenownBatch";
 export const SCHEMA_SETTING = "dataVersion";
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 let running = false;
 export const isRenownBatchRunning = () => running;
 
@@ -31,8 +31,10 @@ export async function migrateReputationSchema() {
   if (!Number.isInteger(current) || current < 0 || current > SCHEMA_VERSION)
     throw new Error(`Unsupported Renown data version: ${current}. No data was changed.`);
   if (current === SCHEMA_VERSION) return false;
-  // The new durable pending-batch setting already has an empty default.
-  // No Actor or Journal is changed during this versioned upgrade.
+  // v2 adds optional Quest Failure fields; missing fields have safe empty defaults.
+  // Do NOT rewrite per-Character progress: Completed and legacy Failed outcomes survive.
+  // Existing Journal IDs/UUIDs, quest payouts and Actor ledgers stay untouched.
+  await synchronizeQuestFolders();
   await game.settings.set(ID, SCHEMA_SETTING, SCHEMA_VERSION);
   return true;
 }
@@ -73,14 +75,14 @@ export async function applyRenownBatch(details = null) {
       const delta = Number(details.delta);
       const {ids, trimmed} = validateInput({...details, delta});
       plan = {
-        schema: SCHEMA_VERSION, id: foundry.utils.randomID(),
+        schema: 1, id: foundry.utils.randomID(),
         actorIds: ids, factionUuid: details.factionUuid, delta,
         reason: trimmed, at: new Date().toISOString(), gmUserId: game.user.id
       };
       // Commit intent BEFORE touching any Actor to survive F5/restart.
       await game.settings.set(ID, BATCH_SETTING, plan);
     }
-    if (plan.schema !== SCHEMA_VERSION || !Array.isArray(plan.actorIds) || !plan.id)
+    if (plan.schema !== 1 || !Array.isArray(plan.actorIds) || !plan.id)
       throw new Error("Pending batch format is unknown. Do not clear it; contact the maintainer.");
     if (!getFaction(plan.factionUuid))
       throw new Error("The pending batch references a missing Faction. Restore it before retrying.");

@@ -9,6 +9,27 @@ Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entrie
 - **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
 - **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
 
+## v0.0.7 — Production-safe Failure Turn-In & Inactive Journals
+
+**Upgrade from production v0.0.6 without recreating Quests, Factions, Actors, Journals or previous Success payouts.** Make a full backup of your production World with Foundry stopped before upgrading. The hidden world schema setting `dataVersion` migrates idempotently from **1 to 2**.
+
+- **Failure Turn-In:** a separate GM command in Quest Manager marks individually selected Characters Failed. Available or Inactive Quests may receive a Failure Turn-In. Completed Characters remain Completed, and no standard Success Currency, Items or Renown is granted by a Failure Turn-In.
+- **Failure Penalties (optional, GM-only):** the Quest Editor adds an initially **disabled** list of negative Faction Renown amounts. Each Faction may occur only once; multiple Factions are allowed. The GM can enable/disable recipients for each penalty row during the Failure Turn-In. Group Actors are candidates derived from selected Characters and are always **optional**; nothing is granted or removed from a Group without explicit selection. The values are not revealed in the public Quest Journal.
+- **No penalty by default:** older Quests have no enabled penalties. A Failure Turn-In only records the `Failed` outcome when no penalty is configured.
+- **Idempotent receipts and interrupted operations:** failure distribution uses a separate frozen `activeFailureTurnIn` plan and per-Actor ledger keys, `failurePayouts` and `groupFailures`. It resumes without reapplying completed rows. Existing `payouts`, `groupAwards`, Currency/Item receipts, manual `ledger`, `activeTurnIn` and `pendingRenownBatch` remain untouched.
+- **Inactive != Failed:** changing the global Quest availability to `Inactive` now **only archives** it; it no longer automatically fails unfinished Characters. Their individual states persist until a GM explicitly performs a Failure Turn-In. Success Turn-In requires Available; Failure Turn-In supports Available or Inactive.
+- **Legacy auto-fail handling:** Characters automatically marked Failed by older releases (`reason: "Quest became Inactive"`) retain their existing Failed state. The GM can explicitly confirm their Failure Turn-In, with any newly configured penalties, once; their original failure timestamp is preserved as `legacyAutoFailedAt`. Other previously recorded Failed/Completed states are never implicitly reset.
+- **Native folder colors:** `Quests` root `#ab960d`, Faction subfolders `#776809`, `Factions` root `#890b1e`, and newly created `Inativas` folders use the darker shade `#5a500b`. All managed Inactive Quests move to `Quests / <Faction> / Inativas` with **the same Journal UUID**. Re-activating moves them back. The migration limits automated moves to the module's recognized folders and skips custom/manual folder locations.
+- **Original monochrome SVG seals:** Completed = intact check seal tinted green, Failed = cracked X seal tinted red. The module provides two original, simple vector SVG paths and CSS mask coloring; no AI-generated or external image assets. The native read-only Journal status panel shows the outcome for the User's selected Character.
+- **Privacy:** Journal profiles remain Observer-only to eligible assigned Users; GM Notes pages remain private. No existing permissions or private Journal content are relaxed.
+
+### Production validation notes
+
+- Before enabling this release in the campaign, create a **complete offline World backup**. Multiple GM clients should not execute Turn-Ins simultaneously; Foundry document writes are not atomic transactions.
+- Verify a previously Completed Quest still shows Completed and its prior rewards; check an Inactive Quest still keeps unfinished Characters without creating a new automatic failure.
+- In an existing Inactive Quest with older automatic failures, use the **Fail Turn-In** to confirm selected legacy rows if the GM wishes to apply newly configured penalties. No pre-existing Renown loss is automatically added.
+- The module cannot be considered fully validated on your Foundry V14 installation until live testing succeeds; static/isolated tests are not a substitute for a backup and World QA.
+
 ## v0.0.6 — Production-safe Manual Renown Batches
 
 **Compatible, additive update from v0.0.5.** This release does **not** convert, clear, rewrite or truncate any existing Actor `flags.hammer-s-quest-renown.ledger`, Journal, Quest/Faction UUID, Quest payout state or permission settings.

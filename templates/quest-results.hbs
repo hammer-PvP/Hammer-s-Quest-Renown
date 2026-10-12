@@ -9,6 +9,11 @@
     <p><strong>Completed:</strong> {{participants}}</p><p><strong>Represented Groups:</strong> {{groups}}</p>
     {{#each renown}}<div class="hqr-balance"><span>{{faction}}</span><span>{{amount}} · {{#if personal}}Characters{{/if}} {{#if group}}Groups{{/if}}</span></div>{{/each}}
   </div>{{else}}<div class="hqr-panel"><p class="hqr-hint">No completed Turn-Ins yet.</p></div>{{/each}}
+  {{#each failureRows}}
+  <div class="hqr-panel"><h3><i class="fa-solid fa-xmark"></i> Failure Turn-In #{{index}} · {{at}}</h3>
+    <p><strong>Failed Characters:</strong> {{participants}}</p><p><strong>Represented Groups:</strong> {{groups}}</p>
+    {{#each renown}}<div class="hqr-balance"><span>{{faction}}</span><span>{{amount}} · {{#if personal}}Characters{{/if}} {{#if group}}Groups{{/if}}</span></div>{{else}}<p class="hqr-hint">No failure penalties configured — outcome only.</p>{{/each}}
+  </div>{{/each}}
   <div class="hqr-panel"><h3>Each — Rewards Defined</h3>
     {{#each currency}}<div class="hqr-balance"><span>{{name}}</span><strong>{{amount}} per Character</strong></div>{{/each}}
     {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}} per Character</strong></div>{{/each}}

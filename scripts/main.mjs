@@ -1,5 +1,5 @@
 import {ID,isGM,report,esc} from "./constants.mjs";
-import {roots,reconcileAccess} from "./services/documents.mjs";
+import {roots,reconcileAccess,synchronizeQuestFolders} from "./services/documents.mjs";
 import {FactionApp} from "./apps/faction-app.mjs";
 import {QuestApp} from "./apps/quest-app.mjs";
 import {ReputationApp} from "./apps/reputation-app.mjs";
@@ -55,7 +55,8 @@ function attachItemTooltips(root){
   root.addEventListener('mouseleave',hide);
 }
 function addJournalSheetButton(app,html){
-  const journal=app?.document;
+  const source=app?.document??app?.object;
+  const journal=source?.documentName==="JournalEntryPage"?source.parent:source;
   if(journal?.documentName!=="JournalEntry"||!["quest","faction"].includes(journal.getFlag(ID,'kind')))return;
   const root=html?.[0]??html??app.element;
   if(!(root instanceof HTMLElement))return;
@@ -75,7 +76,7 @@ function isDndActorSheet(app){
 }
 Hooks.once('init',()=>{
   registerReputationSettings();
-  console.info(`${ID} | Initializing v0.0.6`);
+  console.info(`${ID} | Initializing v0.0.7`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
@@ -84,7 +85,7 @@ Hooks.once('ready',async()=>{
   game.modules.get(ID).api={openFactions:startFaction,newQuest:()=>startQuest(),editQuest:startQuest,
     openQuestManager:startQuestManager,openQuestLifecycle:startQuestLifecycle,openReputation:startReputation,reconcileAccess};
   if(!isGM())return;
-  try {await migrateReputationSchema();await roots();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
+  try {const migrated=await migrateReputationSchema();if(!migrated)await synchronizeQuestFolders();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
 });
 
 // A single delegated listener survives D&D5e partial tab renders, F5 and any sheet redraw.
@@ -108,9 +109,10 @@ function installReputationClickHandler(){
 Hooks.on('renderJournalDirectory',(app,html)=>addDirectoryButtons(app,html));
 Hooks.on('renderApplicationV2',(app,element)=>{
   if(app?.constructor?.name==='JournalDirectory')addDirectoryButtons(app,element);
-  if(app?.document?.documentName==='JournalEntry')addJournalSheetButton(app,element);
+  if(['JournalEntry','JournalEntryPage'].includes(app?.document?.documentName))addJournalSheetButton(app,element);
 });
 Hooks.on('renderJournalSheet',(app,html)=>addJournalSheetButton(app,html));
+Hooks.on('renderJournalEntryPageSheet',(app,html)=>addJournalSheetButton(app,html));
 Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
   if(isDndActorSheet(app)){
     const actor=app.actor??app.document;

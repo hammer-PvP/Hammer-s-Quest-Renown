@@ -5,12 +5,14 @@ import {progressOf} from "../services/documents.mjs";
  * The page text itself remains shared; no per-user Journal duplication or GM-secret disclosure.
  */
 export function renderQuestStatus(app,html){
-  const doc=app?.document;
+  const source=app?.document??app?.object;
+  const doc=source?.documentName==="JournalEntryPage"?source.parent:source;
   if(doc?.documentName!=="JournalEntry"||doc.getFlag(ID,"kind")!=="quest")return;
+  if(source?.documentName==="JournalEntryPage" && source.getFlag(ID,"gmOnly"))return;
   const root=html?.[0]??html??app.element;
   if(!(root instanceof HTMLElement))return;
-  const content=root.querySelector(".journal-entry-content, .journal-entry-page, .window-content");
-  if(!content)return;
+  const content=root.querySelector(".journal-entry-content, .journal-entry-page, .journal-entry-page-content, .window-content")??root;
+  if(!(content instanceof HTMLElement))return;
   let panel=root.querySelector("[data-hqr-quest-status]");
   if(!panel){
     panel=document.createElement("section");
@@ -38,10 +40,10 @@ export function renderQuestStatus(app,html){
     const progress=progressOf(doc,actor.id);
     const stateLabel={completed:"QUEST COMPLETED",failed:"QUEST FAILED","in-progress":"IN PROGRESS",accepted:"QUEST ACCEPTED"};
     const stamp=progress==="completed"?"completed":progress==="failed"?"failed":null;
-    const seal=stamp?`<img class="hqr-outcome-stamp" src="modules/${ID}/assets/quest-${stamp}.svg" alt="${esc(stateLabel[progress])}">`:"";
+    const seal=stamp?`<span class="hqr-outcome-stamp hqr-stamp-${stamp}" role="img" aria-label="${esc(stateLabel[progress])}"></span>`:"";
     const selector=allowed.length>1?`<label class="hqr-quest-character-selector">Character <select data-hqr-character>${allowed.map(a=>`<option value="${esc(a.id)}" ${a.id===selected?"selected":""}>${esc(a.name)}</option>`).join("")}</select></label>`:"";
     panel.className=`hqr-personal-quest-state hqr-state-${progress}`;
-    panel.innerHTML=`${selector}<div class="hqr-status-line">${seal}<div class="hqr-status-caption"><strong>${esc(stateLabel[progress]??progress.toUpperCase())}</strong><span>${esc(actor.name)}</span>${progress==="failed"?"<small>This Quest was not completed before its opportunity expired.</small>":""}</div></div>`;
+    panel.innerHTML=`${selector}<div class="hqr-status-line">${seal}<div class="hqr-status-caption"><strong>${esc(stateLabel[progress]??progress.toUpperCase())}</strong><span>${esc(actor.name)}</span>${progress==="failed"?"<small>This Quest was recorded as failed.</small>":""}</div></div>`;
     panel.dataset.actorId=actor.id;
     panel.querySelector("[data-hqr-character]")?.addEventListener("change",event=>{selected=event.target.value;update();});
   }

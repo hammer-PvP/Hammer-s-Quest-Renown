@@ -1,7 +1,7 @@
 import {ID,CURRENCIES,assertGM,report,factions,CLONE,esc} from "../constants.mjs";
 import {saveQuest,getGMNotes} from "../services/documents.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
-const defaults=()=>({name:"",factionUuid:"",status:"unavailable",flavor:"",objectives:[],items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],notes:""});
+const defaults=()=>({name:"",factionUuid:"",status:"unavailable",flavor:"",objectives:[],items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],failurePenaltiesEnabled:false,failurePenalties:[],notes:""});
 function itemRow(item,index){
   const row=document.createElement("div");row.className="hqr-item-row";
   row.dataset.index=String(index);
@@ -27,6 +27,8 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
       statusLabel:String(this.doc?.getFlag(ID,"status")??"unavailable").replaceAll("-"," "),
       objectives:this.data.objectives.map((o,index)=>({...o,index})),
       items:this.data.items.map((o,index)=>({...o,index,img:o.img||"icons/svg/item-bag.svg"})),
+      failureClaimed:!!((this.doc?.getFlag(ID,"failurePayouts")??[]).length || this.doc?.getFlag(ID,"activeFailureTurnIn")),
+      failurePenalties:(this.data.failurePenalties??[]).map(row=>({...row,choices:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===row.factionUuid}))})),
       renownRewards:(this.data.renownRewards??[]).map(row=>({...row,choices:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===row.factionUuid}))})),
       currencies:CURRENCIES.map(id=>({id,label:id.toUpperCase(),value:this.data.currency?.[id]??0}))};
   }
@@ -37,6 +39,11 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
       id:row.dataset.rewardId, factionUuid:row.querySelector('[data-field="faction"]')?.value??"",
       amount:Number(row.querySelector('[data-field="amount"]')?.value)
     }));
+    this.data.failurePenaltiesEnabled=Boolean(r.querySelector('[name="failurePenaltiesEnabled"]')?.checked);
+    this.data.failurePenalties=Array.from(r.querySelectorAll('.hqr-failure-penalty')).map(row=>({
+      id:row.dataset.penaltyId,factionUuid:row.querySelector('[data-field="faction"]')?.value??"",
+      amount:Number(row.querySelector('[data-field="amount"]')?.value)
+    }));
     this.data.currency=Object.fromEntries(CURRENCIES.map(k=>[k,Number(value(`currency_${k}`))||0]));
     this.data.objectives=Array.from(r.querySelectorAll(".hqr-objective")).map(row=>({text:row.querySelector('input[type="text"]').value,done:row.querySelector('input[type="checkbox"]').checked}));
     this.data.items=Array.from(r.querySelectorAll(".hqr-item-row")).map(row=>({uuid:row.querySelector('[data-field="uuid"]').value,name:row.querySelector('.hqr-item-name').textContent,img:row.querySelector('.hqr-item-img').getAttribute('src'),quantity:Math.trunc(Number(row.querySelector('[data-field="quantity"]').value))}));
@@ -44,6 +51,29 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
   }
   _onRender(){
     const root=this.element;
+    const failureEnabled=root.querySelector('[name="failurePenaltiesEnabled"]');
+    const failureSection=root.querySelector('.hqr-failure-penalty-controls');
+    failureEnabled?.addEventListener('change',()=>{if(failureSection)failureSection.hidden=!failureEnabled.checked;});
+    root.querySelector('[data-action="add-failure"]')?.addEventListener('click',()=>{
+      if(this.doc?.getFlag(ID,'activeFailureTurnIn')||(this.doc?.getFlag(ID,'failurePayouts')??[]).length)return;
+      const options=factions();
+      const used=new Set([...root.querySelectorAll('.hqr-failure-penalty [data-field="faction"]')].map(x=>x.value));
+      const faction=options.find(x=>!used.has(x.uuid));
+      if(!faction){ui.notifications.warn('All Factions already have a Failure Penalty.');return;}
+      const row=document.createElement('div');row.className='hqr-renown-reward hqr-failure-penalty';row.dataset.penaltyId=foundry.utils.randomID();
+      const label=document.createElement('label');label.className='hqr-renown-faction';label.textContent='Faction';
+      const select=document.createElement('select');select.dataset.field='faction';
+      for(const fac of options){const option=document.createElement('option');option.value=fac.uuid;option.textContent=fac.name;option.selected=fac.uuid===faction.uuid;select.append(option);}
+      label.append(select);
+      const valueLabel=document.createElement('label');valueLabel.className='hqr-renown-amount';valueLabel.textContent='Renown (negative)';
+      const amount=document.createElement('input');amount.type='number';amount.max='-1';amount.step='1';amount.dataset.field='amount';amount.value='-1';valueLabel.append(amount);
+      const remove=document.createElement('button');remove.type='button';remove.dataset.action='remove-failure';remove.title='Remove Failure Penalty';remove.innerHTML='<i class="fa-solid fa-trash"></i>';
+      row.append(label,valueLabel,remove);root.querySelector('.hqr-failure-penalties')?.append(row);
+    });
+    root.querySelector('.hqr-failure-penalties')?.addEventListener('click',event=>{
+      const button=event.target.closest('[data-action="remove-failure"]');
+      if(button && !(this.doc?.getFlag(ID,'activeFailureTurnIn')||(this.doc?.getFlag(ID,'failurePayouts')??[]).length))button.closest('.hqr-failure-penalty')?.remove();
+    });
     root.querySelector('[data-action="add-renown"]')?.addEventListener('click',()=>{
       if(((this.doc?.getFlag(ID,'payouts')??[]).length>0 || !!this.doc?.getFlag(ID,'activeTurnIn')))return;
       const options=factions();
@@ -106,6 +136,10 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
         if(CURRENCIES.some(k=>data.currency[k]<0||!Number.isInteger(data.currency[k])))throw new Error("Currency amounts must be non-negative whole numbers.");
         if(data.renownRewards.some(r=>!r.factionUuid || !Number.isInteger(r.amount)))throw new Error("Choose a Faction and an integer for every Renown reward.");
         if(new Set(data.renownRewards.map(r=>r.factionUuid)).size!==data.renownRewards.length)throw new Error("Each Faction can appear only once in Renown rewards.");
+        if(data.failurePenalties.some(r=>!r.factionUuid || !Number.isSafeInteger(r.amount)||r.amount>=0))
+          throw new Error("Failure Penalties must be negative whole Renown values linked to Factions.");
+        if(new Set(data.failurePenalties.map(r=>r.factionUuid)).size!==data.failurePenalties.length)
+          throw new Error("A Faction can appear only once in Failure Penalties.");
         const old=!!this.doc;
         this.doc=await saveQuest(this.doc,data);
         ui.notifications.info(old?"Quest saved.":"Quest created as Unavailable.");

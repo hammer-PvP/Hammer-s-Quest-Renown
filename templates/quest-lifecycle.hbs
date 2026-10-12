@@ -1,5 +1,5 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><i class="fa-solid fa-handshake"></i><div><h2>{{#if isGiving}}Quest Giving{{else}}Quest Turn-In{{/if}}</h2><p>{{name}} · {{statusLabel}}</p></div><span class="hqr-pill">GM</span></header>
+<header class="hqr-banner"><i class="fa-solid fa-handshake"></i><div><h2>{{#if isGiving}}Quest Giving{{else}}{{#if isFailure}}Failure Turn-In{{else}}Success Turn-In{{/if}}{{/if}}</h2><p>{{name}} · {{statusLabel}}</p></div><span class="hqr-pill">GM</span></header>
 <div class="hqr-scroll">
 {{#if isGiving}}
   {{#if canGive}}
@@ -11,34 +11,40 @@
   {{else}}<div class="hqr-warning">Quest Giving is unavailable while this Quest is {{statusLabel}}. The GM can change its availability from Quest Manager.</div>{{/if}}
 {{else}}
   {{#if canTurnIn}}
+    {{#if isFailure}}
+      <div class="hqr-panel hqr-failure-editor"><h3><i class="fa-solid fa-xmark"></i> Failed — Optional Penalties</h3>
+        <p class="hqr-hint">Mark chosen Characters as Failed. No Success Rewards will be granted. {{#unless hasRenown}}This Quest has no enabled Failure Penalties; only outcomes will be recorded.{{/unless}}</p>
+      </div>
+    {{else}}
     <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Each — Full Rewards per Character</h3>
       {{#each currency}}<div class="hqr-balance"><span>{{key}}</span><strong>{{amount}} each</strong></div>{{/each}}
       {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}} each</strong></div>{{/each}}
       {{#unless hasLoot}}{{#unless hasRenown}}<p class="hqr-hint">No rewards defined; Characters can still complete this Quest.</p>{{/unless}}{{/unless}}
     </div>
+    {{/if}}
     {{#if pending}}
       <div class="hqr-warning">An interrupted Turn-In is pending. Resume the original frozen recipients and rewards. Selections below are unavailable until the transaction finishes.</div>
     {{else}}
-      <div class="hqr-panel"><h3><i class="fa-solid fa-users"></i> Characters Completing Now</h3>
-        <p class="hqr-hint">Select only Characters finishing now. Completed and Failed Characters are locked; other Characters can return on a later day.</p>
+      <div class="hqr-panel"><h3><i class="fa-solid fa-users"></i> Characters {{#if isFailure}}Failing{{else}}Completing{{/if}} Now</h3>
+        <p class="hqr-hint">Select the assigned Characters receiving this outcome. Already Completed Characters remain locked. Legacy automatically failed Characters can be explicitly confirmed here.</p>
         <div class="hqr-selection-toolbar"><span><strong data-selected="participants">{{selectedCount}}</strong> / {{waitingCount}} eligible</span><div><button type="button" data-action="select-participants">Select All</button><button type="button" data-action="clear-participants">Clear Selection</button></div></div>
         <div class="hqr-people">{{#each participants}}<label class="hqr-check {{#unless eligible}}hqr-already{{/unless}}"><input type="checkbox" name="participants" value="{{id}}" {{#if checked}}checked{{/if}} {{#unless eligible}}disabled{{/unless}}><span>{{name}}</span>{{#unless eligible}}<small>{{state}}</small>{{/unless}}</label>{{else}}<p class="hqr-hint">No Characters assigned. Use Quest Giving first.</p>{{/each}}</div>
       </div>
       {{#if hasGroups}}
       <div class="hqr-panel"><h3>Represented Groups <small>(Optional)</small></h3>
-        <p class="hqr-hint">Only Groups containing selected Characters appear. Group awards are never automatic or mandatory and are issued once per Quest.</p>
+        <p class="hqr-hint">Only Groups containing selected Characters appear. Group {{#if ../isFailure}}penalties{{else}}awards{{/if}} are never automatic or mandatory and are issued at most once per Quest.</p>
         <div class="hqr-people">{{#each groups}}<label class="hqr-check {{#if credited}}hqr-already{{/if}}"><input type="checkbox" name="groups" value="{{id}}" {{#if checked}}checked{{/if}} {{#if credited}}disabled{{/if}}><span>{{name}}<small class="hqr-group-members">{{people}}</small></span>{{#if credited}}<small>Already credited</small>{{/if}}</label>{{/each}}</div>
         <p class="hqr-hint"><strong data-selected="groups">{{selectedGroupCount}}</strong> Groups selected. You may leave every Group unchecked.</p>
       </div>{{/if}}
     {{/if}}
-    {{#if hasRenown}}<div class="hqr-panel"><h3>Faction Renown Rewards</h3>
-      <p class="hqr-hint">Each selected Character receives the full signed value personally. Checked Groups receive each signed value once collectively, unless disabled for that row.</p>
+    {{#if hasRenown}}<div class="hqr-panel"><h3>{{#if isFailure}}Failure Renown Penalties{{else}}Faction Renown Rewards{{/if}}</h3>
+      <p class="hqr-hint">Each selected Character receives the configured signed value personally. Checked Groups receive it once collectively, unless disabled for that row.</p>
       {{#each renown}}<div class="hqr-turnin-renown-row" data-reward-id="{{id}}"><strong>{{factionName}}</strong><span class="{{#if positive}}hqr-positive{{else}}hqr-negative{{/if}}">{{amountLabel}}</span>
         {{#unless ../pending}}<label class="hqr-check"><input type="checkbox" name="targetPersonal" {{#if personal}}checked{{/if}}>Characters</label><label class="hqr-check"><input type="checkbox" name="targetGroup" {{#if group}}checked{{/if}}>Groups</label>{{/unless}}
       </div>{{/each}}
     </div>{{/if}}
-    <div class="hqr-panel"><button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid fa-check"></i> {{#if pending}}Resume Interrupted Turn-In{{else}}Complete & Grant Each{{/if}}</button></div>
-  {{else}}<div class="hqr-warning">This Quest is {{statusLabel}}. Turn-In is closed. Completed/Failed results remain recorded.</div>{{/if}}
+    <div class="hqr-panel"><button type="button" data-action="issue" class="hqr-primary"><i class="fa-solid {{#if isFailure}}fa-xmark{{else}}fa-check{{/if}}"></i> {{#if pending}}Resume Interrupted Turn-In{{else}}{{#if isFailure}}Mark Failed{{else}}Complete & Grant Each{{/if}}{{/if}}</button></div>
+  {{else}}<div class="hqr-warning">This Quest is {{statusLabel}}. This Turn-In is not available. Existing outcomes remain recorded.</div>{{/if}}
 {{/if}}
 </div>
 <footer class="hqr-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button>{{#if isGiving}}{{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Give Quest — Accepted</button>{{/if}}{{/if}}</footer>

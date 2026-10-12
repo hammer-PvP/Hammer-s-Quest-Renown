@@ -37,9 +37,12 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
       }
       const canGive=status==="available";
       const canTurnIn=canGive && (counts.active>0 || !!q.getFlag(ID,"activeTurnIn"));
-      const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||counts.failed>0;
+      const failPending=!!q.getFlag(ID,"activeFailureTurnIn");
+      const canFail=(status==="available"||status==="inactive") &&
+        (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
+      const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
       return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status.replaceAll("-"," "),
-        total:assignees.length,...counts,canGive,canTurnIn,hasHistory,
+        total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
     return {entries,query:this.search,total:entries.length};
@@ -62,13 +65,13 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(action==="open")journal.sheet?.render(true);
         else if(action==="give")new QuestLifecycleApp(journal,"giving").render(true);
         else if(action==="turnin")new QuestLifecycleApp(journal,"turnin").render(true);
+        else if(action==="fail")new QuestLifecycleApp(journal,"failure").render(true);
         else if(action==="results")new QuestResultsApp(journal).render(true);
         else if(["available","unavailable","inactive"].includes(action)){
           if(action==="inactive"){
-            const pending=(journal.getFlag(ID,"assignees")??[]).filter(id=>!["completed","failed"].includes(journal.getFlag(ID,"progress")?.[id]?.status));
             const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Inactivate Quest"},
-              content:`<p>Mark <strong>${esc(journal.name)}</strong> Inactive?</p><p><strong>${pending.length} unfinished Character(s)</strong> will be marked Failed. Completed Characters keep their results. Journal and history remain available.</p>`,
-              yes:{label:"Inactivate & Mark Failed"},no:{label:"Cancel"}});
+              content:`<p>Archive <strong>${esc(journal.name)}</strong> in the <strong>Inativas</strong> folder?</p><p>Assigned Characters keep their existing outcomes. <strong>No one is marked Failed automatically.</strong> Use the separate Failure Turn-In to record a failure.</p>`,
+              yes:{label:"Inactivate (No Automatic Failure)"},no:{label:"Cancel"}});
             if(!yes)return;
           }
           await setQuestAvailability(journal,action);await this.render();
