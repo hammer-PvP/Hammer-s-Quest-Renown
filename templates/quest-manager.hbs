@@ -11,6 +11,7 @@
  {{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Quest Giving</button>{{/if}}
  {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}
  {{#if canFail}}<button type="button" class="hqr-danger-action" data-action="fail"><i class="fa-solid fa-xmark"></i> Fail Turn-In</button>{{/if}}
+ {{#if hasUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}
  {{#if hasHistory}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}
  </div>
 </article>{{else}}<div class="hqr-panel"><p>No Quests yet. Create one to begin.</p></div>{{/each}}

@@ -11,13 +11,29 @@ export function renderQuestStatus(app,html){
   if(source?.documentName==="JournalEntryPage" && source.getFlag(ID,"gmOnly"))return;
   const root=html?.[0]??html??app.element;
   if(!(root instanceof HTMLElement))return;
-  const content=root.querySelector(".journal-entry-content, .journal-entry-page, .journal-entry-page-content, .window-content")??root;
-  if(!(content instanceof HTMLElement))return;
-  let panel=root.querySelector("[data-hqr-quest-status]");
+  // Never fall back to .window-content or the Journal chrome: V14 renders
+  // full Journal sheets AND partial pages through different hooks. In v0.0.7
+  // that fallback could insert a second stamp on top of the window controls.
+  // Only the shared PUBLIC Quest Briefing HTML is a legal mount point.
+  const questSections=[...root.querySelectorAll("section.hqr-journal")];
+  const content=questSections.find(el=>el.offsetParent!==null)??questSections[0];
+  const existing=[...root.querySelectorAll("[data-hqr-quest-status]")];
+  if(!content){
+    // Remove orphan panels left behind by a prior/partial render, but do not
+    // create anything until the actual Quest Briefing has been mounted.
+    for(const orphan of existing)orphan.remove();
+    return;
+  }
+  let panel=existing.find(el=>el.parentElement===content)??null;
+  const oldActorId=existing.find(el=>el.dataset.actorId)?.dataset.actorId;
+  for(const orphan of existing)if(orphan!==panel)orphan.remove();
   if(!panel){
     panel=document.createElement("section");
     panel.className="hqr-personal-quest-state";panel.dataset.hqrQuestStatus="";
-    content.prepend(panel);
+    // Mount directly inside the authored Quest page, just after the title.
+    const heading=content.querySelector(":scope > h1");
+    if(heading)heading.after(panel);else content.prepend(panel);
+    if(oldActorId)panel.dataset.actorId=oldActorId;
   }
   // This is not a permission mechanism; a player sees only accessible Journal pages.
   const allowed=(doc.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(actor=>

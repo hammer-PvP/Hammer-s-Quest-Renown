@@ -3,6 +3,7 @@ import {setQuestAvailability} from "../services/documents.mjs";
 import {QuestApp} from "./quest-app.mjs";
 import {QuestLifecycleApp} from "./quest-lifecycle-app.mjs";
 import {QuestResultsApp} from "./quest-results-app.mjs";
+import {FailureReversalApp} from "./failure-reversal-app.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
 export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
   static DEFAULT_OPTIONS={classes:["hqr-app","hqr-quest-manager"],position:{width:870,height:780},window:{title:"Quest Manager",resizable:true},tag:"section"};
@@ -41,8 +42,9 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
       const canFail=(status==="available"||status==="inactive") &&
         (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
       const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
+      const hasUndo=counts.failed>0 || !!q.getFlag(ID,"activeFailureReversal");
       return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status.replaceAll("-"," "),
-        total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,
+        total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,hasUndo,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
     return {entries,query:this.search,total:entries.length};
@@ -67,6 +69,7 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(action==="turnin")new QuestLifecycleApp(journal,"turnin").render(true);
         else if(action==="fail")new QuestLifecycleApp(journal,"failure").render(true);
         else if(action==="results")new QuestResultsApp(journal).render(true);
+        else if(action==="undo-failure")new FailureReversalApp(journal).render(true);
         else if(["available","unavailable","inactive"].includes(action)){
           if(action==="inactive"){
             const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Inactivate Quest"},

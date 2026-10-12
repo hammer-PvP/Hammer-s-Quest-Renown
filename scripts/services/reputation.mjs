@@ -34,6 +34,7 @@ export async function awardQuest(doc,options={}) {
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Not a Quest journal.");
   if(doc.getFlag(ID,"status")!=="available")throw new Error("Quest must be Available for Turn-In.");
   if(doc.getFlag(ID,"activeFailureTurnIn"))throw new Error("Resume the pending Failure Turn-In before completing a Quest.");
+  if(doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resume the pending Undo Failure first.");
   const pending=doc.getFlag(ID,"activeTurnIn");
   let plan=pending;
   if(!plan){
@@ -112,7 +113,7 @@ export async function awardQuest(doc,options={}) {
   for(const id of plan.groups)groupAwards[id]={payoutId:plan.id,at};
   const payouts=[...(doc.getFlag(ID,"payouts")??[]),{...plan,completedAt:at}];
   await doc.update({[`flags.${ID}.progress`]:progress,[`flags.${ID}.groupAwards`]:groupAwards,
-    [`flags.${ID}.payouts`]:payouts,[`flags.${ID}.-=activeTurnIn`]:null});
+    [`flags.${ID}.payouts`]:payouts,[`flags.${ID}.activeTurnIn`]:new foundry.data.operators.ForcedDeletion()});
   await reconcileAccess();
   ui.notifications.info(`Quest rewards delivered to ${plan.participants.length} Character(s): ${doc.name}.`);
   return true;
@@ -128,6 +129,7 @@ export async function failQuest(doc, options={}) {
   if(!["available","inactive"].includes(doc.getFlag(ID,"status")))
     throw new Error("Only Available or Inactive Quests can record a Failure Turn-In.");
   if(doc.getFlag(ID,"activeTurnIn"))throw new Error("Resume the pending Success Turn-In first.");
+  if(doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resume the pending Undo Failure first.");
   let plan=doc.getFlag(ID,"activeFailureTurnIn");
   if(!plan){
     const progress=doc.getFlag(ID,"progress")??{};
@@ -154,7 +156,7 @@ export async function failQuest(doc, options={}) {
     }
     if(groups.length&&!rows.some(r=>r.group))
       throw new Error("No Group Failure Penalty is enabled. Uncheck Groups for a no-penalty failure.");
-    plan={id:foundry.utils.randomID(),participants,groups,rows,
+    plan={id:foundry.utils.randomID(),keyVersion:2,participants,groups,rows,
       createdAt:new Date().toISOString(),gmUserId:game.user.id};
     await doc.setFlag(ID,"activeFailureTurnIn",plan);
   }
@@ -164,7 +166,7 @@ export async function failQuest(doc, options={}) {
     if(!actor || actor.type!=="character")throw new Error(`Missing failed Character ${id}`);
     for(const row of plan.rows){
       if(row.personal)await adjust(actor,row.factionUuid,row.amount,`Quest failed: ${doc.name}`,
-        {source:doc.uuid,key:`quest:${doc.uuid}:failure:${row.id}:${actor.id}`,reconcile:false});
+        {source:doc.uuid,key:Number(plan.keyVersion)>=2?`quest:${doc.uuid}:failure:${plan.id}:${row.id}:${actor.id}`:`quest:${doc.uuid}:failure:${row.id}:${actor.id}`,reconcile:false});
     }
   }
   for(const id of plan.groups){
@@ -172,7 +174,7 @@ export async function failQuest(doc, options={}) {
     if(group?.type!=="group")throw new Error(`Missing represented Group ${id}`);
     for(const row of plan.rows){
       if(row.group)await adjust(group,row.factionUuid,row.amount,`Quest failed: ${doc.name}`,
-        {source:doc.uuid,key:`quest:${doc.uuid}:failure:${row.id}:${group.id}`,reconcile:false});
+        {source:doc.uuid,key:Number(plan.keyVersion)>=2?`quest:${doc.uuid}:failure:${plan.id}:${row.id}:${group.id}`:`quest:${doc.uuid}:failure:${row.id}:${group.id}`,reconcile:false});
     }
   }
   const at=new Date().toISOString();
@@ -180,13 +182,13 @@ export async function failQuest(doc, options={}) {
   for(const id of plan.participants){
     const former=progress[id]??{};
     progress[id]={...former,status:"failed",failedAt:at,failurePayoutId:plan.id,
-      reason:"Quest Failure Turn-In",...(former.reason==="Quest became Inactive"?{legacyAutoFailedAt:former.failedAt}: {})};
+      reason:"Quest Failure Turn-In",previousStatus:["accepted","in-progress"].includes(former.status)?former.status:"accepted",...(former.reason==="Quest became Inactive"?{legacyAutoFailedAt:former.failedAt}: {})};
   }
   const groupFailures={...(doc.getFlag(ID,"groupFailures")??{})};
   for(const id of plan.groups)groupFailures[id]={payoutId:plan.id,at};
   const failurePayouts=[...(doc.getFlag(ID,"failurePayouts")??[]),{...plan,failedAt:at}];
   await doc.update({[`flags.${ID}.progress`]:progress,[`flags.${ID}.groupFailures`]:groupFailures,
-    [`flags.${ID}.failurePayouts`]:failurePayouts,[`flags.${ID}.-=activeFailureTurnIn`]:null});
+    [`flags.${ID}.failurePayouts`]:failurePayouts,[`flags.${ID}.activeFailureTurnIn`]:new foundry.data.operators.ForcedDeletion()});
   await reconcileAccess();
   ui.notifications.info(`Quest failure recorded for ${plan.participants.length} Character(s): ${doc.name}.`);
   return true;

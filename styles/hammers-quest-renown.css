@@ -201,3 +201,13 @@
 .hqr-app .hqr-failure-editor{border-color:#825050}
 .hqr-app .hqr-record-actions .hqr-danger-action{background:#573035;border-color:#9c5454;color:#f6dad9}
 .hqr-app .hqr-record-actions .hqr-danger-action:hover{background:#77363d}
+
+/* v0.0.8: outcome exists ONLY inside the Quest Briefing, never Journal chrome. */
+section.hqr-journal > .hqr-personal-quest-state{position:relative!important;inset:auto!important;transform:none!important;z-index:auto!important;clear:both;max-width:100%;overflow:hidden}
+section.hqr-journal > .hqr-personal-quest-state .hqr-outcome-stamp{position:static!important;inset:auto!important;transform:none!important}
+.hqr-undo-failure .hqr-reversal-list{display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto;scrollbar-width:thin}
+.hqr-undo-failure .hqr-reversal-person{display:flex!important;align-items:center;min-width:0;gap:10px;flex:0 0 auto}
+.hqr-undo-failure .hqr-reversal-person>span{min-width:0;white-space:normal;overflow-wrap:anywhere}
+.hqr-undo-failure .hqr-reversal-person small{display:block;color:#c0b7aa;font-weight:400;font-size:10px}
+.hqr-undo-failure .hqr-reversal-warning{border-color:#b87548;background:#2b2420}
+.hqr-results .hqr-reversal-audit{border-color:#719274}

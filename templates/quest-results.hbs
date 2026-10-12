@@ -14,10 +14,15 @@
     <p><strong>Failed Characters:</strong> {{participants}}</p><p><strong>Represented Groups:</strong> {{groups}}</p>
     {{#each renown}}<div class="hqr-balance"><span>{{faction}}</span><span>{{amount}} · {{#if personal}}Characters{{/if}} {{#if group}}Groups{{/if}}</span></div>{{else}}<p class="hqr-hint">No failure penalties configured — outcome only.</p>{{/each}}
   </div>{{/each}}
+  {{#each reversalRows}}
+  <div class="hqr-panel hqr-reversal-audit"><h3><i class="fa-solid fa-rotate-left"></i> Failure Correction · {{at}}</h3>
+    <p><strong>Restored:</strong> {{characters}}</p><p><strong>Group penalty corrections:</strong> {{groups}}</p>
+    <p><strong>Reason:</strong> {{reason}}</p><p class="hqr-hint">{{penalties}} penalty transaction(s) offset; original history retained.</p>
+  </div>{{/each}}
   <div class="hqr-panel"><h3>Each — Rewards Defined</h3>
     {{#each currency}}<div class="hqr-balance"><span>{{name}}</span><strong>{{amount}} per Character</strong></div>{{/each}}
     {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}} per Character</strong></div>{{/each}}
   </div>
 </div>
-<footer class="hqr-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button></footer>
+<footer class="hqr-actions">{{#if canUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}<button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button></footer>
 </div>

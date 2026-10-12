@@ -251,7 +251,7 @@ export async function setQuestAvailability(doc, status) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
   if(!["available","unavailable","inactive"].includes(status))throw new Error("Invalid Quest availability.");
-  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn"))throw new Error("Resolve the interrupted Turn-In before changing availability.");
+  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn") || doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resolve the pending Turn-In or Undo Failure before changing availability.");
   // Availability is not a per-Character outcome. Never auto-fail recipients.
   // In particular, preserve all Completed and historical Failed records in production.
   const faction=getFaction(doc.getFlag(ID,"factionUuid"));
@@ -272,6 +272,7 @@ export async function giveQuest(doc,{assignees}={}) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
   if(doc.getFlag(ID,"status")!=="available")throw new Error("Only Available Quests can be given.");
+  if(doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resume pending Undo Failure before Giving this Quest.");
   const ids=[...new Set(assignees??[])];
   if(!ids.length||ids.some(id=>!eligible(game.actors.get(id))))
     throw new Error("Select at least one eligible Character with an explicit non-GM Owner.");

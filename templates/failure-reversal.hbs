@@ -1,0 +1,35 @@
+<div class="hqr-shell">
+  <header class="hqr-banner"><i class="fa-solid fa-rotate-left"></i><div><h2>Undo Failure</h2><p>{{name}} · GM-only production-safe correction</p></div><span class="hqr-pill">GM</span></header>
+  <div class="hqr-scroll">
+    {{#if pending}}
+      <section class="hqr-panel hqr-reversal-warning">
+        <h3><i class="fa-solid fa-triangle-exclamation"></i> Interrupted reversal</h3>
+        <p>A correction is waiting to finish: {{pendingCharacters}} Character(s), {{pendingGroups}} Group(s). The original recipients are frozen. Resume it before making another change to this Quest.</p>
+        <p>Already written compensation entries will <strong>not</strong> be paid again.</p>
+      </section>
+    {{else}}
+      <section class="hqr-panel"><h3>Failed Characters</h3>
+        <p class="hqr-hint">Select only the mistaken outcomes. Their previous status is restored (Accepted for legacy failures). Completed Characters are never modified.</p>
+        <div class="hqr-selection-toolbar"><strong>{{selectedCount}} / {{total}} selected</strong><div>
+          <button type="button" data-action="all">Select All Failed</button><button type="button" data-action="clear">Clear</button>
+        </div></div>
+        <div class="hqr-reversal-list">
+          {{#each characters}}<label class="hqr-check hqr-reversal-person"><input type="checkbox" name="undoCharacters" value="{{id}}" {{#if checked}}checked{{/if}}><span>{{name}} <small>{{#if legacy}}Legacy / no penalty run{{else}}Failure Turn-In{{/if}}</small></span></label>
+          {{else}}<p class="hqr-hint">This Quest has no failed Characters to restore.</p>{{/each}}
+        </div>
+      </section>
+      <section class="hqr-panel"><h3>Group Renown Penalties — Optional</h3>
+        <p class="hqr-hint">Characters are independent from Groups. Check a Group only when its collective failure penalty should also be compensated. Groups cannot be reversed while another member from that Failure Turn-In remains Failed.</p>
+        <div class="hqr-reversal-list">
+          {{#each groups}}<label class="hqr-check hqr-reversal-person"><input type="checkbox" name="undoGroups" value="{{id}}" {{#unless available}}disabled{{/unless}} {{#if checked}}checked{{/if}}><span>{{name}} <small>{{note}}</small></span></label>
+          {{else}}<p class="hqr-hint">No Group penalty available for the selected Characters.</p>{{/each}}
+        </div>
+      </section>
+      <section class="hqr-panel"><h3>Reason for Correction (required)</h3>
+        <textarea rows="3" name="undoReason" placeholder="Example: The Fail Turn-In was clicked accidentally. This Quest is still active.">{{reason}}</textarea>
+        <p class="hqr-hint">The original Failure Turn-In and penalty records stay in history. Any applied penalty is offset by a traceable reversal entry. Nothing is removed from other Quests.</p>
+      </section>
+    {{/if}}
+  </div>
+  <footer class="hqr-actions"><button type="button" class="hqr-primary" data-action="undo"><i class="fa-solid fa-rotate-left"></i> {{#if pending}}Resume Undo Failure{{else}}Undo Selected Failures{{/if}}</button></footer>
+</div>

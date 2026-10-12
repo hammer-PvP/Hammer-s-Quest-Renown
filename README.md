@@ -9,6 +9,19 @@ Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entrie
 - **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
 - **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
 
+## v0.0.8 — Production hotfix: Undo Failure & Journal Seal Layout
+
+**Upgrade from v0.0.7 without recreating Quests, Factions, Actors or Journal pages.** Back up the production World before enabling the update. This update is additive and does not rewrite existing `Completed` outcomes, currency/item receipts, historical Failure Turn-Ins, or Actor Renown ledgers.
+
+- **Undo Failure (GM only):** Open Quest Manager → `Undo Failure`, or Quest Results → `Undo Failure`. Choose individual Failed Characters (or `Select All Failed`), provide a required correction reason and confirm. The selected Characters are restored to **Accepted** when v0.0.7 did not record their previous status, or to their recorded prior `Accepted`/`In Progress` status when available. Their existing assignments and Observer Journal access are preserved. If the Quest is globally Inactive, make it Available separately before accepting a Success Turn-In.
+- **Recover accidental seven-Character failures:** The same correction can restore all seven Characters for a Quest such as *A Lâmina dos Ecos Perdidos*, leaving other Quests and previous Completed Characters untouched.
+- **Safe Penalty Compensation:** Original negative Renown entries are retained for audit; verified penalties incurred from the exact Failure Turn-In receive uniquely keyed positive compensating entries. Group penalties are not reversed automatically—select the affected Group explicitly if permitted. No penalty is invented when the Quest had none.
+- **Interrupted correction recovery:** A frozen `activeFailureReversal` is stored before any Actor is modified. If interrupted, re-open Undo Failure and choose **Resume Undo Failure**; recorded compensation keys are reused so a reward cannot be returned twice. A pending Undo blocks concurrent Success/Failure Turn-In processing on that Quest.
+- **Journal stamp visual fix:** Only one personalized status panel is inserted, anchored inside the public Quest Briefing document, instead of allowing fallback insertion into the Journal window chrome. The old stray Completed/Failed icon near the top-right window controls must not be recreated. CSS anchors seal elements inside the authorized panel.
+- **Preserved history:** `failurePayouts` remains unchanged. Reversal details are appended to `failureReversals`, while a selected Character's progress changes from Failed back to an unfinished state. The original failure remains visible in the historical audit trail.
+
+**Validation:** isolated smoke tests cover seven-Character Undo, ledger compensation, optional Group compensation safeguards, F5/restart-style interruption recovery, double-Undo prevention, and issuing a *new* Failure Turn-In after a completed reversal. The Journal mount was code-reviewed; actual in-Foundry UI verification is still required.
+
 ## v0.0.7 — Production-safe Failure Turn-In & Inactive Journals
 
 **Upgrade from production v0.0.6 without recreating Quests, Factions, Actors, Journals or previous Success payouts.** Make a full backup of your production World with Foundry stopped before upgrading. The hidden world schema setting `dataVersion` migrates idempotently from **1 to 2**.
