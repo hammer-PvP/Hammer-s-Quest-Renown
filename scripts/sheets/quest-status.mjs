@@ -1,5 +1,5 @@
 import {ID,esc,eligible} from "../constants.mjs";
-import {progressOf} from "../services/documents.mjs";
+import {progressOf,getFaction} from "../services/documents.mjs";
 
 /** Adds a per-Character read-only outcome to the native Journal sheet.
  * The page text itself remains shared; no per-user Journal duplication or GM-secret disclosure.
@@ -35,6 +35,13 @@ export function renderQuestStatus(app,html){
     if(heading)heading.after(panel);else content.prepend(panel);
     if(oldActorId)panel.dataset.actorId=oldActorId;
   }
+  // Legacy Quest Briefings store global availability. Display contextual status
+  // without rewriting or migrating the shared Journal page content.
+  const subtitle=content.querySelector(":scope > .hqr-journal-subtitle");
+  const factionLabel=getFaction(doc.getFlag(ID,"factionUuid"))?.name??"No Faction";
+  if(subtitle)subtitle.textContent=game.user.isGM
+    ? `${factionLabel} · ${doc.getFlag(ID,"status")==="inactive"?"Finished":doc.getFlag(ID,"status")??"Unavailable"}`
+    : factionLabel;
   // This is not a permission mechanism; a player sees only accessible Journal pages.
   const allowed=(doc.getFlag(ID,"assignees")??[]).map(id=>game.actors.get(id)).filter(actor=>
     actor?.type==="character"&&(game.user.isGM||Number(actor.ownership?.[game.user.id])===CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
@@ -54,6 +61,7 @@ export function renderQuestStatus(app,html){
     const actor=allowed.find(a=>a.id===selected);
     if(!actor)return;
     const progress=progressOf(doc,actor.id);
+    if(subtitle)subtitle.textContent=`${factionLabel} · ${progress==="in-progress"?"In Progress":progress.charAt(0).toUpperCase()+progress.slice(1)}`;
     const stateLabel={completed:"QUEST COMPLETED",failed:"QUEST FAILED","in-progress":"IN PROGRESS",accepted:"QUEST ACCEPTED"};
     const stamp=progress==="completed"?"completed":progress==="failed"?"failed":null;
     const seal=stamp?`<span class="hqr-outcome-stamp hqr-stamp-${stamp}" role="img" aria-label="${esc(stateLabel[progress])}"></span>`:"";

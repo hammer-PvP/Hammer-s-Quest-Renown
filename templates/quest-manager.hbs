@@ -1,13 +1,13 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>One Journal, individual progress and Each rewards. Inactive quests remain archived.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
+<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>One Journal, individual progress and Each rewards. Finished quests remain archived, with individual outcomes preserved.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
 <div class="hqr-toolbar"><label>Filter Quests<input type="search" name="filter" placeholder="Search by name, faction or status..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="refresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
 <div class="hqr-scroll">
 {{#each entries}}<article class="hqr-quest-record hqr-panel" data-quest-id="{{id}}">
  <div class="hqr-record-heading"><div><h3>{{name}}</h3><p class="hqr-hint">{{faction}} · {{completed}} Completed · {{failed}} Failed · {{active}} Active ({{total}} assigned)</p></div><span class="hqr-pill">{{statusLabel}}</span></div>
  <div class="hqr-record-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
- {{#if canMakeAvailable}}<button type="button" data-action="available"><i class="fa-solid fa-lock-open"></i> Make Available</button>{{/if}}
+ {{#if canMakeAvailable}}<button type="button" data-action="available"><i class="fa-solid fa-lock-open"></i> {{#if isInactive}}Reopen (Available){{else}}Make Available{{/if}}</button>{{/if}}
  {{#if canMakeUnavailable}}<button type="button" data-action="unavailable"><i class="fa-solid fa-lock"></i> Make Unavailable</button>{{/if}}
- {{#if canMakeInactive}}<button type="button" data-action="inactive"><i class="fa-solid fa-hourglass-end"></i> Inactivate</button>{{/if}}
+ {{#if canMakeInactive}}<button type="button" data-action="inactive"><i class="fa-solid fa-hourglass-end"></i> Finish Quest</button>{{/if}}
  {{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Quest Giving</button>{{/if}}
  {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}
  {{#if canFail}}<button type="button" class="hqr-danger-action" data-action="fail"><i class="fa-solid fa-xmark"></i> Fail Turn-In</button>{{/if}}

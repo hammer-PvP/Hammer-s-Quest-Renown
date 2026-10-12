@@ -43,7 +43,7 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
       const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
       const hasUndo=counts.failed>0 || !!q.getFlag(ID,"activeFailureReversal");
-      return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status.replaceAll("-"," "),
+      return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status==="inactive"?"Finished":status.replaceAll("-"," "),
         total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,hasUndo,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
@@ -72,9 +72,9 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(action==="undo-failure")new FailureReversalApp(journal).render(true);
         else if(["available","unavailable","inactive"].includes(action)){
           if(action==="inactive"){
-            const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Inactivate Quest"},
-              content:`<p>Archive <strong>${esc(journal.name)}</strong> in the <strong>Inativas</strong> folder?</p><p>Assigned Characters keep their existing outcomes. <strong>No one is marked Failed automatically.</strong> Use the separate Failure Turn-In to record a failure.</p>`,
-              yes:{label:"Inactivate (No Automatic Failure)"},no:{label:"Cancel"}});
+            const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Finish Quest"},
+              content:`<p>Move <strong>${esc(journal.name)}</strong> to <strong>Hammer's Quests / Finished</strong>?</p><p>Assigned Characters keep their existing outcomes. <strong>No one is marked Failed automatically.</strong> Use the separate Failure Turn-In to record a failure.</p>`,
+              yes:{label:"Finish Quest (No Automatic Failure)"},no:{label:"Cancel"}});
             if(!yes)return;
           }
           await setQuestAvailability(journal,action);await this.render();

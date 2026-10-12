@@ -9,7 +9,7 @@ import {adjust, historyFor} from "./reputation.mjs";
 
 export const BATCH_SETTING = "pendingRenownBatch";
 export const SCHEMA_SETTING = "dataVersion";
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 let running = false;
 export const isRenownBatchRunning = () => running;
 
@@ -31,7 +31,8 @@ export async function migrateReputationSchema() {
   if (!Number.isInteger(current) || current < 0 || current > SCHEMA_VERSION)
     throw new Error(`Unsupported Renown data version: ${current}. No data was changed.`);
   if (current === SCHEMA_VERSION) return false;
-  // v3 adds optional per-Quest Failure Reversal audit/pending flags; absent means empty.
+  // v4 replaces legacy Faction/Inativas subfolders with Active/Finished.
+  // v3 added optional per-Quest Failure Reversal audit/pending flags; absent means empty.
   // No existing journal progress, result or Actor ledger is rewritten.
   // Do NOT rewrite per-Character progress: Completed and legacy Failed outcomes survive.
   // Existing Journal IDs/UUIDs, quest payouts and Actor ledgers stay untouched.

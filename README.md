@@ -9,6 +9,17 @@ Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entrie
 - **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
 - **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
 
+## v0.0.9 — Active / Finished Journal Directories (Production-safe Migration)
+
+**Upgrades existing v0.0.8 campaign data without rebuilding Journals.** Make a full offline World backup before enabling. Migration runs on GM startup and advances hidden `dataVersion` from **3 to 4** only after completion; repeated starts are safe.
+
+- **New folder layout:** `Hammer's Factions` contains Faction Journals; `Hammer's Quests / Active` contains Available and Unavailable Quests; `Hammer's Quests / Finished` contains administratively Inactive Quests **regardless of each Character's Completed/Failed result**. Quest owner Faction remains a Journal UUID reference, no longer a folder.
+- **GM closes a Quest explicitly:** `Finish Quest` changes global availability to the existing internal `inactive` status, moving the same Journal into `Finished`. `Reopen (Available)` returns it to `Active`. Finishing a Quest **never automatically marks pending Characters Failed** or applies Failure Penalties. The separate Fail Turn-In and Undo Failure from v0.0.8 remain intact.
+- **Folder root rename:** when possible, existing `Quests - Hammer's Quest & Renown` and `Factions - Hammer's Quest & Renown` folders are renamed in-place, preserving native Folder IDs and Journal IDs. If a new root already exists, module Journals are relocated into it. Empty recognized old faction/`Inativas` subfolders are cleaned up bottom-up; any folder containing other documents or custom child folders is preserved.
+- **Scope:** only JournalEntries with `flags.hammer-s-quest-renown.kind` = `quest` or `faction` are moved. Migration does not rewrite descriptions, pages, objectives, individual progress, payout records, Actor ledgers, Renown, or permissions. Reopening a Quest does not undo individual Completed/Failed states.
+- **Native colors:** Quests root `#ab960d`, `Active`/`Finished` `#776809`, Factions root `#890b1e`. No dependency on Character Builder.
+- **Validation required:** check one existing Active, Finished, Completed, Failed and Undo Failure case in your real World. A successful static simulation does not replace live Foundry V14 verification.
+
 ## v0.0.8 — Production hotfix: Undo Failure & Journal Seal Layout
 
 **Upgrade from v0.0.7 without recreating Quests, Factions, Actors or Journal pages.** Back up the production World before enabling the update. This update is additive and does not rewrite existing `Completed` outcomes, currency/item receipts, historical Failure Turn-Ins, or Actor Renown ledgers.

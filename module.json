@@ -1,8 +1,8 @@
 {
   "id": "hammer-s-quest-renown",
   "title": "Hammer's Quest & Renown",
-  "description": "Native Foundry Quest & Faction Journals, per-Actor Renown, Each rewards, safe Failure Turn-In reversal and production-compatible data migrations for D&D5e 6.x.",
-  "version": "0.0.8",
+  "description": "Native Foundry Faction & Quest Journals with Active/Finished organization, per-Actor Renown, safe Failure reversal and production-compatible migrations for D&D5e 6.x.",
+  "version": "0.0.9",
   "authors": [
     {
       "name": "Raphael Andrade"
@@ -42,7 +42,7 @@
   "readme": "README.md",
   "url": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown",
   "manifest": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json",
-  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.8/hammer-s-quest-renown.zip",
+  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.0.9/hammer-s-quest-renown.zip",
   "bugs": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/issues",
-  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.8"
+  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.0.9"
 }

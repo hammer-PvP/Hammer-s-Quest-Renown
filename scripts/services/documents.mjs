@@ -1,7 +1,9 @@
-import {ID,FOLDER_FACTIONS,FOLDER_QUESTS,DEFAULT_RANKS,assertGM,esc,htmlText,factions,ownerUsers,eligible,groupMembers,CURRENCIES} from "../constants.mjs";
+import {ID,FOLDER_FACTIONS,FOLDER_QUESTS,LEGACY_FOLDER_FACTIONS,LEGACY_FOLDER_QUESTS,DEFAULT_RANKS,assertGM,esc,htmlText,factions,ownerUsers,eligible,groupMembers,CURRENCIES} from "../constants.mjs";
 
-export const COLORS = Object.freeze({questRoot:"#ab960d",questFaction:"#776809",factionRoot:"#890b1e",inactive:"#5a500b"});
-export const INACTIVE_FOLDER = "Inativas";
+export const COLORS = Object.freeze({questRoot:"#ab960d",questCategory:"#776809",factionRoot:"#890b1e"});
+export const ACTIVE_FOLDER = "Active";
+export const FINISHED_FOLDER = "Finished";
+const LEGACY_INACTIVE_FOLDER = "Inativas";
 const OWN_NONE = CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE;
 const OWN_OBSERVER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
 let syncing = false;
@@ -12,53 +14,89 @@ const pageText = (name, html, gmOnly=false) => ({
 });
 function docPage(doc, isGMPage) { return doc.pages.find(p=>Boolean(p.getFlag(ID,"gmOnly"))===isGMPage); }
 export function getFaction(uuid) { return factions().find(f=>f.uuid===uuid) ?? null; }
+const directFolder = (name,parent=null) => game.folders.find(f=>f.type==="JournalEntry" && f.name===name && (f.folder?.id??null)===(parent?.id??null));
 export async function ensureFolder(name, parent=null, color=null) {
   assertGM();
-  const folder = game.folders.find(f=>f.type==="JournalEntry" && f.name===name && (f.folder?.id??null)===(parent?.id??null));
+  const folder = directFolder(name,parent);
   if(folder){
-    // Managed folders only: do not alter arbitrary Journal folders elsewhere in the World.
     if(color && String(folder.color??"").toLowerCase()!==color)await folder.update({color});
     return folder;
   }
   return Folder.create({name,type:"JournalEntry",folder:parent?.id??null,...(color?{color}:{})});
 }
+/** Prefer renaming the existing module root: this retains native Folder IDs and
+ * preserves user sorting/expansion. If both old and new exist, use the new one;
+ * the old root is pruned only after its documents and children are relocated.
+ */
+async function moduleRoot(name,legacyName,color){
+  const existing=directFolder(name);
+  if(existing)return ensureFolder(name,null,color);
+  const legacy=directFolder(legacyName);
+  if(legacy){await legacy.update({name,color});return legacy;}
+  return ensureFolder(name,null,color);
+}
 export async function roots() {
-  return { factions:await ensureFolder(FOLDER_FACTIONS,null,COLORS.factionRoot),
-    quests:await ensureFolder(FOLDER_QUESTS,null,COLORS.questRoot) };
+  assertGM();
+  return {factions:await moduleRoot(FOLDER_FACTIONS,LEGACY_FOLDER_FACTIONS,COLORS.factionRoot),
+    quests:await moduleRoot(FOLDER_QUESTS,LEGACY_FOLDER_QUESTS,COLORS.questRoot)};
 }
-export async function questFolder(faction, status="available") {
-  if(!faction)throw new Error("The Quest's Faction is missing.");
-  const root=(await roots()).quests;
-  const factionFolder=await ensureFolder(faction.name,root,COLORS.questFaction);
-  return status==="inactive" ? ensureFolder(INACTIVE_FOLDER,factionFolder,COLORS.inactive) : factionFolder;
+/** Administrative state controls a Quest's single native folder.
+ * Character results are individual and NEVER determine physical Journal location.
+ * The faction argument remains accepted for backwards module API compatibility.
+ */
+export async function questFolder(_faction, status="available") {
+  const {quests:root}=await roots();
+  return ensureFolder(status==="inactive"?FINISHED_FOLDER:ACTIVE_FOLDER,root,COLORS.questCategory);
 }
-/** Idempotent repair of managed folder colors and placement, retaining Journal IDs/UUIDs.
- * Move only managed Quest Journals with resolvable Faction references.
+function folderDepth(folder){let depth=0;const visited=new Set();for(let p=folder?.folder;p&&!visited.has(p.id);p=p.folder){visited.add(p.id);depth++;}return depth;}
+function within(folder,root){const seen=new Set();for(let p=folder;p&&!seen.has(p.id);p=p.folder){if(p.id===root.id)return true;seen.add(p.id);}return false;}
+function emptyFolder(folder){return !game.journal.some(j=>j.folder?.id===folder.id) &&
+  !game.folders.some(child=>child.folder?.id===folder.id);}
+/** Idempotent, production-safe v4 folder migration.
+ * Only module-flagged Faction/Quest JournalEntry documents may be moved.
+ * Journal IDs, page contents, permissions, progress, ledgers and payout receipts
+ * are untouched. Empty, known legacy folders are removed bottom-up only when
+ * they have no Journal and no child folder. Failures leave the migration retryable.
  */
 export async function synchronizeQuestFolders(){
   assertGM();
-  await roots();
-  for(const faction of factions()){
-    const parent=(await roots()).quests;
-    await ensureFolder(faction.name,parent,COLORS.questFaction);
-  }
-  const questRoot=game.folders.find(f=>f.type==="JournalEntry"&&f.name===FOLDER_QUESTS&& !f.folder);
-  for(const journal of game.journal.filter(j=>j.getFlag(ID,"kind")==="quest")){
-    const faction=getFaction(journal.getFlag(ID,"factionUuid"));
-    if(!faction){console.warn(`${ID} | Cannot organize Quest without Faction: ${journal.name}`);continue;}
-    const current=journal.folder;
-    // Preserve any deliberately custom filing of a managed Quest elsewhere.
-    // Only normalize documents currently placed within the module's recognized hierarchy.
-    const inManagedLocation=!!current && (current.id===questRoot?.id ||
-      current.folder?.id===questRoot?.id ||
-      (current.name===INACTIVE_FOLDER && current.folder?.folder?.id===questRoot?.id));
-    if(!inManagedLocation){
-      console.info(`${ID} | Skipping non-standard Quest folder placement: ${journal.name}`);
-      continue;
+  const legacyQuestRoot=directFolder(LEGACY_FOLDER_QUESTS);
+  const legacyFactionRoot=directFolder(LEGACY_FOLDER_FACTIONS);
+  const {quests:questRoot,factions:factionRoot}=await roots();
+  const active=await ensureFolder(ACTIVE_FOLDER,questRoot,COLORS.questCategory);
+  const finished=await ensureFolder(FINISHED_FOLDER,questRoot,COLORS.questCategory);
+  const recognizedRoots=[questRoot,...(legacyQuestRoot && legacyQuestRoot.id!==questRoot.id?[legacyQuestRoot]:[])];
+  // Capture old faction/Inactive folders before moving their last Quest.
+  const oldFolderIds=new Set();
+  const factionNames=new Set(factions().map(f=>f.name));
+  for(const root of recognizedRoots){
+    for(const folder of game.folders.filter(f=>f.type==="JournalEntry" && within(f,root) && f.id!==root.id)){
+      if(folder.id===active.id||folder.id===finished.id)continue;
+      const top=folder.folder?.id===root.id;
+      const isLegacyTop=top && factionNames.has(folder.name);
+      const isLegacyNested=folder.name===LEGACY_INACTIVE_FOLDER && folder.folder && factionNames.has(folder.folder.name) && folder.folder.folder?.id===root.id;
+      if(isLegacyTop || isLegacyNested)oldFolderIds.add(folder.id);
     }
-    const target=await questFolder(faction,journal.getFlag(ID,"status"));
+  }
+  const taggedFactions=game.journal.filter(j=>j.getFlag(ID,"kind")==="faction");
+  for(const journal of taggedFactions){
+    if(journal.folder?.id!==factionRoot.id)await journal.update({folder:factionRoot.id});
+  }
+  const taggedQuests=game.journal.filter(j=>j.getFlag(ID,"kind")==="quest");
+  for(const journal of taggedQuests){
+    // Intentional GM-controlled physical filing is replaced by the approved
+    // Active/Finished structure; no unrelated Journals are ever modified.
+    const target=journal.getFlag(ID,"status")==="inactive"?finished:active;
     if(journal.folder?.id!==target.id)await journal.update({folder:target.id});
   }
+  // Do not delete any folders still holding documents or subfolders. Unrelated
+  // custom folders survive even if nested in the module's old root.
+  const cleanup=[...oldFolderIds].map(id=>game.folders.get(id)).filter(Boolean).sort((a,b)=>folderDepth(b)-folderDepth(a));
+  for(const folder of cleanup)if(emptyFolder(folder))await folder.delete();
+  for(const legacy of [legacyQuestRoot,legacyFactionRoot]){
+    if(legacy && legacy.id!==questRoot.id && legacy.id!==factionRoot.id && emptyFolder(legacy))await legacy.delete();
+  }
+  return {quests:taggedQuests.length,factions:taggedFactions.length};
 }
 function sortedRanks(ranks) {
   const valid = (ranks??[]).filter(r=>String(r.name??"").trim() && Number.isFinite(Number(r.min)));
@@ -224,19 +262,12 @@ export async function reconcileAccess() {
   } catch(error) { console.error(`${ID} | Permission synchronization failed`,error); }
   finally {syncing=false;}
 }
-export async function renameFactionFolders(faction,oldName=null) {
-  if(!game.user.isGM)return;
-  const root=(await roots()).quests;
-  let target=game.folders.find(f=>f.type==="JournalEntry" && f.name===faction.name && f.folder?.id===root.id);
-  if(!target && oldName && oldName!==faction.name) {
-    const previous=game.folders.find(f=>f.type==="JournalEntry" && f.name===oldName && f.folder?.id===root.id);
-    if(previous) { await previous.update({name:faction.name});target=previous; }
-  }
-  target??=await ensureFolder(faction.name,root,COLORS.questFaction);
-  if(String(target.color??"").toLowerCase()!==COLORS.questFaction)await target.update({color:COLORS.questFaction});
-  for (const journal of game.journal.filter(j=>j.getFlag(ID,"kind")==="quest" && j.getFlag(ID,"factionUuid")===faction.uuid)) {
-    const destination=await questFolder(faction,journal.getFlag(ID,"status"));
-    if(journal.folder?.id!==destination.id) await journal.update({folder:destination.id});
+/** Refresh public faction labels after a rename. Quest folders are independent
+ * of their associated Faction as of v0.0.9. Preserves all Quest UUIDs and data.
+ */
+export async function renameFactionFolders(faction,_oldName=null) {
+  if(!game.user?.isGM)return;
+  for(const journal of game.journal.filter(j=>j.getFlag(ID,"kind")==="quest" && j.getFlag(ID,"factionUuid")===faction.uuid)) {
     await setPage(journal,false,"Quest Briefing",questHTML(journal.name,journal.flags[ID]));
   }
 }
@@ -255,7 +286,7 @@ export async function setQuestAvailability(doc, status) {
   // Availability is not a per-Character outcome. Never auto-fail recipients.
   // In particular, preserve all Completed and historical Failed records in production.
   const faction=getFaction(doc.getFlag(ID,"factionUuid"));
-  const destination=faction?await questFolder(faction,status):doc.folder;
+  const destination=await questFolder(faction,status);
   await doc.update({[`flags.${ID}.status`]:status,...(destination?.id!==doc.folder?.id?{folder:destination.id}:{})});
   await setPage(doc,false,"Quest Briefing",questHTML(doc.name,doc.flags[ID]));
   await reconcileAccess();

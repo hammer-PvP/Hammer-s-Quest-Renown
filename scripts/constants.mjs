@@ -1,6 +1,8 @@
 export const ID = "hammer-s-quest-renown";
-export const FOLDER_FACTIONS = "Factions - Hammer's Quest & Renown";
-export const FOLDER_QUESTS = "Quests - Hammer's Quest & Renown";
+export const FOLDER_FACTIONS = "Hammer's Factions";
+export const LEGACY_FOLDER_FACTIONS = "Factions - Hammer's Quest & Renown";
+export const FOLDER_QUESTS = "Hammer's Quests";
+export const LEGACY_FOLDER_QUESTS = "Quests - Hammer's Quest & Renown";
 export const STATUS = ["unavailable", "available", "inactive"];
 export const CHARACTER_PROGRESS = ["accepted", "in-progress", "completed", "failed", "abandoned"];
 export const TERMINAL_STATES = ["completed", "failed", "abandoned"];
