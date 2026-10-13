@@ -1,147 +1,328 @@
 # Hammer's Quest & Renown
 
-Foundry VTT V14 module for the D&D5e 6.x game system. Uses native Journal Entries for Factions and Quests, maintains private GM-only journal pages and explicit Observer-only player access, and tracks per-Actor faction Renown.
+**A journal-based Quest, Faction, and Renown manager for Foundry Virtual Tabletop and the D&D 5e game system.**
 
-- **Module ID / install folder:** `hammer-s-quest-renown`
-- **Display name:** Hammer's Quest & Renown
-- **Foundry:** minimum 14.367, verified 14.368
-- **D&D5e:** verified 6.0.6, declared compatible range 6.0.0–6.0.999
-- **GitHub:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown
-- **Manifest:** https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
+Create quest briefings and faction profiles, assign adventures to individual characters, award currency and items, record successes or failures, and track how each character or adventuring group is regarded by different factions—all without replacing Foundry's native Journals or D&D5e character sheets.
 
-## v0.0.9 — Active / Finished Journal Directories (Production-safe Migration)
+**Current release:** `0.0.9` · **Interface language:** English · **License:** MIT
 
-**Upgrades existing v0.0.8 campaign data without rebuilding Journals.** Make a full offline World backup before enabling. Migration runs on GM startup and advances hidden `dataVersion` from **3 to 4** only after completion; repeated starts are safe.
+[Install the module](#installation) · [Get started](#quick-start) · [Quest workflow](#managing-quests) · [Renown guide](#reputation-and-renown) · [Troubleshooting](#troubleshooting)
 
-- **New folder layout:** `Hammer's Factions` contains Faction Journals; `Hammer's Quests / Active` contains Available and Unavailable Quests; `Hammer's Quests / Finished` contains administratively Inactive Quests **regardless of each Character's Completed/Failed result**. Quest owner Faction remains a Journal UUID reference, no longer a folder.
-- **GM closes a Quest explicitly:** `Finish Quest` changes global availability to the existing internal `inactive` status, moving the same Journal into `Finished`. `Reopen (Available)` returns it to `Active`. Finishing a Quest **never automatically marks pending Characters Failed** or applies Failure Penalties. The separate Fail Turn-In and Undo Failure from v0.0.8 remain intact.
-- **Folder root rename:** when possible, existing `Quests - Hammer's Quest & Renown` and `Factions - Hammer's Quest & Renown` folders are renamed in-place, preserving native Folder IDs and Journal IDs. If a new root already exists, module Journals are relocated into it. Empty recognized old faction/`Inativas` subfolders are cleaned up bottom-up; any folder containing other documents or custom child folders is preserved.
-- **Scope:** only JournalEntries with `flags.hammer-s-quest-renown.kind` = `quest` or `faction` are moved. Migration does not rewrite descriptions, pages, objectives, individual progress, payout records, Actor ledgers, Renown, or permissions. Reopening a Quest does not undo individual Completed/Failed states.
-- **Native colors:** Quests root `#ab960d`, `Active`/`Finished` `#776809`, Factions root `#890b1e`. No dependency on Character Builder.
-- **Validation required:** check one existing Active, Finished, Completed, Failed and Undo Failure case in your real World. A successful static simulation does not replace live Foundry V14 verification.
+## At a glance
 
-## v0.0.8 — Production hotfix: Undo Failure & Journal Seal Layout
+| Feature | What it does |
+| --- | --- |
+| Native Quest Journals | Public briefing, objectives, announced rewards, and a separate private GM Notes page |
+| Factions | Public profiles, optional emblems, customizable Renown ranks, and private lore |
+| Individual quest progress | One Quest Journal can have different `Accepted`, `Completed`, and `Failed` outcomes for different characters |
+| Quest Giving | Assign an available Quest to eligible player-owned Characters, including additional Characters later |
+| Success Turn-In | Give each selected Character the full configured currency, items, and personal Renown rewards |
+| Failure Turn-In | Mark selected Characters as Failed and apply optional, configurable negative Renown penalties |
+| Undo Failure | Correct an accidental failure, restore Characters to an unfinished state, and compensate applied Renown penalties |
+| Group Renown | Optionally award or deduct collective Renown for explicitly selected D&D5e Group Actors |
+| Reputation Manager | Inspect balances, ranks, and history; make manual adjustments for one or many Actors |
+| Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
+| Active / Finished filing | Automatically organize Quest Journals by administrative state, not by faction or individual outcome |
 
-**Upgrade from v0.0.7 without recreating Quests, Factions, Actors or Journal pages.** Back up the production World before enabling the update. This update is additive and does not rewrite existing `Completed` outcomes, currency/item receipts, historical Failure Turn-Ins, or Actor Renown ledgers.
+## Compatibility
 
-- **Undo Failure (GM only):** Open Quest Manager → `Undo Failure`, or Quest Results → `Undo Failure`. Choose individual Failed Characters (or `Select All Failed`), provide a required correction reason and confirm. The selected Characters are restored to **Accepted** when v0.0.7 did not record their previous status, or to their recorded prior `Accepted`/`In Progress` status when available. Their existing assignments and Observer Journal access are preserved. If the Quest is globally Inactive, make it Available separately before accepting a Success Turn-In.
-- **Recover accidental seven-Character failures:** The same correction can restore all seven Characters for a Quest such as *A Lâmina dos Ecos Perdidos*, leaving other Quests and previous Completed Characters untouched.
-- **Safe Penalty Compensation:** Original negative Renown entries are retained for audit; verified penalties incurred from the exact Failure Turn-In receive uniquely keyed positive compensating entries. Group penalties are not reversed automatically—select the affected Group explicitly if permitted. No penalty is invented when the Quest had none.
-- **Interrupted correction recovery:** A frozen `activeFailureReversal` is stored before any Actor is modified. If interrupted, re-open Undo Failure and choose **Resume Undo Failure**; recorded compensation keys are reused so a reward cannot be returned twice. A pending Undo blocks concurrent Success/Failure Turn-In processing on that Quest.
-- **Journal stamp visual fix:** Only one personalized status panel is inserted, anchored inside the public Quest Briefing document, instead of allowing fallback insertion into the Journal window chrome. The old stray Completed/Failed icon near the top-right window controls must not be recreated. CSS anchors seal elements inside the authorized panel.
-- **Preserved history:** `failurePayouts` remains unchanged. Reversal details are appended to `failureReversals`, while a selected Character's progress changes from Failed back to an unfinished state. The original failure remains visible in the historical audit trail.
+| Requirement | Supported version |
+| --- | --- |
+| Foundry Virtual Tabletop | V14; minimum `14.367`, verified `14.368` |
+| D&D 5e system (`dnd5e`) | `6.0.x`; verified `6.0.6` |
+| Character Builder or other modules | **Not required** |
 
-**Validation:** isolated smoke tests cover seven-Character Undo, ledger compensation, optional Group compensation safeguards, F5/restart-style interruption recovery, double-Undo prevention, and issuing a *new* Failure Turn-In after a completed reversal. The Journal mount was code-reviewed; actual in-Foundry UI verification is still required.
+The Reputation tab is designed for the native D&D5e Character and Group sheets. Third-party replacement sheets may not display the tab, even where the Reputation Manager remains accessible.
 
-## v0.0.7 — Production-safe Failure Turn-In & Inactive Journals
+## Installation
 
-**Upgrade from production v0.0.6 without recreating Quests, Factions, Actors, Journals or previous Success payouts.** Make a full backup of your production World with Foundry stopped before upgrading. The hidden world schema setting `dataVersion` migrates idempotently from **1 to 2**.
+1. Open **Foundry Setup → Add-on Modules → Install Module**.
+2. Paste this manifest URL into **Manifest URL**:
 
-- **Failure Turn-In:** a separate GM command in Quest Manager marks individually selected Characters Failed. Available or Inactive Quests may receive a Failure Turn-In. Completed Characters remain Completed, and no standard Success Currency, Items or Renown is granted by a Failure Turn-In.
-- **Failure Penalties (optional, GM-only):** the Quest Editor adds an initially **disabled** list of negative Faction Renown amounts. Each Faction may occur only once; multiple Factions are allowed. The GM can enable/disable recipients for each penalty row during the Failure Turn-In. Group Actors are candidates derived from selected Characters and are always **optional**; nothing is granted or removed from a Group without explicit selection. The values are not revealed in the public Quest Journal.
-- **No penalty by default:** older Quests have no enabled penalties. A Failure Turn-In only records the `Failed` outcome when no penalty is configured.
-- **Idempotent receipts and interrupted operations:** failure distribution uses a separate frozen `activeFailureTurnIn` plan and per-Actor ledger keys, `failurePayouts` and `groupFailures`. It resumes without reapplying completed rows. Existing `payouts`, `groupAwards`, Currency/Item receipts, manual `ledger`, `activeTurnIn` and `pendingRenownBatch` remain untouched.
-- **Inactive != Failed:** changing the global Quest availability to `Inactive` now **only archives** it; it no longer automatically fails unfinished Characters. Their individual states persist until a GM explicitly performs a Failure Turn-In. Success Turn-In requires Available; Failure Turn-In supports Available or Inactive.
-- **Legacy auto-fail handling:** Characters automatically marked Failed by older releases (`reason: "Quest became Inactive"`) retain their existing Failed state. The GM can explicitly confirm their Failure Turn-In, with any newly configured penalties, once; their original failure timestamp is preserved as `legacyAutoFailedAt`. Other previously recorded Failed/Completed states are never implicitly reset.
-- **Native folder colors:** `Quests` root `#ab960d`, Faction subfolders `#776809`, `Factions` root `#890b1e`, and newly created `Inativas` folders use the darker shade `#5a500b`. All managed Inactive Quests move to `Quests / <Faction> / Inativas` with **the same Journal UUID**. Re-activating moves them back. The migration limits automated moves to the module's recognized folders and skips custom/manual folder locations.
-- **Original monochrome SVG seals:** Completed = intact check seal tinted green, Failed = cracked X seal tinted red. The module provides two original, simple vector SVG paths and CSS mask coloring; no AI-generated or external image assets. The native read-only Journal status panel shows the outcome for the User's selected Character.
-- **Privacy:** Journal profiles remain Observer-only to eligible assigned Users; GM Notes pages remain private. No existing permissions or private Journal content are relaxed.
+   ```text
+   https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json
+   ```
 
-### Production validation notes
+3. Install the module, then enable **Hammer's Quest & Renown** in your D&D5e World under **Manage Modules**.
+4. Log in as GM. The module creates or maintains its managed Journal folders automatically.
+5. Open the **Journal Directory** to access its management tools.
 
-- Before enabling this release in the campaign, create a **complete offline World backup**. Multiple GM clients should not execute Turn-Ins simultaneously; Foundry document writes are not atomic transactions.
-- Verify a previously Completed Quest still shows Completed and its prior rewards; check an Inactive Quest still keeps unfinished Characters without creating a new automatic failure.
-- In an existing Inactive Quest with older automatic failures, use the **Fail Turn-In** to confirm selected legacy rows if the GM wishes to apply newly configured penalties. No pre-existing Renown loss is automatically added.
-- The module cannot be considered fully validated on your Foundry V14 installation until live testing succeeds; static/isolated tests are not a substitute for a backup and World QA.
+You can also obtain release files from [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases).
 
-## v0.0.6 — Production-safe Manual Renown Batches
+> **Updating an existing World?** Back up the complete World with Foundry stopped before updating. The module preserves existing managed Journal IDs, Actor Renown ledgers, quest outcomes, and payout history through its versioned migrations. A backup is still strongly recommended for a live campaign.
 
-**Compatible, additive update from v0.0.5.** This release does **not** convert, clear, rewrite or truncate any existing Actor `flags.hammer-s-quest-renown.ledger`, Journal, Quest/Faction UUID, Quest payout state or permission settings.
+## Quick start
 
-- **Manual Reputation batch:** select multiple eligible Characters (non-GM explicit Owner) via checkboxes, with Select All, Clear and name filtering. Group Actors are in a **separate collapsible selector**, with independent checkboxes. Selecting Characters **never** selects their Groups.
-- **One signed adjustment + required reason per operation:** applied independently to every selected Actor. `0` remains supported to discover a Faction without changing its balance.
-- **Live impact preview:** for each chosen recipient, show their old and projected Renown total before confirmation.
-- **Durable resume:** before mutating any Actor, freeze the batch into a private world setting. Every recipient has a deterministic ledger key; a resumed batch skips Actors already recorded. When interruption occurs, new batches are blocked until the saved operation completes. Never manually clear a pending batch setting to retry.
-- **Known Factions:** closed by default; count shown, expanding reveals a list with a fixed-height internal scroll. No Faction data is discarded.
-- **History:** last 5 events by default; View Full History opens paginated 20-event pages with local scroll, preserving the complete ledger in the Actor.
-- **Inspect recipient:** each recipient has a View action for their existing Factions/History without changing which Actors will receive the adjustment.
-- **Versioned additive migration:** hidden world `dataVersion` moves to 1 on GM startup. `pendingRenownBatch` is a new world setting with an empty default. No existing documents need to be migrated; repeat startups are idempotent.
+For a complete first Quest, follow this order:
 
-**Operational safeguards:** back up your production World before installing any update. Do not execute batch adjustments concurrently from multiple GM clients. Foundry multi-document writes are not transactional; this release offers interruption recovery but cannot guarantee atomicity across multiple simultaneous GM sessions.
+1. **Create a Faction.** In the Journal Directory, select **Factions**. Name it, describe it, and optionally configure an emblem, rank thresholds, and GM-only notes. Save.
+2. **Create a Quest.** Select **New Quest**, enter a title, choose the Faction, add its public briefing and objectives, then configure any rewards. Save. New Quests start as **Unavailable**.
+3. **Make the Quest Available.** Open **Quest Manager**, find the Quest, and select **Make Available**.
+4. **Give it to your players.** Select **Quest Giving**, choose eligible Characters, and confirm. Each new recipient starts with **Accepted** status.
+5. **Resolve each Character's outcome.** Use **Quest Turn-In** for success or **Fail Turn-In** for failure. The two actions are independent; one Character may complete the Quest while another fails or is still working on it.
+6. **Finish the Quest when appropriate.** Select **Finish Quest** to move its Journal to **Finished**. This does **not** automatically mark unfinished Characters as Failed.
 
-## v0.0.5 — Each Rewards & Individual Quest Outcomes
+## Where to find the controls
 
-**Prototype schema change:** No automatic migration of experimental v0.0.4 Quests. For predictable testing, create new Quests in a test World. Existing Faction Journals and Actor Renown ledgers are not intentionally deleted.
+When logged in as GM, the **Journal Directory** adds four buttons:
 
-- Quest Giving always sets newly assigned Characters to **Accepted**. Add more eligible Characters later, even after others completed. `Select All` and `Clear Selection` affect only newly eligible Characters.
-- Availability is global: **Unavailable / Available / Inactive**. Completed / Failed are stored separately for each assigned Character on the same Quest Journal.
-- Quest Turn-In selects **unfinished assigned Characters**. Currency and Item rewards are **Each**: every newly completing Character receives the full values directly into their own inventory. Personal Renown rewards also apply once per Character.
-- Represented Groups are filtered by current selected participants, initially unchecked and always optional. Each explicitly selected Group can receive its collective Renown **once per Quest**, no matter how many Characters complete later.
-- Every Turn-In saves a recipient snapshot, individual status and receipt history. Interrupted payouts resume from their saved recipients. Currency and Item reward receipts and Renown ledger keys guard against duplicate payments.
-- Marking a Quest **Inactive** automatically marks assigned Characters who have not completed it **Failed**. Completed results remain. Journal, UUID, history and all rewards persist. Reopening availability does not undo failures automatically.
-- A single native Journal shows a **golden Completed** or **rusted Failed** seal based on the viewing Character. If a User controls multiple assigned Characters, the status panel has a Character selector. GM sees a summary.
-- Fixed misaligned/duplicated checkbox styling across the module. Added bulk select/clear controls to Giving and Turn-In.
-- GM-only pages remain private; player Journals are read-only Observer. Native D&D5e 6.0.6 Character and Group Reputation tabs remain Actor-specific.
+| Button | Purpose |
+| --- | --- |
+| **New Quest** | Open the Quest Editor |
+| **Quest Manager** | Manage Quest availability, assignment, outcomes, results, and corrections |
+| **Factions** | Create and edit Factions |
+| **Renown** | Open the Reputation Manager |
 
-**Known constraint:** This package has passed isolated service tests and static/syntax checks, but has not been run in a live Foundry V14 World. The personalized Journal status panel must be visually verified in the native Journal sheet.
+Managed Quest and Faction Journals also have an **Edit Quest / Faction** control for GMs. A supported D&D5e Character or Group sheet provides Reputation access through its custom tab or a header control where available.
 
-## v0.0.4 — Multi-Faction Renown, Characters & Optional Groups
+## Journal folder organization
 
-This release changes the prototype Quest reward schema and assignment model. There is **no migration of experimental Quests created with v0.0.3 or earlier**. Recreate those Quests for reliable v0.0.4 Turn-In testing. Already recorded Actor ledgers are not deleted.
+The module uses two managed root folders:
 
-### Quest Editor
+```text
+Journal Directory
+├── Hammer's Factions
+│   ├── The Eastern Council
+│   └── Guardians of the Vale
+└── Hammer's Quests
+    ├── Active
+    │   ├── The Missing Silver
+    │   └── The Lost Echo Blade
+    └── Finished
+        ├── Danger in the Skies
+        └── The Broken Oath
+```
 
-- Each Quest remains a native Journal in `Quests - Hammer's Quest & Renown` → *Faction Name*, with a separate player-visible briefing page and GM-only notes page.
-- A Quest can be created as **Unavailable**, without recipients. Quest availability and giving are managed afterward.
-- Currency rewards and drag-and-drop Items work as before.
-- **Renown Rewards** are now an editable list: `+ Add Renown Reward` adds a line with a Faction dropdown and signed integer amount. Use as many distinct Factions as necessary, including negative amounts. The Quest's owner Faction is independent of those affected.
-- Adding/removing a Renown reward is a localized DOM operation, preserving the scroll position.
+- **Hammer's Factions:** Faction Journals are stored separately from Quests.
+- **Active:** Quests whose global status is **Available** or **Unavailable**.
+- **Finished:** Quests the GM has administratively finished (internally `Inactive`), whether Characters succeeded, failed, or still have unfinished records.
+- A Quest's owner Faction is stored as a **reference**, not a folder. A Quest can affect other Factions through its rewards or penalties.
+
+**Important:** each Quest is **one shared native Journal**, and a native Journal has only one physical folder. Its location reflects the **GM's global administrative status**, not the result of any single Character. `Finished` can therefore contain mixed individual outcomes.
+
+### Global status vs. Character result
+
+| Global Quest status (GM) | Journal folder | What it means |
+| --- | --- | --- |
+| **Unavailable** | Active | Prepared, but cannot yet be given to Characters |
+| **Available** | Active | Can be given to eligible Characters and resolved with Success or Failure Turn-In |
+| **Finished** (internally `Inactive`) | Finished | Closed to new Quest Giving and Success Turn-In; existing individual results remain unchanged |
+
+| Individual result | Meaning |
+| --- | --- |
+| **Accepted** | Assigned to the Character, not yet resolved |
+| **Completed** | The Character completed the Quest; success rewards were issued according to the Turn-In |
+| **Failed** | A Failure Turn-In recorded failure for that Character |
+
+Finishing a Quest **does not** fail pending Characters, take away Renown, revoke a previous success, or issue any other reward. The GM can use **Fail Turn-In** on a Finished Quest to resolve remaining Characters as Failed. To resume successful Turn-Ins, use **Reopen (Available)** first.
+
+## Factions
+
+Select **Factions** in the Journal Directory to create or edit a Faction.
+
+A Faction has:
+
+- **Name** and **public description** for its native `Faction Profile` Journal page.
+- An optional **emblem/image**, selected with Foundry's built-in File Picker.
+- **Renown ranks** with configurable minimum thresholds. Thresholds can be negative; each Faction has its own rank scale.
+- A separate **GM Notes** page for secrets, NPCs, and campaign information.
+
+The default ranks are:
+
+| Rank | Minimum Renown |
+| --- | ---: |
+| Hostile | -25 |
+| Unfriendly | -10 |
+| Neutral | 0 |
+| Friendly | 10 |
+| Honored | 25 |
+| Exalted | 50 |
+
+These are editable defaults, not fixed rules.
+
+**Faction discovery:** a Character or Group gains a recorded relationship with a Faction when it receives its first Renown ledger entry for that Faction. A **zero-point** manual adjustment is a useful way to establish a known Faction without changing the balance. Eligible Players receive read-only access to Faction profiles associated with their known Characters or Groups.
+
+## Creating a Quest
+
+Select **New Quest** or **Quest Manager → Create Quest**.
+
+### Public information
+
+The **Quest Editor** lets the GM configure:
+
+- **Quest name** and **owner Faction** (an existing Faction is currently required).
+- **Flavor Text** for the public Quest Briefing.
+- **Objectives**, with checkboxes in the editor; these are shared Quest fields, **not separate per-Character objective trackers**.
+- **Currency rewards:** Platinum, Gold, Electrum, Silver, and Copper pieces.
+- **Item rewards:** drag Items from the World or Compendiums and set a quantity.
+- **Renown rewards:** add separate signed Renown amounts for multiple different Factions. These do not need to match the owner Faction.
+
+Players can read the public Quest Briefing, objectives, and announced success rewards when their User has access to the Journal. Item links can use Foundry's native UUID handling, with tooltip details where accessible.
+
+### GM-only information
+
+The Quest Editor also has:
+
+- **Failure Penalties**, disabled by default. When enabled, define negative whole-number Renown changes against one or more Factions. These values are **not published** in the public Quest Briefing.
+- **GM Notes**, stored in a separate protected Journal page rather than in the public page.
+
+**After a Success Turn-In**, reward definitions are locked to protect previously issued per-Character rewards. **After a Failure Turn-In**, failure penalty definitions are likewise locked to protect existing failure records. Plan changes before issuing the first corresponding Turn-In.
+
+A new Quest is saved **Unavailable** with no assigned Characters. Use the Quest Manager to change its availability and distribute it.
+
+## Managing Quests
+
+Open **Quest Manager** to search by Quest name, Faction, or status. Each Quest displays its global availability, count of assigned Characters, and counts of active, completed, and failed Characters.
 
 ### Quest Giving
 
-- Giving is **Character-based**: choose any eligible Character Actors with a non-GM User explicitly at Owner level.
-- Assigning a Quest does not require a Group Actor. Player Users receive Observer access only, never Owner.
-- Group associations do not automatically assign or reveal Quests to other characters.
+1. Make the Quest **Available**.
+2. Select **Quest Giving**.
+3. Select the Characters who should receive it; **Select All** and **Clear Selection** are available.
+4. Confirm to mark each newly assigned Character **Accepted**.
 
-### Quest Turn-In
+A Character is eligible for Quest Giving only if it is a `character` Actor with an **explicit Owner permission for at least one non-GM User**. Merely belonging to a Group does not make a Character eligible. You may assign additional eligible Characters later, even if other Characters already completed the Quest. An already assigned Character cannot be given the same Quest twice.
 
-- Check which assigned eligible **Characters actually participated**. Each selected Character can receive the complete personal delta from every configured Faction reward line.
-- An optional **Represented Groups** list is derived from the selected participants' native D&D5e Group Actor memberships. Groups are **never preselected** and may all remain unchecked, even if participants belong to groups.
-- Select zero, one, or multiple represented Group Actors. Each selected Group receives the full collective delta once per Faction reward line, irrespective of how many of its members participated.
-- Every reward line has independent **Characters / Groups** target toggles, defaulting to both. No target is inferred or paid unless its Actor was checked. A line with no recipients requires explicitly disabling its targets.
-- Changing group membership later never moves, duplicates, or merges ledger entries. The immutable payout plan records participating Characters, represented Groups, and per-line scopes.
-- Retry protection uses an Actor-specific key for each `Quest + reward line + Actor` and a locked payout plan for partial grants. Currency and Item payout guards from previous releases remain in place.
+The module grants eligible recipients **Observer** access to the Quest Journal, not Owner access. It does not assign Quests automatically to Groups.
 
-### Reputation
+### Success Turn-In
 
-- A Character sheet displays **only that Character Actor's personal Renown**; a Group sheet displays **only that Group Actor's collective Renown**. There is no auto-inheritance, sum, or shared display across sheets.
-- Compact native D&D5e Character and Group `Reputation` tabs: one row per Faction, with **Faction | Rank | current / faction maximum**, fixed-width numeric columns, no progress bars, and no large cards.
-- The **Manage** control opens the Actor's Reputation Manager, where GMs can issue manual positive, negative, or zero changes with mandatory reasons. Transaction histories are retained.
-- Faction Journals are revealed once an eligible Actor's ledger contains a Faction record, including zero or negative Renown; public journals remain Observer-only and GM notes private.
+Use **Quest Turn-In** on an **Available** Quest:
 
-### Quest Manager & Results
+1. Select the assigned, unfinished Characters who completed the Quest.
+2. Review the configured rewards. Each selected Character receives the **full currency amount and full Item quantities**, directly into that Character's inventory.
+3. Choose whether each configured Faction Renown line targets **Characters**, **Groups**, or both.
+4. Optionally check **Represented Groups** drawn from the selected Characters' D&D5e Group memberships. Groups are **never preselected**.
+5. Confirm **Complete & Grant Each**.
 
-- A Quest marked `Completed · Rewards Issued` no longer offers an active **Quest Turn-In** action; it offers **View Results** instead.
-- Results are **read-only** and show the immutable payout snapshot: participating Characters, represented Groups, Faction deltas, and Currency / Item inventory recipient.
-- Failed and abandoned Quests do not offer automatic reward Turn-In. Completed Quests with pending rewards can still be paid once.
-- The Quest Manager refreshes when its managed Quests are updated, including when rewards become issued.
+Each selected Character receives its own personal Renown amount for the relevant reward rows. An explicitly selected Group Actor receives the configured **collective Renown once per Quest**, rather than once per member. **Currency and Items are Character rewards; Groups do not receive those items or coins through this operation.**
 
-### Faction Manager & visual identity
+A Character's Completion does **not** finish the Quest globally. Other assigned Characters can complete it later and receive their own rewards. Payout records help prevent duplicate distribution if an operation must be resumed.
 
-- The native Foundry FilePicker, 5:3 contain-fitted preview, public/GM private lore split, custom per-Faction ranks and separate faction Journal directory remain from v0.0.3.
-- Book-and-quill SVG identity remains included within the module; no Character Builder runtime dependency.
+### Failure Turn-In
 
-## Native Journal folder structure
+Use **Fail Turn-In** on an **Available** or **Finished** Quest:
 
-- `Factions - Hammer's Quest & Renown` — faction Journals with public profiles, ranks, and private GM Notes pages.
-- `Quests - Hammer's Quest & Renown` — one child folder per Faction; Quests contain public narrative/objectives/rewards and private GM Notes.
+1. Select the assigned Characters who failed.
+2. Review any enabled **Failure Penalties**.
+3. Optionally select eligible represented Group Actors, and choose Character/Group targets for each penalty row.
+4. Confirm **Mark Failed**.
 
-## QA and limitations
+The selected Characters become **Failed**. If no Failure Penalties were enabled, only the outcome changes. If configured, the module applies the selected **negative Renown** changes. It does **not** issue success currency, items, or success Renown. Group penalties are never automatic.
 
-- JavaScript syntax, JSON manifest structure, template block balancing, ZIP integrity and isolated payout service flows can be validated outside Foundry. **Full multi-client Foundry V14 / D&D5e 6.0.6 validation is still required.**
-- Quest assignment and lifecycle are one state per Quest Journal, not separate Quest instances for multiple independent parties.
-- Item and Currency rewards are still delivered to **one selected inventory Actor**; independent splitting/assignment of individual Items and coins is future scope.
-- No automatic prerequisites, rank perks, or quest chains in this release.
-- Public/GM fields are multiline text inputs and output as Journal pages, not a full rich text editor.
-- Third-party replacement Actor Sheets may omit the custom native Reputation tab, but header/menu access to Reputation Manager remains where integration permits.
-- Do not run concurrent Turn-In payouts for the same Quest on multiple GM clients. Payouts have retry and idempotency protection, but Foundry multi-document writes are not database transactions.
+A previous **Completed** outcome is not overwritten by Failure Turn-In.
+
+### Undo Failure
+
+The **Undo Failure** action is GM-only and is intended for accidental Failure Turn-Ins.
+
+1. Open the affected Quest in **Quest Manager** and select **Undo Failure**. It is also accessible from **View Results** where applicable.
+2. Select the incorrectly Failed Characters; use **Select All Failed** for a batch correction.
+3. Optionally choose Group penalty corrections when the affected Groups are eligible for reversal. Group correction is **independent** from Character selection.
+4. Enter a **required reason** and confirm.
+
+For the selected Characters, the module restores the previously recorded unfinished state where available, or **Accepted** for older failures without a prior-state record. Assignments and Journal access remain intact. Applicable Renown penalties receive **compensating positive ledger entries**; original transactions remain in the audit history. The correction is designed to avoid compensating the same penalty twice.
+
+**Undo Failure does not reopen a globally Finished Quest.** If those Characters should successfully turn in the Quest afterward, select **Reopen (Available)** separately.
+
+> Undo Failure is **not** a general Undo Success function. Do not use it to try to withdraw currency, items, or Renown from a previously Completed Character.
+
+### View Results
+
+The GM can open **View Results** to inspect individual Character statuses, completed Turn-Ins, Failed Turn-Ins, selected Groups, Renown effects, and recorded failure corrections. Results are read-only and preserve historical records.
+
+### Finish or reopen a Quest
+
+- **Finish Quest** moves the Journal to `Hammer's Quests / Finished` and keeps every Character's current result intact.
+- **Reopen (Available)** returns it to `Hammer's Quests / Active`; a previous `Completed` or `Failed` result does not reset just because the Quest was reopened.
+
+## Reputation and Renown
+
+Renown is recorded **per Actor** and **per Faction**. A Character's reputation is independent from the reputation of a Group Actor, even if the Character is a Group member.
+
+### Native Reputation tab
+
+On supported D&D5e Character and Group sheets, open **Reputation** to see each known Faction's:
+
+- Name
+- Current rank
+- Current Renown and the Faction's maximum rank threshold, displayed compactly as `current / max`
+
+**A Character sheet shows only that Character's personal Renown. A Group sheet shows only that Group Actor's Renown.** Balances are not automatically combined, inherited, or shared.
+
+### Reputation Manager
+
+Open **Renown** from the Journal Directory, or **Manage** from a supported Reputation tab.
+
+GM capabilities include:
+
+- Select **one or many Characters** using checkboxes, search, and Select All/Clear controls.
+- Select **Group Actors separately**; selecting a Character never automatically selects their Group.
+- Choose a Faction and enter a **positive, negative, or zero** whole-number adjustment.
+- Enter a **required reason** and review the projected balance for each selected Actor before recording.
+- Inspect a Character's or Group's existing Factions and history without changing the selected adjustment recipients.
+- Review the **five most recent events** or open the full, paginated history.
+
+Each recipient receives the **full amount entered**. For example, a `+5` adjustment applied to three Characters gives **+5 to each**, not a total of five points distributed among them.
+
+Players can view their permitted reputation information, but **only the GM can change Renown**.
+
+## What players see
+
+Players continue using Foundry's **native Journal Directory** and supported **D&D5e Actor sheets**.
+
+- Quest Journals are read-only and shared with Players whose Users explicitly own assigned Characters.
+- Public Quest pages show the briefing, objectives, assigned Characters, and announced rewards.
+- A personalized panel shows **Quest Accepted**, **Quest Completed**, or **Quest Failed** for the selected Character. Completed uses a simple green check seal; Failed uses a red cracked-X seal.
+- If a User owns multiple assigned Characters, the panel offers a **Character selector** to switch the displayed outcome.
+- Faction profiles become readable when an eligible Character or Group has a Renown record for that Faction.
+- **Private GM Notes remain hidden**, and optional Failure Penalties are not listed in the public Quest Briefing.
+
+**Permission model:** Foundry Journal permissions belong to **Users**, not individual Characters. The Character selector personalizes the result panel; it is not an independent, Character-level security boundary. A User who owns several Characters may be able to access a shared Quest Journal through any one of them.
+
+## Reliability and safe operation
+
+This module stores Quest and Faction data in **native `JournalEntry` documents**, and Renown history in **Actor flags**. It does not require a separate database, duplicate a Journal for each recipient, or depend on Character Builder.
+
+To keep a campaign safe:
+
+1. **Back up before updating**, particularly if the World already contains paid Quests or reputation history.
+2. Avoid having **multiple GM clients run the same Turn-In or batch adjustment at the same time**. Foundry document changes across multiple Actors are not an atomic database transaction.
+3. If an operation was interrupted, use the relevant **Resume** option in the module instead of repeating it as a new operation or editing flags manually.
+4. Use **View Results** and the Reputation history to audit awards, penalties, and corrections.
+5. Use **Finish Quest**, **Fail Turn-In**, and **Undo Failure** for their separate purposes; one does not implicitly perform the others.
+
+Versioned migration logic is included for the module's existing managed campaign records. The Active/Finished filing also preserves native Quest Journal IDs and moves only documents identified as belonging to the module.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| A Character is missing from Quest Giving | The Actor must be type `character` and have **explicit Owner** permission for at least one non-GM User. Group membership is not sufficient. |
+| Quest Giving or Success Turn-In is unavailable | The Quest must be **Available**. A Finished Quest must be reopened first. |
+| A Quest is in `Finished` but a Character still shows Accepted | This is expected: **Finish Quest does not automatically fail or complete Characters**. Use Fail Turn-In only if a failure is intended. |
+| A Character was marked Failed by mistake | Use **Quest Manager → Undo Failure**, select that Character, and give a reason. Reopen the Quest separately if needed. |
+| A Group received no Renown | Groups must be **explicitly selected** during Turn-In, and the relevant reward/penalty line must target Groups. |
+| A Faction is missing from a Character's Reputation tab | That Actor may have no ledger entry for the Faction. A GM can record a **zero-point adjustment** to establish the relationship. |
+| A payout or correction was interrupted | Reopen the operation and use its **Resume** action; do not create a duplicate operation. |
+| The Reputation tab is absent from a custom Actor sheet | The tab targets native D&D5e sheets; try the available **Reputation** header control or the Journal Directory **Renown** button. |
+
+If you encounter a bug, include your Foundry version, D&D5e system version, module version, and relevant console messages in a [GitHub issue](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/issues). Please avoid posting private campaign data or player information publicly.
+
+## Current scope and limitations
+
+- A new Quest **requires an existing Faction** as its owner. Standalone factionless Quests are not supported yet.
+- Quest progress and Turn-In outcomes are **individual per Character**; Group membership does not automatically copy personal progress or Renown.
+- Objectives belong to the shared Quest document; **independent per-Character objective completion** is not provided.
+- Failure Penalties currently affect **Renown only**. Automatic currency deductions and Item removal are not part of Failure Turn-In.
+- **Undo Failure** is supported; automatic reversal of a successful Turn-In's currency and Items is not.
+- No built-in automatic quest prerequisites, quest chains, or rank-based perks.
+- The native Journal folders `Active` and `Finished` express **global Quest administration**, not personalized folders per player.
+
+For version-specific changes, see [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases). This README is a **feature and usage guide**, not a changelog.
+
+## License and credits
+
+**Hammer's Quest & Renown** is developed by **Raphael Andrade** and released under the [MIT License](LICENSE).
+
+Designed for [Foundry Virtual Tabletop](https://foundryvtt.com/) and the [D&D5e system](https://github.com/foundryvtt/dnd5e). These are separate projects and are not bundled with this module.
