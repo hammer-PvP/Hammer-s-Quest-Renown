@@ -15,7 +15,41 @@
       </div>
       <p class="hqr-hint">Native Foundry File Picker · 5:3 preview · image preserved without cropping or stretching.</p>
     </div><label>Flavor Text / Description<textarea name="description" rows="5">{{description}}</textarea></label></div>
-    <div class="hqr-panel"><h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3><p class="hqr-hint">Each faction has independent thresholds. Renown can be negative.</p><div class="hqr-list">{{#each ranks}}<div class="hqr-rank-row"><input type="text" data-field="rank-name" value="{{name}}" placeholder="Rank"><input type="number" data-field="rank-min" value="{{min}}"><button type="button" data-action="remove-rank" data-index="{{index}}" title="Remove Rank"><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div><button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button></div>
+    <div class="hqr-panel hqr-ranks">
+      <h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3>
+      <p class="hqr-hint">Each faction has independent thresholds. Renown can be negative. Existing ranks and reputation are preserved.</p>
+      <div class="hqr-list">
+        {{#each ranks}}
+        <div class="hqr-rank-card" data-rank-id="{{id}}">
+          <div class="hqr-rank-row">
+            <input type="text" data-field="rank-name" value="{{name}}" placeholder="Rank" aria-label="Rank name">
+            <input type="number" data-field="rank-min" value="{{min}}" aria-label="Minimum Renown">
+            <button type="button" data-action="remove-rank" title="Remove Rank"><i class="fa-solid fa-trash"></i></button>
+          </div>
+          <div class="hqr-rank-benefits">
+            <h4>Rank Benefits <span class="hqr-foundation-label">Foundation</span></h4>
+            <div class="hqr-block-list">
+              {{#each benefits}}
+              <div class="hqr-benefit-block" data-benefit-id="{{id}}" data-benefit-type="{{type}}">
+                <div class="hqr-benefit-head">
+                  <span><i class="fa-solid {{#if isGeneral}}fa-users{{else}}fa-user-shield{{/if}}"></i> {{#if isGeneral}}General{{else}}Class Specific{{/if}}</span>
+                  <button type="button" data-action="remove-benefit" title="Remove benefit block"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <p class="hqr-hint">{{#if isGeneral}}All eligible Characters.{{else}}Per-class slots; empty classes are valid.{{/if}} Source linking arrives in the next development stages.</p>
+              </div>
+              {{/each}}
+            </div>
+            <div class="hqr-benefit-actions">
+              <button type="button" data-action="add-benefit" data-type="general"><i class="fa-solid fa-plus"></i> General</button>
+              <button type="button" data-action="add-benefit" data-type="classSpecific"><i class="fa-solid fa-plus"></i> Class Specific</button>
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      <button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button>
+      <p class="hqr-hint">v0.1.0 configures and saves benefit blocks. It does not grant Items, Feats, Features or Spells to Characters.</p>
+    </div>
     <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots, key NPCs, contingencies...">{{notes}}</textarea></label><p class="hqr-hint">This text is stored only on a private JournalEntryPage, never in public Journal flags.</p></div>
   </div>
   <footer class="hqr-actions"><button type="button" data-action="open-journal" {{#unless isEdit}}disabled{{/unless}}>Open Journal</button><button type="button" data-action="save" class="hqr-primary"><i class="fa-solid fa-floppy-disk"></i> Save Faction</button></footer>

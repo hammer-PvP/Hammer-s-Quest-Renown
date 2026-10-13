@@ -62,12 +62,11 @@ function addJournalSheetButton(app,html){
   if(!(root instanceof HTMLElement))return;
   attachItemTooltips(root);
   renderQuestStatus(app,root);
-  if(!isGM() || root.querySelector('.hqr-edit-journal'))return;
-  const host=root.querySelector('.window-header .window-title')??root.querySelector('.window-header');
-  if(!host)return;
-  const button=document.createElement('button');button.type='button';button.className='hqr-edit-journal';button.innerHTML='<i class="fa-solid fa-pen-to-square"></i> Edit Quest / Faction';
-  button.addEventListener('click',event=>{event.preventDefault();journal.getFlag(ID,'kind')==='quest'?startQuest(journal):startFaction(journal);});
-  host.after(button);
+  // Foundry V14 renders JournalEntry windows through ApplicationV2. Their
+  // header action is registered below with getHeaderControlsApplicationV2.
+  // Do not inject a second legacy button into the chrome on render hooks:
+  // that used to overlap header actions and retained detached page fragments.
+
 }
 function isDndActorSheet(app){
   const actor=app?.actor??app?.document;
@@ -76,7 +75,7 @@ function isDndActorSheet(app){
 }
 Hooks.once('init',()=>{
   registerReputationSettings();
-  console.info(`${ID} | Initializing v0.0.9`);
+  console.info(`${ID} | Initializing v0.1.0`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
@@ -117,13 +116,13 @@ Hooks.on('getHeaderControlsApplicationV2',(app,controls)=>{
   if(isDndActorSheet(app)){
     const actor=app.actor??app.document;
     if(game.user.isGM || actor.testUserPermission(game.user,'OBSERVER')){
-      controls.push({action:'hqrOpenReputation',label:'Reputation',icon:'fa-solid fa-book-open',visible:true,onClick:()=>startReputation(actor)});
+      if(!controls.some(c=>c.action==='hqrOpenReputation'))controls.push({action:'hqrOpenReputation',label:'Reputation',icon:'fa-solid fa-book-open',visible:true,onClick:()=>startReputation(actor)});
     }
   }
   if(isGM() && app?.document?.documentName==='JournalEntry'){
     const journal=app.document;
     if(['faction','quest'].includes(journal.getFlag(ID,'kind'))){
-      controls.push({action:'hqrEditJournal',label:journal.getFlag(ID,'kind')==='quest'?'Edit Quest':'Edit Faction',icon:'fa-solid fa-pen-to-square',visible:true,onClick:()=>journal.getFlag(ID,'kind')==='quest'?startQuest(journal):startFaction(journal)});
+      if(!controls.some(c=>c.action==='hqrEditJournal'))controls.push({action:'hqrEditJournal',label:journal.getFlag(ID,'kind')==='quest'?'Edit Quest':'Edit Faction',icon:'fa-solid fa-pen-to-square',visible:true,onClick:()=>journal.getFlag(ID,'kind')==='quest'?startQuest(journal):startFaction(journal)});
     }
   }
 });

@@ -211,3 +211,19 @@ section.hqr-journal > .hqr-personal-quest-state .hqr-outcome-stamp{position:stat
 .hqr-undo-failure .hqr-reversal-person small{display:block;color:#c0b7aa;font-weight:400;font-size:10px}
 .hqr-undo-failure .hqr-reversal-warning{border-color:#b87548;background:#2b2420}
 .hqr-results .hqr-reversal-audit{border-color:#719274}
+
+/* v0.1.0 — Rank Benefits foundation: blocks only, no grants. */
+.hqr-faction .hqr-rank-card{padding:12px;border:1px solid rgba(209,176,107,.22);border-radius:6px;background:#242125;display:flex;flex-direction:column;gap:9px}
+.hqr-faction .hqr-rank-benefits{border-top:1px solid rgba(209,176,107,.18);padding-top:9px;display:flex;flex-direction:column;gap:8px}
+.hqr-faction .hqr-rank-benefits h4{display:flex;align-items:center;gap:10px;margin:0}
+.hqr-faction .hqr-foundation-label{font-size:10px;text-transform:none;font-family:sans-serif;color:#bba985;font-weight:400}
+.hqr-faction .hqr-block-list{display:flex;flex-direction:column;gap:7px}
+.hqr-faction .hqr-benefit-block{padding:8px 11px;border-radius:5px;border:1px solid #4e453e;background:#1b1b1f}
+.hqr-faction .hqr-benefit-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:#e8d6af;font-weight:600}
+.hqr-faction .hqr-benefit-head button{min-height:24px;min-width:27px;padding:2px 5px}
+.hqr-faction .hqr-benefit-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hqr-faction .hqr-benefit-actions button{font-size:11px}
+/* Journal outcome seals must never paint over native title/header controls. */
+.window-header .hqr-outcome-stamp,.window-controls .hqr-outcome-stamp,.window-title .hqr-outcome-stamp{display:none!important}
+.hqr-outcome-stamp{display:none!important}
+section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-outcome-stamp{display:block!important;pointer-events:none!important}

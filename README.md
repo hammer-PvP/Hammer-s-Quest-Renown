@@ -4,7 +4,7 @@
 
 Create quest briefings and faction profiles, assign adventures to individual characters, award currency and items, record successes or failures, and track how each character or adventuring group is regarded by different factions—all without replacing Foundry's native Journals or D&D5e character sheets.
 
-**Current release:** `0.0.9` · **Interface language:** English · **License:** MIT
+**Interface language:** English · **License:** MIT
 
 [Install the module](#installation) · [Get started](#quick-start) · [Quest workflow](#managing-quests) · [Renown guide](#reputation-and-renown) · [Troubleshooting](#troubleshooting)
 
@@ -23,6 +23,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Reputation Manager | Inspect balances, ranks, and history; make manual adjustments for one or many Actors |
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | Active / Finished filing | Automatically organize Quest Journals by administrative state, not by faction or individual outcome |
+| Rank Benefits foundation | Configure General and Class Specific benefit blocks in Faction ranks; Item linking and grants are not yet enabled |
 
 ## Compatibility
 
@@ -141,6 +142,20 @@ The default ranks are:
 These are editable defaults, not fixed rules.
 
 **Faction discovery:** a Character or Group gains a recorded relationship with a Faction when it receives its first Renown ledger entry for that Faction. A **zero-point** manual adjustment is a useful way to establish a known Faction without changing the balance. Eligible Players receive read-only access to Faction profiles associated with their known Characters or Groups.
+
+## Rank Benefits — configuration foundation
+
+Open **Factions**, select a faction, and expand its **Renown Ranks** area. Inside
+any rank, choose **+ General** to add a benefit block for all classes or
+**+ Class Specific** to add a future per-class block. You may create multiple
+blocks of either type in the same rank and leave class-specific rewards empty.
+Save the Faction to keep these blocks; existing ranks and Renown thresholds
+remain unchanged.
+
+**Important:** Benefit blocks are **configuration placeholders only** in the
+current stage. Drag-and-drop of source Items, the Class Catalog, and actual
+Feat/Feature/Spell/Item grants to character sheets will be added in later
+updates. Rank Benefits cannot alter Actor inventories or spell lists yet.
 
 ## Creating a Quest
 
@@ -316,10 +331,10 @@ If you encounter a bug, include your Foundry version, D&D5e system version, modu
 - Objectives belong to the shared Quest document; **independent per-Character objective completion** is not provided.
 - Failure Penalties currently affect **Renown only**. Automatic currency deductions and Item removal are not part of Failure Turn-In.
 - **Undo Failure** is supported; automatic reversal of a successful Turn-In's currency and Items is not.
-- No built-in automatic quest prerequisites, quest chains, or rank-based perks.
+- No built-in automatic quest prerequisites or quest chains. Rank Benefit blocks can be saved, but they do not yet grant Items or abilities to Characters.
 - The native Journal folders `Active` and `Finished` express **global Quest administration**, not personalized folders per player.
 
-For version-specific changes, see [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases). This README is a **feature and usage guide**, not a changelog.
+For technical changes by version, consult [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases).
 
 ## License and credits
 

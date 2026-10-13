@@ -15,9 +15,17 @@ export function renderQuestStatus(app,html){
   // full Journal sheets AND partial pages through different hooks. In v0.0.7
   // that fallback could insert a second stamp on top of the window controls.
   // Only the shared PUBLIC Quest Briefing HTML is a legal mount point.
-  const questSections=[...root.querySelectorAll("section.hqr-journal")];
-  const content=questSections.find(el=>el.offsetParent!==null)??questSections[0];
+  const questSections=[...(root.matches?.("section.hqr-journal")?[root]:[]),...root.querySelectorAll("section.hqr-journal")];
+  // Never mount in the native Journal header, even when Foundry embeds a
+  // fragment with a matching CSS class during a partial page render.
+  const safeSections=questSections.filter(el=>!el.closest(".window-header, .window-controls, .window-title"));
+  const content=safeSections.find(el=>el.offsetParent!==null)??safeSections[0];
   const existing=[...root.querySelectorAll("[data-hqr-quest-status]")];
+  // Clean up orphaned stamp nodes left by earlier releases or interrupted
+  // render cycles. A valid stamp lives INSIDE its private status section.
+  for(const seal of root.querySelectorAll(".hqr-outcome-stamp")){
+    if(!seal.closest("section.hqr-journal > section.hqr-personal-quest-state"))seal.remove();
+  }
   if(!content){
     // Remove orphan panels left behind by a prior/partial render, but do not
     // create anything until the actual Quest Briefing has been mounted.
