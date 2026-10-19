@@ -23,7 +23,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Reputation Manager | Inspect balances, ranks, and history; make manual adjustments for one or many Actors |
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | Active / Finished filing | Automatically organize Quest Journals by administrative state, not by faction or individual outcome |
-| Rank Benefits foundation | Configure General and Class Specific benefit blocks in Faction ranks; Item linking and grants are not yet enabled |
+| Rank Benefits Class Catalog | Select enabled classes independently of other book content; preview optional class-specific slots on any faction rank |
 
 ## Compatibility
 
@@ -51,6 +51,10 @@ The Reputation tab is designed for the native D&D5e Character and Group sheets. 
 You can also obtain release files from [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases).
 
 > **Updating an existing World?** Back up the complete World with Foundry stopped before updating. The module preserves existing managed Journal IDs, Actor Renown ledgers, quest outcomes, and payout history through its versioned migrations. A backup is still strongly recommended for a live campaign.
+
+### Testing an unpublished local build
+
+Until a test build is published on GitHub, its release manifest does **not** provide a working update URL. To test a ZIP locally, shut down Foundry, back up the World, and extract the module files into `Data/modules/hammer-s-quest-renown/` within the Foundry User Data directory (the `module.json` file should be directly inside that folder). Restart Foundry and open the World to test. Avoid running an automated update from the public manifest until that version has been published.
 
 ## Quick start
 
@@ -143,19 +147,43 @@ These are editable defaults, not fixed rules.
 
 **Faction discovery:** a Character or Group gains a recorded relationship with a Faction when it receives its first Renown ledger entry for that Faction. A **zero-point** manual adjustment is a useful way to establish a known Faction without changing the balance. Eligible Players receive read-only access to Faction profiles associated with their known Characters or Groups.
 
-## Rank Benefits — configuration foundation
+## Configuring Rank Benefits (Class Catalog)
 
-Open **Factions**, select a faction, and expand its **Renown Ranks** area. Inside
-any rank, choose **+ General** to add a benefit block for all classes or
-**+ Class Specific** to add a future per-class block. You may create multiple
-blocks of either type in the same rank and leave class-specific rewards empty.
-Save the Faction to keep these blocks; existing ranks and Renown thresholds
-remain unchanged.
+Open **Factions**, select a Faction, and find **Renown Ranks**. In any rank,
+choose **+ General** to add a reward block for every eligible Character, or
+**+ Class Specific** to add a block with an empty row for each class selected
+in the module's Class Catalog. You may add multiple blocks of both kinds to
+one rank; ranks and class slots may remain completely empty. Use the X beside
+an individual benefit block to remove it, then select **Save Faction**.
 
-**Important:** Benefit blocks are **configuration placeholders only** in the
-current stage. Drag-and-drop of source Items, the Class Catalog, and actual
-Feat/Feature/Spell/Item grants to character sheets will be added in later
-updates. Rank Benefits cannot alter Actor inventories or spell lists yet.
+### Select which classes appear
+
+1. In the Faction Manager, use **Class Catalog** beside **Renown Ranks**.
+2. Review the list discovered from enabled **D&D5e Compendium Browser
+   Sources** and **World Items** of type `class`.
+3. Check the classes you want to offer individual rank-benefit slots for.
+   Uncheck classes that belong to books you want to use for other content but
+   whose classes you do not want in this particular World.
+4. Choose **Save Class Catalog**. Open Faction editors update their
+   Class Specific rows without clearing unsaved description or GM Notes.
+
+On first use, only classes found in the D&D5e system's native **Classes (SRD)**
+compendium are initially selected. Additional compendium and homebrew classes
+must be enabled by the GM. Classes are grouped by their native D&D5e
+identifier, so alternate versions of the same class do not create duplicate
+slots. Custom classes with distinct identifiers can be enabled individually.
+
+This is a **World-wide class selection**, shared by every Faction. Hiding a
+class does **not** remove any previously configured rank data, change any
+Actor's actual class, or block the use of Feats, Spells, equipment or other
+Items from that compendium. Previously enabled classes whose sources are no
+longer available are shown with a warning, rather than silently deleted.
+
+**Current limitation:** General blocks and the individual Class Specific rows
+are **placeholders only**. Item/Feat/Feature/Spell drag-and-drop and real grants
+to Character sheets are planned for later development; nothing added to a rank
+is granted to an Actor in this version. The Class Catalog only controls which
+empty class slots are displayed and saved.
 
 ## Creating a Quest
 

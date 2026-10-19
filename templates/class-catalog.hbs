@@ -1,0 +1,35 @@
+<div class="hqr-shell">
+  <header class="hqr-banner">
+    <i class="fa-solid fa-list-check"></i>
+    <div><h2>Class Catalog</h2><p>Rank Benefits • Enabled Classes</p></div>
+  </header>
+  <div class="hqr-scroll">
+    <div class="hqr-panel">
+      <h3><i class="fa-solid fa-book-open"></i> D&amp;D5e Class Sources</h3>
+      <p class="hqr-hint">Discovered from Item compendiums enabled in the D&amp;D5e Compendium Browser and from World Items. Books can remain available for Spells and Feats without enabling their classes here.</p>
+      {{#unless initialized}}<p class="hqr-catalog-info">Initial selection includes only classes from the system's native D&amp;D5e Classes compendium. Enable additional classes explicitly, then save.</p>{{/unless}}
+      {{#if errors.length}}<p class="hqr-catalog-warning">Some compendiums could not be indexed: {{#each errors}}{{this}} {{/each}}. Other sources remain available.</p>{{/if}}
+      <div class="hqr-class-catalog-toolbar">
+        <input type="search" data-class-search placeholder="Filter by class or source" aria-label="Search available classes">
+        <button type="button" data-action="select-all-classes">Select Visible</button>
+        <button type="button" data-action="clear-classes">Clear Visible</button>
+      </div>
+      <div class="hqr-class-catalog-list" data-class-list>
+        {{#each entries}}
+        <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}">
+          <input type="checkbox" {{#if enabled}}checked{{/if}}>
+          <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Previously enabled (source not currently available){{/if}}</small></span>
+          {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Source unavailable"></i>{{/if}}
+        </label>
+        {{else}}
+        <p class="hqr-hint">No classes were found in enabled sources. Enable a D&amp;D5e class compendium or add a World Item of type Class.</p>
+        {{/each}}
+      </div>
+    </div>
+    <p class="hqr-hint">Disabled classes are hidden from new Class Specific slots. Existing rank configuration is not deleted. General benefits are never filtered by class.</p>
+  </div>
+  <footer class="hqr-actions">
+    <span class="hqr-class-catalog-count"><strong data-class-count>{{selectedCount}}</strong> / {{count}} enabled</span>
+    <button type="button" data-action="save-class-catalog" class="hqr-primary"><i class="fa-solid fa-floppy-disk"></i> Save Class Catalog</button>
+  </footer>
+</div>

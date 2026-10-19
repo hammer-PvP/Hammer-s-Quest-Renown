@@ -4,6 +4,47 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.2 — Local Test: Class Catalog and Class Specific Slots
+
+- **GM Class Catalog:** Discover class Items from the D&D5e 6.0.6
+  Compendium Browser's enabled Item packs and World Items. The GM can
+  enable/disable individual classes independently of other book contents.
+  Alternate class versions sharing a native identifier collapse into one
+  slot; homebrew classes with distinct identifiers are supported.
+- **Safe first-use defaults:** Select native `dnd5e.classes` entries on first
+  use; supplementary and homebrew classes require explicit GM opt-in.
+  Class selection is stored in a separate world setting with source/name
+  snapshots. Previously selected classes remain visible if a source
+  subsequently becomes unavailable.
+- **Class Specific rank slots:** Every selected class has a named, optional,
+  empty placeholder row inside each Class Specific benefit block. General
+  and Class Specific blocks can still coexist in one rank. Class Catalog
+  changes refresh the slot rows without rerendering the Faction sheet or
+  clearing unsaved edits and focus.
+- **No schema rewrite:** Module `dataVersion` remains 5. Existing rank IDs,
+  blocks, Journal data, Quest histories, personal/Group Renown, Actor Items
+  and prior grants remain untouched. The Class Catalog uses a new additive
+  world setting; no grant engine is enabled in this release.
+- **Deferred:** Drag-and-drop of Items/Feats/Features/Spells and their source
+  UUIDs, as well as granting to Actors, will follow in later v0.1.x work.
+- **Development QA:** automated mocked source filtering, class discovery,
+  Core-only defaults, saved selections, duplicate merging and browser DOM
+  regression for scroll/draft-preserving slot updates. Live Foundry V14/D&D5e
+  6.0.6 testing remains required before considering this patch stable.
+
+---
+
+## v0.1.1 — Local Test Hotfix: Faction Save and Editor Drafts
+
+- **Critical Faction save fix:** Import `normalizeFactionRanks` into the Faction document service. The missing import caused `ReferenceError` on *every* Save Faction attempt, even without benefit changes.
+- **No full rerender for microactions:** Adding/removing a General or Class Specific block and adding/removing a rank now update only the relevant DOM nodes. This preserves the current scroll position, focused controls, image field, description and GM Notes drafts. Newly added blocks are revealed inside the editor's own scroll pane.
+- **Reliable save interaction:** Prevent concurrent Save Faction clicks; preserve the current scroll position on successful save/reopen of the editor and keep the user's form untouched when a save fails.
+- **Persistence:** General and Class Specific blocks (including empty blocks) retain stable IDs, rank associations and previously saved metadata. Existing rank names/thresholds and unrelated Quest/Actor records are not changed by the hotfix.
+- **Schema:** No new migration is required. The module data schema remains `dataVersion 5`, as introduced in v0.1.0.
+- **Local validation:** JS syntax, isolated save/repeat-save and empty-block persistence, and headless-browser DOM tests for add/remove without draft or scroll reset passed. Foundry V14/D&D5e 6.0.6 live QA is still required. This is an unreleased test build, not a published stable GitHub Release.
+
+---
+
 ## v0.1.0 — Rank Benefits Foundation and Journal UI Reliability
 
 - **Foundation only:** Faction rank records now carry stable `id` and a `benefits` array.

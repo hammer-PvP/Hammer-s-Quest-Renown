@@ -16,7 +16,8 @@
       <p class="hqr-hint">Native Foundry File Picker · 5:3 preview · image preserved without cropping or stretching.</p>
     </div><label>Flavor Text / Description<textarea name="description" rows="5">{{description}}</textarea></label></div>
     <div class="hqr-panel hqr-ranks">
-      <h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3>
+      <div class="hqr-rank-settings-header"><h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3>
+        <button type="button" data-action="open-class-catalog"><i class="fa-solid fa-list-check"></i> Class Catalog (<span data-enabled-classes>{{classCount}}</span>)</button></div>
       <p class="hqr-hint">Each faction has independent thresholds. Renown can be negative. Existing ranks and reputation are preserved.</p>
       <div class="hqr-list">
         {{#each ranks}}
@@ -35,7 +36,21 @@
                   <span><i class="fa-solid {{#if isGeneral}}fa-users{{else}}fa-user-shield{{/if}}"></i> {{#if isGeneral}}General{{else}}Class Specific{{/if}}</span>
                   <button type="button" data-action="remove-benefit" title="Remove benefit block"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <p class="hqr-hint">{{#if isGeneral}}All eligible Characters.{{else}}Per-class slots; empty classes are valid.{{/if}} Source linking arrives in the next development stages.</p>
+                {{#if isGeneral}}
+                  <p class="hqr-hint">All eligible Characters. Item and Spell source linking is planned for a later version.</p>
+                {{else}}
+                  <div class="hqr-class-slot-list">
+                    {{#each slots}}
+                    <div class="hqr-class-slot {{#if unavailable}}hqr-class-slot-unavailable{{/if}}" data-class-key="{{key}}">
+                      <strong class="hqr-class-slot-name">{{name}}</strong>
+                      <span class="hqr-class-slot-empty">Empty — optional</span>
+                    </div>
+                    {{else}}
+                    <p class="hqr-hint hqr-no-classes">No classes enabled. Open Class Catalog to select classes.</p>
+                    {{/each}}
+                  </div>
+                  <p class="hqr-hint">Class slots are optional placeholders; drag-and-drop will follow in a later version.</p>
+                {{/if}}
               </div>
               {{/each}}
             </div>
@@ -48,7 +63,7 @@
         {{/each}}
       </div>
       <button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button>
-      <p class="hqr-hint">v0.1.0 configures and saves benefit blocks. It does not grant Items, Feats, Features or Spells to Characters.</p>
+      <p class="hqr-hint">Class Specific slots follow the global Class Catalog. Empty slots are valid and do not grant Items, Feats, Features or Spells to Characters.</p>
     </div>
     <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots, key NPCs, contingencies...">{{notes}}</textarea></label><p class="hqr-hint">This text is stored only on a private JournalEntryPage, never in public Journal flags.</p></div>
   </div>

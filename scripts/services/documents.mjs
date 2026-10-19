@@ -1,3 +1,4 @@
+import {normalizeFactionRanks} from "./rank-benefits.mjs";
 import {ID,FOLDER_FACTIONS,FOLDER_QUESTS,LEGACY_FOLDER_FACTIONS,LEGACY_FOLDER_QUESTS,DEFAULT_RANKS,assertGM,esc,htmlText,factions,ownerUsers,eligible,groupMembers,CURRENCIES} from "../constants.mjs";
 
 export const COLORS = Object.freeze({questRoot:"#ab960d",questCategory:"#776809",factionRoot:"#890b1e"});

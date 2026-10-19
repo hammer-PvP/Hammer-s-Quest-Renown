@@ -8,6 +8,7 @@ import {QuestLifecycleApp} from "./apps/quest-lifecycle-app.mjs";
 import {installReputationTabs} from "./sheets/reputation-tab.mjs";
 import {renderQuestStatus} from "./sheets/quest-status.mjs";
 import {registerReputationSettings,migrateReputationSchema,isRenownBatchRunning} from "./services/batch-reputation.mjs";
+import {registerClassCatalogSettings} from "./services/class-catalog.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
 function startQuest(doc=null){ if(!isGM())return;new QuestApp(doc).render(true); }
@@ -75,7 +76,8 @@ function isDndActorSheet(app){
 }
 Hooks.once('init',()=>{
   registerReputationSettings();
-  console.info(`${ID} | Initializing v0.1.0`);
+  registerClassCatalogSettings();
+  console.info(`${ID} | Initializing v0.1.2`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}

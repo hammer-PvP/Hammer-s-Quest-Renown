@@ -1,8 +1,8 @@
 {
   "id": "hammer-s-quest-renown",
   "title": "Hammer's Quest & Renown",
-  "description": "Native Foundry Quests, Factions and Renown for D&D5e 6.x; Rank Benefits configuration foundation, production-safe data migrations and Journal UI fixes.",
-  "version": "0.1.0",
+  "description": "Native Foundry Quests, Factions and Renown for D&D5e 6.x; Rank Benefits Class Catalog and class-specific placeholder slots.",
+  "version": "0.1.2",
   "authors": [
     {
       "name": "Raphael Andrade"
@@ -42,7 +42,7 @@
   "readme": "README.md",
   "url": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown",
   "manifest": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/latest/download/module.json",
-  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.1.0/hammer-s-quest-renown.zip",
+  "download": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/download/v0.1.2/hammer-s-quest-renown.zip",
   "bugs": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/issues",
-  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.1.0"
+  "changelog": "https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases/tag/v0.1.2"
 }
