@@ -434,3 +434,14 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
 @media(max-width:630px){
   .hqr-app.hqr-module-settings .hqr-class-source-list{grid-template-columns:1fr}
 }
+
+/* v0.1.8 — Class Sources and Enabled Classes are separate, independently
+   collapsible configuration panels. Approved native Folder Management intact. */
+.hqr-app.hqr-module-settings .hqr-class-sources-panel,
+.hqr-app.hqr-module-settings .hqr-class-catalog-panel{margin-bottom:10px}
+.hqr-app.hqr-module-settings .hqr-class-sources-panel .hqr-class-catalog-chevron,
+.hqr-app.hqr-module-settings .hqr-class-catalog-panel .hqr-class-catalog-chevron{transition:transform 120ms ease}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry[data-unavailable="true"]{border-style:dashed}
+.hqr-app.hqr-module-settings .hqr-class-catalog-row .hqr-class-catalog-text small{
+  color:#bdb3a3;font-size:10px;line-height:1.1
+}

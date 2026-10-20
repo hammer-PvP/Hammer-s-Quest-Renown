@@ -24,7 +24,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | GM Only / Active / Finished filing | Automatically file prepared, available, and closed Quests by GM administrative status without changing individual results |
 | Quest Manager filters | Browse All, GM Only, Available, Accepted and Finished; live search by Quest name or Faction with category counts |
-| World Module Settings | Choose allowed rank-benefit classes and custom names and colors for native managed folders in one GM-only settings screen |
+| World Module Settings | Configure Class Sources separately from logical Enabled Classes; customize native managed folder names and colors |
 
 ## Compatibility
 
@@ -116,7 +116,7 @@ Journal Directory
 
 Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** (GM only). In this single screen:
 
-- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Class Catalog starts collapsed with a count of enabled classes; expand it to edit a dense, searchable two-column list. First enable the desired **Class Sources** (the exact class compendium(s) or World Items). Each class can then be enabled individually and is bound to its exact class definition UUID. When multiple enabled sources contain the same class, choose the exact source/edition from its dropdown before saving. Bibliographic source labels reflect document metadata, not assumptions about the selected ruleset. Search classes by name or source; the list supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
+- **Class Sources and Enabled Classes:** use the two separate collapsible sections in World Module Settings. First expand **Class Sources** and check every class compendium (or World Items) permitted in the campaign. Then expand **Enabled Classes** to choose which logical classes may receive Class Specific rank benefits. A single Fighter slot accepts **every Fighter definition** found in the authorized Class Sources; PHB and custom supplement Fighters are not mutually exclusive. Each source document keeps its original UUID, source, and edition for future eligibility checks. Classes remain individually selectable without enabling the entire book's Feats or Spells, and empty Class Specific slots are valid. Both sections start collapsed to save space. Changing Class Sources does not automatically uncheck previously selected classes.
 - **Folder Management:** customize the **name and color** of each of the five managed native Journal folders, or use **Reset Default Names** / **Reset Default Colors**. You can call your Quest root *Missões*, the GM-only folder *Ocultas*, and Finished *Concluídas* without altering their roles. Click **Save Settings** to apply changes to the current World. Existing Folder documents are renamed/recolored in place, retaining their IDs and all child Journals; Quest status rules never depend on the visible names. Folder names must not be blank or collide with another folder under the same parent.
 
 Folder colors and names are World-wide settings for the GM; changes survive closing the configuration window and reloading the game. If you use a custom folder name, the module continues to move Quests by their global status into the same physical Folder IDs.
@@ -178,14 +178,17 @@ an individual benefit block to remove it, then select **Save Faction**.
 
 1. As GM, open **Game Settings → Configure Settings → Module Settings**.
 2. Under **Hammer's Quest & Renown**, click **Open Settings**.
-3. Expand **Class Catalog**. Under **Class Sources**, choose the exact compendiums (or World Items) from which classes may be discovered. Then review and enable the desired classes. If two enabled sources contain the same class, choose its exact definition from the source dropdown; unknown/ambiguous definitions are never silently substituted. The source line prioritizes Item/book metadata, with the collection name used only if bibliographic information is missing.
-4. Check or uncheck individual classes, then click **Save Settings**. This is independent of editing or saving a Faction.
+3. Open **Class Sources**, the first collapsible section, and enable **all** class compendiums you want the campaign to recognize (plus World Items if desired). A class can be recognized from multiple books at the same time; this does not enable or restrict other game-system content.
+4. Open the separate **Enabled Classes** section and check which logical classes should have Class Specific rank slots. Fighter needs to be checked only once even if two authorized sources contain a Fighter. The class count shows how many distinct authorized definitions exist, and the tooltip lists their provenance. This configuration does not grant Items to Characters.
+5. Check or uncheck individual classes, then click **Save Settings**. This is independent of editing or saving a Faction.
 
 On first use, only classes found in the D&D5e system's native **Classes (SRD)**
 compendium are initially selected. Additional compendium and homebrew classes
-must be enabled by the GM. Classes are grouped by their native D&D5e
-identifier, so alternate versions of the same class do not create duplicate
-slots. Custom classes with distinct identifiers can be enabled individually.
+must be enabled by the GM. Classes of the same name from approved sources share a logical slot, even if
+supplements use different internal identifiers. The document UUIDs for **all**
+authorized definitions are kept separately for future class eligibility; each
+logical class still has only one row in the Faction rank editor. Custom classes
+with distinct names can be enabled individually.
 
 This is a **World-wide class selection**, shared by every Faction. Hiding a
 class does **not** remove any previously configured rank data, change any

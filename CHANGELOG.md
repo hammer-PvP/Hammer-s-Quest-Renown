@@ -4,6 +4,17 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.8 — Independent Class Sources and Multi-Definition Class Eligibility
+
+- **Two independent controls:** World Module Settings now has two separately collapsible panels: `Class Sources` (authorize any number of class compendiums / World Items) and `Enabled Classes` (enable logical classes such as Fighter and Wizard). Each logical class has one rank slot, regardless of the number of authorized definitions. The approved Folder Management markup and service remain unchanged.
+- **OR-set definitions:** all class Item UUIDs from all permitted sources are retained for each enabled class, instead of forcing the GM to choose one version of a class. A Fighter from PHB 2024 and a Fighter from an authorized supplement both qualify as valid Fighter definitions when future granting is implemented. Grants remain **disabled** in v0.1.8; this patch configures and stores the eligibility model only.
+- **Provenance and aliases:** every definition retains source pack/World Item, UUID, identifier and editorial source metadata. Equivalently named classes can share a logical slot even when a supplement uses a different internal identifier. Previously selected class keys and snapshots are migrated additively without rewriting existing Faction rank/benefit documents.
+- **Migration:** `dataVersion 8 → 9`; World setting `rankClassCatalog` v2 → v3 (bindings hold a `definitions` array), `rankClassSources` v1 → v2 when saved. Existing Quest Journals, native folder IDs/colors/names, Character/Group reputation ledgers, payouts and histories are not changed. Multiple saves and schema upgrades are idempotent. An unavailable source is never replaced silently; missing-class definitions are treated as ineligible until restored.
+- **UX:** compact Class Catalog stays collapsed by default; no exclusive per-class UUID dropdown. The count of authorized definitions and an inspection tooltip replace inconsistent repeated book labels. Source changes do not toggle class selections or reset window scroll/focus. README remains an end-user guide; this file records technical changes.
+- **QA:** mocked dual-source Fighter (including different `system.identifier` values), third-source, disabling/re-enabling a source, idempotent migration and unchanged Faction data; syntax/template and package checks. Validate the interface in Foundry V14 / D&D5e 6.0.6 before public release.
+
+---
+
 ## v0.1.7 — Explicit Class Sources and Exact Definition Binding
 
 - **GM Class Sources:** a compact source selector in Module Settings now controls which D&D5e class compendiums / World class Items may contribute to the Class Catalog. It is independent of Feat, Item and Spell compendium availability and respects packs disabled in the D&D5e Compendium Browser.

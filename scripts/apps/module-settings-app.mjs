@@ -57,13 +57,13 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
         const classDraft=classUI.collect();
         // Abort BEFORE touching native folder settings if any class definition
         // is missing, ambiguous or incompatible with the selected source.
-        await validateClassCatalogDraft(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds,bindings:classDraft.bindings});
+        await validateClassCatalogDraft(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds});
         // Desired state is durable before modifying native folders: a partial
         // Foundry update will be resumed safely on the next GM startup.
         await saveFolderNames(names);
         await saveFolderColors(colors);
         await applyManagedFolderSettings();
-        await saveClassCatalog(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds,bindings:classDraft.bindings});
+        await saveClassCatalog(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds});
         ui.notifications.info("Hammer's Quest & Renown settings saved.");
         await this.close();
       }catch(error){report(error,'Save Module Settings failed');}
