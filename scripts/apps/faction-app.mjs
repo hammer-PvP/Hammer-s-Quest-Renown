@@ -2,7 +2,6 @@ import {ID,DEFAULT_RANKS,assertGM,report,CLONE,factions} from "../constants.mjs"
 import {saveFaction,getGMNotes,renameFactionFolders} from "../services/documents.mjs";
 import {normalizeFactionRanks,newBenefitBlock} from "../services/rank-benefits.mjs";
 import {getEnabledClasses} from "../services/class-catalog.mjs";
-import {ClassCatalogApp} from "./class-catalog-app.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
 
 /** Placeholder rows reflect selected classes only. They do not create or change
@@ -14,7 +13,7 @@ function classSlotsNode(classes){
   if(!classes.length){
     const empty=document.createElement('p');
     empty.className='hqr-hint hqr-no-classes';
-    empty.textContent='No classes enabled. Open Class Catalog to select classes.';
+    empty.textContent='No classes enabled. Configure them in Module Settings.';
     list.append(empty);
   }
   for(const cls of classes){
@@ -180,12 +179,6 @@ export class FactionApp extends HandlebarsApplicationMixin(ApplicationV2) {
       imageField.value='';preview?.classList.remove('hqr-preview-error');updatePreview();
     });
     updatePreview();
-    root.querySelector('[data-action="open-class-catalog"]')?.addEventListener('click',()=>{
-      try{
-        assertGM();
-        new ClassCatalogApp({onSaved:()=>this._refreshClassSlots()}).render(true);
-      }catch(error){report(error,'Open Class Catalog failed');}
-    });
     // This is a markup-only template. It is NEVER inserted into the live list
     // until the GM explicitly asks to create a rank.
     const sample=root.querySelector('.hqr-rank-card');

@@ -9,6 +9,8 @@ import {installReputationTabs} from "./sheets/reputation-tab.mjs";
 import {renderQuestStatus} from "./sheets/quest-status.mjs";
 import {registerReputationSettings,migrateReputationSchema,isRenownBatchRunning} from "./services/batch-reputation.mjs";
 import {registerClassCatalogSettings} from "./services/class-catalog.mjs";
+import {registerFolderColorSettings} from "./services/folder-settings.mjs";
+import {HQRModuleSettingsApp} from "./apps/module-settings-app.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
 function startQuest(doc=null){ if(!isGM())return;new QuestApp(doc).render(true); }
@@ -77,14 +79,20 @@ function isDndActorSheet(app){
 Hooks.once('init',()=>{
   registerReputationSettings();
   registerClassCatalogSettings();
-  console.info(`${ID} | Initializing v0.1.2`);
+  registerFolderColorSettings();
+  game.settings.registerMenu(ID,"worldConfiguration",{
+    name:"World Configuration",label:"Open Settings",
+    hint:"Configure eligible classes and native Journal folder colors for this World.",
+    icon:"fa-solid fa-sliders",type:HQRModuleSettingsApp,restricted:true
+  });
+  console.info(`${ID} | Initializing v0.1.4`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
   installReputationTabs();
   installReputationClickHandler();
   game.modules.get(ID).api={openFactions:startFaction,newQuest:()=>startQuest(),editQuest:startQuest,
-    openQuestManager:startQuestManager,openQuestLifecycle:startQuestLifecycle,openReputation:startReputation,reconcileAccess};
+    openQuestManager:startQuestManager,openQuestLifecycle:startQuestLifecycle,openReputation:startReputation,openSettings:()=>isGM()&&new HQRModuleSettingsApp().render(true),reconcileAccess};
   if(!isGM())return;
   try {const migrated=await migrateReputationSchema();if(!migrated)await synchronizeQuestFolders();await reconcileAccess();}catch(error){report(error,'Initialization failed');}
 });

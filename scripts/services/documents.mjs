@@ -1,7 +1,9 @@
 import {normalizeFactionRanks} from "./rank-benefits.mjs";
+import {getFolderColors} from "./folder-settings.mjs";
 import {ID,FOLDER_FACTIONS,FOLDER_QUESTS,LEGACY_FOLDER_FACTIONS,LEGACY_FOLDER_QUESTS,DEFAULT_RANKS,assertGM,esc,htmlText,factions,ownerUsers,eligible,groupMembers,CURRENCIES} from "../constants.mjs";
 
-export const COLORS = Object.freeze({questRoot:"#ab960d",questCategory:"#776809",factionRoot:"#890b1e"});
+export const COLORS = Object.freeze({questRoot:"#ab960d",questCategory:"#776809",factionRoot:"#890b1e"}); // legacy defaults, kept for API compatibility
+export const GM_ONLY_FOLDER = "GM Only";
 export const ACTIVE_FOLDER = "Active";
 export const FINISHED_FOLDER = "Finished";
 const LEGACY_INACTIVE_FOLDER = "Inativas";
@@ -38,8 +40,9 @@ async function moduleRoot(name,legacyName,color){
 }
 export async function roots() {
   assertGM();
-  return {factions:await moduleRoot(FOLDER_FACTIONS,LEGACY_FOLDER_FACTIONS,COLORS.factionRoot),
-    quests:await moduleRoot(FOLDER_QUESTS,LEGACY_FOLDER_QUESTS,COLORS.questRoot)};
+  const colors=getFolderColors();
+  return {factions:await moduleRoot(FOLDER_FACTIONS,LEGACY_FOLDER_FACTIONS,colors.factionRoot),
+    quests:await moduleRoot(FOLDER_QUESTS,LEGACY_FOLDER_QUESTS,colors.questRoot)};
 }
 /** Administrative state controls a Quest's single native folder.
  * Character results are individual and NEVER determine physical Journal location.
@@ -47,7 +50,10 @@ export async function roots() {
  */
 export async function questFolder(_faction, status="available") {
   const {quests:root}=await roots();
-  return ensureFolder(status==="inactive"?FINISHED_FOLDER:ACTIVE_FOLDER,root,COLORS.questCategory);
+  const colors=getFolderColors();
+  if(status==="unavailable")return ensureFolder(GM_ONLY_FOLDER,root,colors.gmOnly);
+  if(status==="inactive")return ensureFolder(FINISHED_FOLDER,root,colors.finished);
+  return ensureFolder(ACTIVE_FOLDER,root,colors.active);
 }
 function folderDepth(folder){let depth=0;const visited=new Set();for(let p=folder?.folder;p&&!visited.has(p.id);p=p.folder){visited.add(p.id);depth++;}return depth;}
 function within(folder,root){const seen=new Set();for(let p=folder;p&&!seen.has(p.id);p=p.folder){if(p.id===root.id)return true;seen.add(p.id);}return false;}
@@ -64,15 +70,17 @@ export async function synchronizeQuestFolders(){
   const legacyQuestRoot=directFolder(LEGACY_FOLDER_QUESTS);
   const legacyFactionRoot=directFolder(LEGACY_FOLDER_FACTIONS);
   const {quests:questRoot,factions:factionRoot}=await roots();
-  const active=await ensureFolder(ACTIVE_FOLDER,questRoot,COLORS.questCategory);
-  const finished=await ensureFolder(FINISHED_FOLDER,questRoot,COLORS.questCategory);
+  const colors=getFolderColors();
+  const gmOnly=await ensureFolder(GM_ONLY_FOLDER,questRoot,colors.gmOnly);
+  const active=await ensureFolder(ACTIVE_FOLDER,questRoot,colors.active);
+  const finished=await ensureFolder(FINISHED_FOLDER,questRoot,colors.finished);
   const recognizedRoots=[questRoot,...(legacyQuestRoot && legacyQuestRoot.id!==questRoot.id?[legacyQuestRoot]:[])];
   // Capture old faction/Inactive folders before moving their last Quest.
   const oldFolderIds=new Set();
   const factionNames=new Set(factions().map(f=>f.name));
   for(const root of recognizedRoots){
     for(const folder of game.folders.filter(f=>f.type==="JournalEntry" && within(f,root) && f.id!==root.id)){
-      if(folder.id===active.id||folder.id===finished.id)continue;
+      if(folder.id===gmOnly.id||folder.id===active.id||folder.id===finished.id)continue;
       const top=folder.folder?.id===root.id;
       const isLegacyTop=top && factionNames.has(folder.name);
       const isLegacyNested=folder.name===LEGACY_INACTIVE_FOLDER && folder.folder && factionNames.has(folder.folder.name) && folder.folder.folder?.id===root.id;
@@ -87,7 +95,8 @@ export async function synchronizeQuestFolders(){
   for(const journal of taggedQuests){
     // Intentional GM-controlled physical filing is replaced by the approved
     // Active/Finished structure; no unrelated Journals are ever modified.
-    const target=journal.getFlag(ID,"status")==="inactive"?finished:active;
+    const status=journal.getFlag(ID,"status")??"unavailable";
+    const target=status==="inactive"?finished:status==="available"?active:gmOnly;
     if(journal.folder?.id!==target.id)await journal.update({folder:target.id});
   }
   // Do not delete any folders still holding documents or subfolders. Unrelated
@@ -99,6 +108,25 @@ export async function synchronizeQuestFolders(){
   }
   return {quests:taggedQuests.length,factions:taggedFactions.length};
 }
+/** Repaint existing managed folders without creating/moving Journal documents.
+ * Changing colors never changes Faction, Quest, Actor, or ownership flags.
+ */
+export async function applyManagedFolderColors(){
+  assertGM();
+  const colors=getFolderColors();
+  const rootF=directFolder(FOLDER_FACTIONS)??directFolder(LEGACY_FOLDER_FACTIONS);
+  const rootQ=directFolder(FOLDER_QUESTS)??directFolder(LEGACY_FOLDER_QUESTS);
+  const pairs=[[rootF,colors.factionRoot],[rootQ,colors.questRoot]];
+  if(rootQ){
+    pairs.push([directFolder(GM_ONLY_FOLDER,rootQ),colors.gmOnly],
+      [directFolder(ACTIVE_FOLDER,rootQ),colors.active],
+      [directFolder(FINISHED_FOLDER,rootQ),colors.finished]);
+  }
+  for(const [folder,color] of pairs){
+    if(folder && String(folder.color??"").toLowerCase()!==color)await folder.update({color});
+  }
+}
+
 function sortedRanks(ranks) {
   // Retain stable rank/benefit IDs and future-compatible metadata on every save.
   return normalizeFactionRanks(ranks);

@@ -16,8 +16,7 @@
       <p class="hqr-hint">Native Foundry File Picker · 5:3 preview · image preserved without cropping or stretching.</p>
     </div><label>Flavor Text / Description<textarea name="description" rows="5">{{description}}</textarea></label></div>
     <div class="hqr-panel hqr-ranks">
-      <div class="hqr-rank-settings-header"><h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3>
-        <button type="button" data-action="open-class-catalog"><i class="fa-solid fa-list-check"></i> Class Catalog (<span data-enabled-classes>{{classCount}}</span>)</button></div>
+      <div class="hqr-rank-settings-header"><h3><i class="fa-solid fa-book-open"></i> Renown Ranks</h3></div>
       <p class="hqr-hint">Each faction has independent thresholds. Renown can be negative. Existing ranks and reputation are preserved.</p>
       <div class="hqr-list">
         {{#each ranks}}
@@ -46,7 +45,7 @@
                       <span class="hqr-class-slot-empty">Empty — optional</span>
                     </div>
                     {{else}}
-                    <p class="hqr-hint hqr-no-classes">No classes enabled. Open Class Catalog to select classes.</p>
+                    <p class="hqr-hint hqr-no-classes">No classes enabled. Configure them in Module Settings.</p>
                     {{/each}}
                   </div>
                   <p class="hqr-hint">Class slots are optional placeholders; drag-and-drop will follow in a later version.</p>

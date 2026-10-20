@@ -1,0 +1,46 @@
+<div class="hqr-shell">
+  <header class="hqr-banner"><i class="fa-solid fa-gears"></i><div>
+    <h2>Module Settings</h2><p>World settings • GM Only • Shared across Factions</p>
+  </div></header>
+  <div class="hqr-scroll">
+    <div class="hqr-panel">
+      <h3><i class="fa-solid fa-list-check"></i> Class Catalog</h3>
+      <p class="hqr-hint">Choose which classes appear in Class Specific rank slots. Classes from enabled D&amp;D5e Sources and World Items can be selected individually. This does not restrict Feats or Spells from the same books.</p>
+      {{#unless initialized}}<p class="hqr-catalog-info">Default selection starts with classes from the native D&amp;D5e Classes compendium. Save your selection to customize it.</p>{{/unless}}
+      {{#if errors.length}}<p class="hqr-catalog-warning">Could not index some compendiums: {{#each errors}}{{this}} {{/each}}</p>{{/if}}
+      <div class="hqr-class-catalog-toolbar">
+        <input type="search" data-class-search placeholder="Filter class or source" aria-label="Search classes">
+        <button type="button" data-action="select-all-classes">Select Visible</button>
+        <button type="button" data-action="clear-classes">Clear Visible</button>
+      </div>
+      <div class="hqr-class-catalog-list" data-class-list>
+        {{#each classes}}
+        <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}">
+          <input type="checkbox" {{#if enabled}}checked{{/if}}>
+          <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Source currently unavailable{{/if}}</small></span>
+          {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Previously enabled source unavailable"></i>{{/if}}
+        </label>
+        {{else}}
+        <p class="hqr-hint">No classes discovered. Check the D&amp;D5e Compendium Browser Sources or World Items.</p>
+        {{/each}}
+      </div>
+      <p class="hqr-hint"><strong data-class-count>{{selectedCount}}</strong> of {{totalClasses}} classes selected. Empty Class Specific slots remain valid.</p>
+    </div>
+    <div class="hqr-panel hqr-folder-colors">
+      <h3><i class="fa-solid fa-palette"></i> Default Folder Colors</h3>
+      <p class="hqr-hint">Native Journal folder colors for the module's managed folders. Does not change individual Quest or Faction data.</p>
+      {{#each colors}}
+      <label class="hqr-folder-color-row">
+        <span>{{label}}</span>
+        <input type="color" data-folder-color="{{key}}" value="{{value}}" aria-label="Color for {{label}}">
+        <code data-color-label="{{key}}">{{value}}</code>
+      </label>
+      {{/each}}
+      <button type="button" data-action="reset-colors" class="hqr-quiet"><i class="fa-solid fa-rotate-left"></i> Reset Default Colors</button>
+    </div>
+  </div>
+  <footer class="hqr-actions">
+    <span class="hqr-hint">Changes apply to this World.</span>
+    <button type="button" data-action="save-settings" class="hqr-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+  </footer>
+</div>

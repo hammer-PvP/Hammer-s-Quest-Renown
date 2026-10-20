@@ -4,6 +4,18 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.4 — Local Test: Global Settings and GM Only Folder Migration
+
+- **Dedicated GM-only module settings:** registered a World Configuration submenu under Game Settings → Module Settings. It contains the global Class Catalog and a palette of five configurable native folder colors. Removed the Class Catalog button from the Faction Editor without modifying any rank or benefit records.
+- **Existing Class Catalog preserved:** continue using the v0.1.2 `rankClassCatalog` world setting, including previously saved class identities, known names and source UUID snapshots. GM selection is not reset or silently replaced. The settings screen displays a compact multi-column list; search and selection update without full rerender.
+- **Folder palette:** new independent `managedFolderColors` world setting (defaults Factions `#890b1e`, Quests `#ab960d`, GM Only/Active/Finished `#776809`). Applies native `Folder.color` only to the five managed folders; includes reset-to-default preview before Save. Idempotent and does not touch unrelated Journal documents or nested custom folders.
+- **New native GM Only folder:** map global `unavailable` → `Hammer's Quests / GM Only`, `available` → `/ Active`, `inactive` → `/ Finished`. All relevant code paths (creation, save, availability change, startup synchronization) use the same mapping. No new Character statuses introduced; Quest Manager categories remain as in v0.1.3.
+- **Versioned World migration:** hidden `dataVersion` advances **5 → 6** after folder sync and existing Faction rank migration complete. Moves only module-tagged Quest Journals, preserving their IDs/UUIDs, pages, progress, payouts, Renown and ownership. Existing assigned recipients of legacy Unavailable Quests retain their Observer access; GM Only is not a blanket permission-revocation mechanism. Module-managed folder IDs are reused when present; repeated migrations do not duplicate or modify documents.
+- **Scope boundary:** Rank Benefits drag-and-drop and granting remain frozen; Quest Manager cards/filters are left unchanged. The Class Catalog choices and folders are configured globally, not per Faction.
+- **QA:** isolated v5→v6 migration, repeat-sync idempotence, preserved assigned outcomes, unrelated document safety, palette updates, existing Class Catalog selection, JavaScript syntax and package checks. Validate in Foundry V14 / D&D5e 6.0.6 before public release.
+
+---
+
 ## v0.1.3 — Local Test: Quest Manager Filtering and Compact Cards
 
 - **Five live filters:** All, GM Only (global `unavailable`), Available (global `available` with no pending Characters), Accepted (global `available` with one or more pending Characters), Finished (global `inactive`). Individual Completed/Failed results do not move a Quest between administrative folders.

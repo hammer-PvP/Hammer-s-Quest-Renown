@@ -10,7 +10,7 @@ import {adjust, historyFor} from "./reputation.mjs";
 
 export const BATCH_SETTING = "pendingRenownBatch";
 export const SCHEMA_SETTING = "dataVersion";
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 let running = false;
 export const isRenownBatchRunning = () => running;
 
@@ -32,6 +32,7 @@ export async function migrateReputationSchema() {
   if (!Number.isInteger(current) || current < 0 || current > SCHEMA_VERSION)
     throw new Error(`Unsupported Renown data version: ${current}. No data was changed.`);
   if (current === SCHEMA_VERSION) return false;
+  // v6 files Unavailable quests under GM Only and preserves existing Character outcomes.
   // v5 adds stable IDs and empty benefit block lists to existing Faction ranks.
   // v4 replaces legacy Faction/Inativas subfolders with Active/Finished.
   // v3 added optional per-Quest Failure Reversal audit/pending flags; absent means empty.

@@ -275,3 +275,20 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
 .hqr-quest-manager .hqr-quest-footer{display:flex;justify-content:space-between;gap:10px;padding:7px 16px;border-top:1px solid rgba(209,176,107,.22);font-size:10px;color:#a99e8b;background:#17171a}
 .hqr-quest-manager .hqr-quest-footer strong{font-variant-numeric:tabular-nums;color:#e2c68d}
 @media(max-width:720px){.hqr-quest-manager .hqr-quest-tabs{padding:8px 10px 3px}.hqr-quest-manager .hqr-quest-toolbar{padding:7px 10px}.hqr-quest-manager .hqr-quest-scroll{padding:10px;gap:8px}.hqr-quest-manager .hqr-quest-footer span:last-child{display:none}}
+
+/* v0.1.4: global settings; compact class catalog and accessible native color controls */
+.hqr-module-settings .hqr-class-catalog-list{max-height:255px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:4px;scrollbar-width:thin}
+.hqr-module-settings .hqr-class-catalog-row{display:flex!important;align-items:center;gap:9px;margin:0!important;padding:5px 8px;border:1px solid rgba(209,176,107,.22);background:#242329;border-radius:4px;min-height:35px;cursor:pointer}
+.hqr-module-settings .hqr-class-catalog-row[hidden]{display:none!important}
+.hqr-module-settings .hqr-class-catalog-row input{margin:0;flex:0 0 auto}
+.hqr-module-settings .hqr-class-catalog-text{display:flex;min-width:0;flex:1;flex-direction:column;gap:1px}
+.hqr-module-settings .hqr-class-catalog-text strong{font-size:11px;color:#e6d5b1}
+.hqr-module-settings .hqr-class-catalog-text small{font-size:9px;color:#b9afa2;overflow-wrap:anywhere}
+.hqr-module-settings .hqr-class-catalog-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.hqr-module-settings .hqr-class-catalog-toolbar input{flex:1;min-width:180px}
+.hqr-module-settings .hqr-class-catalog-toolbar button{font-size:11px}
+.hqr-module-settings .hqr-folder-color-row{display:grid;grid-template-columns:minmax(0,1fr) 60px 84px;gap:12px;align-items:center;min-height:44px;padding:5px 7px;margin:0;border-bottom:1px solid rgba(209,176,107,.20);font-size:12px}
+.hqr-module-settings .hqr-folder-color-row input[type="color"]{appearance:auto;min-width:42px;width:54px;height:30px;padding:1px 3px;border:1px solid #695a49;background:#252227;border-radius:3px;cursor:pointer}
+.hqr-module-settings .hqr-folder-color-row code{font-family:monospace;font-size:11px;color:#cdbb94;background:transparent}
+.hqr-module-settings .hqr-folder-colors button{margin-top:9px;font-size:11px}
+@media(max-width:560px){.hqr-module-settings .hqr-folder-color-row{grid-template-columns:minmax(0,1fr) 55px 75px;gap:5px}}

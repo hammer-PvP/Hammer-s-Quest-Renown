@@ -22,9 +22,9 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Group Renown | Optionally award or deduct collective Renown for explicitly selected D&D5e Group Actors |
 | Reputation Manager | Inspect balances, ranks, and history; make manual adjustments for one or many Actors |
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
-| Active / Finished filing | Automatically organize Quest Journals by administrative state, not by faction or individual outcome |
+| GM Only / Active / Finished filing | Automatically file prepared, available, and closed Quests by GM administrative status without changing individual results |
 | Quest Manager filters | Browse All, GM Only, Available, Accepted and Finished; live search by Quest name or Faction with category counts |
-| Rank Benefits Class Catalog | Select enabled classes independently of other book content; preview optional class-specific slots on any faction rank |
+| World Module Settings | Choose allowed rank-benefit classes and custom colors for native managed folders in one GM-only settings screen |
 
 ## Compatibility
 
@@ -46,8 +46,8 @@ The Reputation tab is designed for the native D&D5e Character and Group sheets. 
    ```
 
 3. Install the module, then enable **Hammer's Quest & Renown** in your D&D5e World under **Manage Modules**.
-4. Log in as GM. The module creates or maintains its managed Journal folders automatically.
-5. Open the **Journal Directory** to access its management tools.
+4. Log in as GM. The module migrates and maintains its managed Journal folders automatically.
+5. Open the **Journal Directory** to access Quest/Faction tools. Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** for the global Class Catalog and folder colors.
 
 You can also obtain release files from [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases).
 
@@ -91,6 +91,8 @@ Journal Directory
 │   ├── The Eastern Council
 │   └── Guardians of the Vale
 └── Hammer's Quests
+    ├── GM Only
+    │   └── The Sealed Invitation
     ├── Active
     │   ├── The Missing Silver
     │   └── The Lost Echo Blade
@@ -100,17 +102,30 @@ Journal Directory
 ```
 
 - **Hammer's Factions:** Faction Journals are stored separately from Quests.
-- **Active:** Quests whose global status is **Available** or **Unavailable**.
+- **GM Only:** Quests that are **Unavailable** and have not been offered to new Characters. A new Quest is filed here.
+- **Active:** Quests that are globally **Available**, whether any Characters have already accepted them or not.
 - **Finished:** Quests the GM has administratively finished (internally `Inactive`), whether Characters succeeded, failed, or still have unfinished records.
 - A Quest's owner Faction is stored as a **reference**, not a folder. A Quest can affect other Factions through its rewards or penalties.
 
 **Important:** each Quest is **one shared native Journal**, and a native Journal has only one physical folder. Its location reflects the **GM's global administrative status**, not the result of any single Character. `Finished` can therefore contain mixed individual outcomes.
 
+
+**GM Only access:** this folder is an *administrative category*, not a substitute for Foundry document permissions. New, unassigned Unavailable Quests have no player Observer access. If a previously shared Quest is later changed to Unavailable, its already-assigned Characters retain their historical results and existing legitimate Journal access; the Quest Manager flags this situation for GM review. The module does not silently revoke that access, fail participants, or discard history.
+
+### World-wide module settings
+
+Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** (GM only). In this single screen:
+
+- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Search classes by name or source; the list is compact and supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
+- **Folder Colors:** use the native color controls to change `Hammer's Factions`, `Hammer's Quests`, `GM Only`, `Active`, and `Finished` individually, or use **Reset Default Colors**. Click **Save Settings** to persist these colors for the World and recolor existing managed folders. No Journals, Renown, or Quest outcomes are rewritten by changing colors.
+
+The Faction Editor is now dedicated to Faction properties, ranks, and optional benefit blocks. It no longer contains the global Class Catalog button. The World-wide class selection can be changed independently of any Faction.
+
 ### Global status vs. Character result
 
 | Global Quest status (GM) | Journal folder | What it means |
 | --- | --- | --- |
-| **Unavailable** | Active | Prepared, but cannot yet be given to Characters |
+| **Unavailable** | GM Only | Prepared, but cannot yet be given to Characters |
 | **Available** | Active | Can be given to eligible Characters and resolved with Success or Failure Turn-In |
 | **Finished** (internally `Inactive`) | Finished | Closed to new Quest Giving and Success Turn-In; existing individual results remain unchanged |
 
@@ -159,14 +174,10 @@ an individual benefit block to remove it, then select **Save Faction**.
 
 ### Select which classes appear
 
-1. In the Faction Manager, use **Class Catalog** beside **Renown Ranks**.
-2. Review the list discovered from enabled **D&D5e Compendium Browser
-   Sources** and **World Items** of type `class`.
-3. Check the classes you want to offer individual rank-benefit slots for.
-   Uncheck classes that belong to books you want to use for other content but
-   whose classes you do not want in this particular World.
-4. Choose **Save Class Catalog**. Open Faction editors update their
-   Class Specific rows without clearing unsaved description or GM Notes.
+1. As GM, open **Game Settings → Configure Settings → Module Settings**.
+2. Under **Hammer's Quest & Renown**, click **Open Settings**.
+3. In **Class Catalog**, review classes from D&D5e Compendium Browser Sources and World Items.
+4. Check or uncheck individual classes, then click **Save Settings**. This is independent of editing or saving a Faction.
 
 On first use, only classes found in the D&D5e system's native **Classes (SRD)**
 compendium are initially selected. Additional compendium and homebrew classes
@@ -228,7 +239,7 @@ Open **Quest Manager** to find Quests in a preconfigured World without scrolling
 
 Type in **Search by Quest or Faction** to narrow the current category. The numeric category counters respect the search term. Both the search and category controls filter the existing list without resetting your scroll position. The cards show a Quest's global availability, assigned Character count, and totals for active, completed, and failed Characters. All existing Journal, Editor, Giving, Turn-In, Failure, Undo and Results actions remain available when applicable.
 
-**Important:** the **GM Only** filter is a *Quest Manager view*, not yet a native Journal folder or a new permission level. In this build, **Unavailable** Quests still live in **Hammer's Quests / Active**, exactly as before. A Quest may be Unavailable while it still has historically assigned Characters; these are flagged for GM review without revoking previous Observer access. The dedicated physical GM Only folder and its explicit access-handling migration are planned separately. Likewise, **Accepted** is a *view based on any pending Character*, not a new global Quest status or a folder. No Actor, Journal, ownership, outcome or payout changes when switching filters.
+**Important:** the **GM Only** filter now corresponds to the native `Hammer's Quests / GM Only` folder. **Accepted** remains only a manager view of Available Quests with unfinished Characters; it is not another physical folder. The module does not change Character results when re-filing a Journal. Previously shared Unavailable Quests remain visible to their authorized recipients, as explained under *GM Only access* above.
 
 ### Quest Giving
 
