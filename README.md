@@ -116,7 +116,7 @@ Journal Directory
 
 Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** (GM only). In this single screen:
 
-- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Class Catalog starts collapsed with a count of enabled classes; expand it to edit a dense, searchable two-column list. Each entry shows the class and its bibliographic source (for example, Player's Handbook (2024) when that origin is recorded), with the checkbox on the left. Search classes by name or source; the list supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
+- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Class Catalog starts collapsed with a count of enabled classes; expand it to edit a dense, searchable two-column list. First enable the desired **Class Sources** (the exact class compendium(s) or World Items). Each class can then be enabled individually and is bound to its exact class definition UUID. When multiple enabled sources contain the same class, choose the exact source/edition from its dropdown before saving. Bibliographic source labels reflect document metadata, not assumptions about the selected ruleset. Search classes by name or source; the list supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
 - **Folder Management:** customize the **name and color** of each of the five managed native Journal folders, or use **Reset Default Names** / **Reset Default Colors**. You can call your Quest root *Missões*, the GM-only folder *Ocultas*, and Finished *Concluídas* without altering their roles. Click **Save Settings** to apply changes to the current World. Existing Folder documents are renamed/recolored in place, retaining their IDs and all child Journals; Quest status rules never depend on the visible names. Folder names must not be blank or collide with another folder under the same parent.
 
 Folder colors and names are World-wide settings for the GM; changes survive closing the configuration window and reloading the game. If you use a custom folder name, the module continues to move Quests by their global status into the same physical Folder IDs.
@@ -178,7 +178,7 @@ an individual benefit block to remove it, then select **Save Faction**.
 
 1. As GM, open **Game Settings → Configure Settings → Module Settings**.
 2. Under **Hammer's Quest & Renown**, click **Open Settings**.
-3. Expand **Class Catalog**, then review classes from D&D5e Compendium Browser Sources and World Items. The source line prioritizes Item/book metadata, with the collection name used only if bibliographic information is missing.
+3. Expand **Class Catalog**. Under **Class Sources**, choose the exact compendiums (or World Items) from which classes may be discovered. Then review and enable the desired classes. If two enabled sources contain the same class, choose its exact definition from the source dropdown; unknown/ambiguous definitions are never silently substituted. The source line prioritizes Item/book metadata, with the collection name used only if bibliographic information is missing.
 4. Check or uncheck individual classes, then click **Save Settings**. This is independent of editing or saving a Faction.
 
 On first use, only classes found in the D&D5e system's native **Classes (SRD)**

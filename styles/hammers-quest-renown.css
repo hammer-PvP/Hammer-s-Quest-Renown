@@ -388,3 +388,49 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
   .hqr-app.hqr-module-settings .hqr-class-catalog-summary-name{font-size:14px}
   .hqr-app.hqr-module-settings .hqr-class-catalog-summary-count{font-size:10px}
 }
+
+/* v0.1.7 — explicit class-source authorization, with source-bound definitions.
+   The existing Folder Management markup and rules are intentionally untouched. */
+.hqr-app.hqr-module-settings .hqr-class-source-header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:9px 0 5px;color:#e4ca93;font-size:12px
+}
+.hqr-app.hqr-module-settings .hqr-class-source-header small{font-size:10px;color:#b9afa2}
+.hqr-app.hqr-module-settings .hqr-class-source-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;
+  max-height:156px;overflow:auto;scrollbar-width:thin
+}
+.hqr-app.hqr-module-settings label.hqr-class-source-row{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  gap:8px;min-width:0;min-height:38px;padding:5px 8px!important;
+  margin:0!important;border:1px solid rgba(209,176,107,.22);
+  border-radius:3px;background:#242329;cursor:pointer
+}
+.hqr-app.hqr-module-settings .hqr-class-source-row input[type="checkbox"]{
+  position:static!important;appearance:auto;flex:0 0 14px;width:14px!important;
+  height:14px!important;margin:0!important;padding:0!important
+}
+.hqr-app.hqr-module-settings .hqr-class-source-row span{
+  display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;line-height:1.15
+}
+.hqr-app.hqr-module-settings .hqr-class-source-row strong{font-size:11px;color:#e6d5b1}
+.hqr-app.hqr-module-settings .hqr-class-source-row small{font-size:9px;color:#b9afa2;overflow-wrap:anywhere}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry{
+  min-width:0;background:#242329;border:1px solid rgba(209,176,107,.22);
+  border-radius:3px;padding:0
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry[hidden]{display:none!important}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry label.hqr-class-catalog-row{
+  background:transparent;border:0;min-height:31px!important;padding:3px 7px!important
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry select[data-class-definition]{
+  display:block;box-sizing:border-box;width:calc(100% - 12px);min-height:26px;
+  font-size:10px;margin:0 6px 5px;padding:2px 4px;color:#e2d3b1;background:#18181b;
+  border:1px solid #836e4e;border-radius:3px
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry select[data-class-definition][hidden]{display:none!important}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry[data-ambiguous="true"]{border-color:#ba8054}
+.hqr-app.hqr-module-settings .hqr-class-catalog-entry[data-unavailable="true"]{border-style:dashed}
+@media(max-width:630px){
+  .hqr-app.hqr-module-settings .hqr-class-source-list{grid-template-columns:1fr}
+}

@@ -1,5 +1,6 @@
 import {ID,assertGM,report} from "../constants.mjs";
-import {getClassCatalogOptions,saveClassCatalog} from "../services/class-catalog.mjs";
+import {getClassCatalogOptions,saveClassCatalog,validateClassCatalogDraft} from "../services/class-catalog.mjs";
+import {wireClassSourceControls} from "./class-source-ui.mjs";
 import {FOLDER_FIELDS,DEFAULT_FOLDER_COLORS,DEFAULT_FOLDER_NAMES,getFolderColors,getFolderNames,saveFolderColors,saveFolderNames,validateFolderNames} from "../services/folder-settings.mjs";
 import {applyManagedFolderSettings,validateManagedFolderNames} from "../services/documents.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
@@ -14,30 +15,14 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
     const catalog=await getClassCatalogOptions({refresh:true});
     this.classOptions=catalog.entries;
     const savedColors=getFolderColors(),savedNames=getFolderNames();
-    return {classes:catalog.entries,totalClasses:catalog.entries.length,
+    return {classes:catalog.entries,sources:catalog.sources,sourcesInitialized:catalog.sourcesInitialized,totalClasses:catalog.entries.length,
       selectedCount:catalog.entries.filter(entry=>entry.enabled).length,
       initialized:catalog.initialized,errors:catalog.errors,
       folders:FOLDER_FIELDS.map(field=>({...field,name:savedNames[field.key],color:savedColors[field.key]}))};
   }
   _onRender(){
     const root=this.element;
-    const rows=()=>[...root.querySelectorAll(".hqr-class-catalog-row")];
-    const selected=()=>rows().filter(row=>row.querySelector('input[type="checkbox"]')?.checked);
-    const updateCount=()=>{
-      const count=root.querySelector("[data-class-count]");
-      if(count)count.textContent=String(selected().length);
-    };
-    root.querySelector("[data-class-search]")?.addEventListener("input",event=>{
-      const query=String(event.target.value??"").trim().toLocaleLowerCase();
-      for(const row of rows())row.hidden=!row.dataset.search?.toLocaleLowerCase().includes(query);
-    });
-    root.querySelector("[data-class-list]")?.addEventListener("change",updateCount);
-    for(const [action,checked] of [["select-all-classes",true],["clear-classes",false]]){
-      root.querySelector(`[data-action="${action}"]`)?.addEventListener("click",()=>{
-        for(const row of rows())if(!row.hidden)row.querySelector('input[type="checkbox"]').checked=checked;
-        updateCount();
-      });
-    }
+    const classUI=wireClassSourceControls(root);
     root.querySelector('[data-action="reset-colors"]')?.addEventListener("click",()=>{
       for(const input of root.querySelectorAll('[data-folder-color]')){
         const color=DEFAULT_FOLDER_COLORS[input.dataset.folderColor];
@@ -69,13 +54,16 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
         }
         validateFolderNames(names);
         validateManagedFolderNames(names);
-        const classKeys=selected().map(row=>row.dataset.key);
+        const classDraft=classUI.collect();
+        // Abort BEFORE touching native folder settings if any class definition
+        // is missing, ambiguous or incompatible with the selected source.
+        await validateClassCatalogDraft(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds,bindings:classDraft.bindings});
         // Desired state is durable before modifying native folders: a partial
         // Foundry update will be resumed safely on the next GM startup.
         await saveFolderNames(names);
         await saveFolderColors(colors);
         await applyManagedFolderSettings();
-        await saveClassCatalog(classKeys,this.classOptions);
+        await saveClassCatalog(classDraft.selected,this.classOptions,{sourceIds:classDraft.sourceIds,bindings:classDraft.bindings});
         ui.notifications.info("Hammer's Quest & Renown settings saved.");
         await this.close();
       }catch(error){report(error,'Save Module Settings failed');}

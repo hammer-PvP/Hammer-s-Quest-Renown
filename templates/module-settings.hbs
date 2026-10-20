@@ -13,9 +13,21 @@
           </span>
         </summary>
         <div class="hqr-class-catalog-body">
-          <p class="hqr-hint">Choose the classes for Class Specific ranks. Sources come from enabled D&amp;D5e Compendiums and World Items; choosing a class here does not restrict Spells or Feats.</p>
-          {{#unless initialized}}<p class="hqr-catalog-info">Default selection starts with the D&amp;D5e native Classes compendium. Select additional classes explicitly, then save.</p>{{/unless}}
+          <p class="hqr-hint">Select which class compendiums (or World Items) this module may use. This does not change the D&amp;D5e Compendium Browser or restrict other spells and feats.</p>
+          {{#unless sourcesInitialized}}<p class="hqr-catalog-info">Existing classes and ranks are preserved. Review the source selection and save to lock the intended class versions for this World.</p>{{/unless}}
           {{#if errors.length}}<p class="hqr-catalog-warning">Could not index some compendiums: {{#each errors}}{{this}} {{/each}}</p>{{/if}}
+          <div class="hqr-class-source-header"><strong><i class="fa-solid fa-book"></i> Class Sources</strong><small><span data-source-count>0</span> selected</small></div>
+          <div class="hqr-class-source-list" data-class-sources>
+            {{#each sources}}
+            <label class="hqr-class-source-row" title="{{id}} — {{bookLabel}}">
+              <input type="checkbox" data-class-source="{{id}}" {{#if enabled}}checked{{/if}}>
+              <span><strong>{{name}}</strong><small>{{bookLabel}} · {{count}} class definitions</small></span>
+            </label>
+            {{else}}
+            <p class="hqr-hint">No class compendiums detected in the D&amp;D5e Sources. Check the game system Compendium Browser configuration.</p>
+            {{/each}}
+          </div>
+          <div class="hqr-class-source-header"><strong><i class="fa-solid fa-list-check"></i> Enabled Classes</strong><small>Choose one exact class definition when sources overlap</small></div>
           <div class="hqr-class-catalog-toolbar">
             <input type="search" data-class-search placeholder="Filter class or source" aria-label="Search classes">
             <button type="button" data-action="select-all-classes">Select Visible</button>
@@ -23,13 +35,20 @@
           </div>
           <div class="hqr-class-catalog-list" data-class-list>
             {{#each classes}}
-            <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}" title="{{name}} — {{sourceLabel}}">
-              <input type="checkbox" aria-label="Enable {{name}}" {{#if enabled}}checked{{/if}}>
-              <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Source unavailable{{/if}}</small></span>
-              {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Previously enabled source unavailable"></i>{{/if}}
-            </label>
+            <div class="hqr-class-catalog-entry" data-class-row data-key="{{key}}" data-name="{{name}}" data-pinned-unavailable="{{#if pinnedUnavailable}}true{{else}}false{{/if}}">
+              <label class="hqr-class-catalog-row" title="{{name}}">
+                <input type="checkbox" data-class-enable aria-label="Enable {{name}}" {{#if enabled}}checked{{/if}}>
+                <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small data-class-source-caption>{{sourceLabel}}</small></span>
+              </label>
+              <select data-class-definition aria-label="Select source for {{name}}" hidden>
+                <option value="">Select exact class definition…</option>
+                {{#each definitions}}
+                <option value="{{uuid}}" data-source-id="{{sourceId}}" data-source-label="{{source}}" {{#if selected}}selected{{/if}}>{{source}} · {{sourceId}}</option>
+                {{/each}}
+              </select>
+            </div>
             {{else}}
-            <p class="hqr-hint">No classes found. Check the D&amp;D5e Compendium Browser Sources or World Items.</p>
+            <p class="hqr-hint">No classes found. Check D&amp;D5e Sources or World Items.</p>
             {{/each}}
           </div>
           <p class="hqr-hint">Only the Class Specific slots are affected. Empty slots remain valid.</p>

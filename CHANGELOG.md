@@ -4,6 +4,16 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.7 — Explicit Class Sources and Exact Definition Binding
+
+- **GM Class Sources:** a compact source selector in Module Settings now controls which D&D5e class compendiums / World class Items may contribute to the Class Catalog. It is independent of Feat, Item and Spell compendium availability and respects packs disabled in the D&D5e Compendium Browser.
+- **Exact definition provenance:** class discovery retains every separate class Item UUID, source pack, bibliographic label and rules edition; a logical class name no longer silently inherits one merged 2014/2024 definition. A class found in multiple approved sources requires a specific choice before saving. When the approved sources leave exactly one definition, it is selected unambiguously.
+- **Backward compatibility:** existing `class:<identifier>` slot keys, GM class selections and known UUIDs are preserved. The additive `dataVersion 7 → 8` migration upgrades `rankClassCatalog` to schema 2 by recording available legacy UUID/source snapshots, without rewriting Faction ranks, benefit blocks, Actor inventories, Renown ledgers, Quests or native folders. The separate `rankClassSources` World setting remains uninitialized until the GM explicitly saves class sources; its default view prioritizes the prior known source where identifiable.
+- **UI and safety:** current collapsed catalog, dense two-column class list, source search/checkboxes and the approved Folder Management controls remain. Changing source filters or a definition updates only the live DOM, without application rerender. Class grant operations stay disabled. Unresolved definitions remain visible with a warning and cannot be silently bound to a different book.
+- **QA:** synthetic mixed PHB 2024/SRD 2014, duplicate-source collision, disabled-pack, homebrew, migration, persistence and package integrity tests. Live Foundry V14 / D&D5e 6.0.6 verification required.
+
+---
+
 ## v0.1.6 — Class Catalog Compact UI and Bibliographic Sources
 
 - **Compact, collapsible Class Catalog:** global Module Settings now opens with the catalog folded into one summary line showing enabled/available class counts. Click or keyboard-toggle the accessible disclosure to edit. Expanded classes use dense two-column rows; no automatic full-window rerenders, and the existing selections remain in the DOM when collapsed.

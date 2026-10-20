@@ -85,7 +85,7 @@ Hooks.once('init',()=>{
     hint:"Configure eligible classes and native Journal folder names/colors for this World.",
     icon:"fa-solid fa-sliders",type:HQRModuleSettingsApp,restricted:true
   });
-  console.info(`${ID} | Initializing v0.1.5`);
+  console.info(`${ID} | Initializing v0.1.7`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}

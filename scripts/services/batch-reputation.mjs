@@ -6,11 +6,12 @@
 import {ID, assertGM, eligible} from "../constants.mjs";
 import {getFaction, reconcileAccess, synchronizeQuestFolders} from "./documents.mjs";
 import {migrateFactionRankBenefits} from "./rank-benefits.mjs";
+import {migrateLegacyClassCatalog} from "./class-catalog.mjs";
 import {adjust, historyFor} from "./reputation.mjs";
 
 export const BATCH_SETTING = "pendingRenownBatch";
 export const SCHEMA_SETTING = "dataVersion";
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 let running = false;
 export const isRenownBatchRunning = () => running;
 
@@ -45,6 +46,8 @@ export async function migrateReputationSchema() {
   // Persist all Faction changes before advancing the global version. On an
   // interrupted migration, existing IDs are reused on the next GM startup.
   await migrateFactionRankBenefits();
+  // v8: preserve legacy logical class keys; add exact source UUID binding snapshots.
+  await migrateLegacyClassCatalog();
   await game.settings.set(ID, SCHEMA_SETTING, SCHEMA_VERSION);
   return true;
 }
