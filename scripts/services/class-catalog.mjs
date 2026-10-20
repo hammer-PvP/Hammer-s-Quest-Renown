@@ -48,6 +48,47 @@ function allowedPacks(){
 function signature(packs){
   return packs.map(p=>p.collection).sort().join('|')+'::'+game.items.filter(i=>i.type==='class').map(i=>`${i.id}:${i.name}:${i.system?.identifier??''}`).sort().join('|');
 }
+/** Prefer actual bibliographic source over the display name of a Compendium.
+ * A pack named "Character Classes" is a collection label, not a source book.
+ * Never infer PHB 2024 from the class name or from the game's selected ruleset.
+ */
+export function formatClassSource(raw, rules=''){
+  let value=String(raw??'').trim();
+  if(!value)return '';
+  const hint=String(rules??'');
+  const year=(/\b2024\b|\b5\.2\b|PHB[ -]?(?:20)?24\b/i.test(`${value} ${hint}`))?'2024':
+    (/\b2014\b|\b5\.1\b|PHB[ -]?(?:20)?14\b/i.test(`${value} ${hint}`))?'2014':'';
+  if(/^PHB(?:[\s-]?(?:20)?(?:14|24))?$/i.test(value) || /^Player.?s Handbook(?:\s*\(?20(?:14|24)\)?)?$/i.test(value)){
+    return `Player's Handbook${year?` (${year})`:''}`;
+  }
+  if(/^SRD\s*5\.?[12]$/i.test(value))return value.replace(/\s+/g,' ').replace(/5\.?([12])$/, '5.$1');
+  return value;
+}
+function documentSource(entry){
+  const source=entry?.system?.source;
+  if(!source)return '';
+  if(typeof source==='string')return formatClassSource(source);
+  if(typeof source!=='object')return '';
+  // Native D&D5e Items may carry a book, rules revision or custom source.
+  const rules=source.rules??source.revision??'';
+  for(const value of [source.book,source.custom,source.title]){
+    const label=formatClassSource(value,rules);
+    if(label)return label;
+  }
+  return '';
+}
+function classSource(entry,pack){
+  const fromDocument=documentSource(entry);
+  if(fromDocument)return fromDocument;
+  // This is a bibliographic pack flag, NOT the generic pack UI title.
+  const fromPack=formatClassSource(pack?.metadata?.flags?.dnd5e?.sourceBook);
+  return fromPack || String(pack?.title??pack?.metadata?.label??pack?.collection??'Unknown Compendium');
+}
+function displaySources(sources){
+  const unique=[...new Set((sources??[]).filter(Boolean))];
+  // When two editions define the same class, make actual books visible before SRD.
+  return unique.sort((a,b)=>Number(/\bSRD\b/i.test(a))-Number(/\bSRD\b/i.test(b)));
+}
 function itemClass(entry,source,uuid,preferred=false,sourceId=""){
   const name=String(entry?.name??'').trim();
   const identifier=entry?.system?.identifier??entry?.system?.source?.identifier??'';
@@ -73,7 +114,7 @@ export async function discoverClasses({refresh=false}={}){
       if(row.preferred&&!old.preferred){old.name=row.name;old.uuid=row.uuid;old.preferred=true;}
     }
   }
-  for(const item of game.items.filter(i=>i.type==='class'))offer(itemClass(item,'World Items',item.uuid,false,'world'));
+  for(const item of game.items.filter(i=>i.type==='class'))offer(itemClass(item,documentSource(item)||'World Items',item.uuid,false,'world'));
   // Bounded concurrency to avoid indexing every D&D5e Item pack at once.
   const todo=[...packs];
   const workers=Array.from({length:Math.min(4,todo.length)},async()=>{
@@ -83,12 +124,12 @@ export async function discoverClasses({refresh=false}={}){
       const packTypes=pack.metadata?.flags?.dnd5e?.types;
       if(Array.isArray(packTypes)&&packTypes.length&&!packTypes.includes('class'))continue;
       try{
-        const index=await pack.getIndex({fields:['type','system.identifier']});
+        const index=await pack.getIndex({fields:['type','system.identifier','system.source']});
         for(const entry of index){
           if(entry.type!=='class')continue;
           const id=entry._id??entry.id;
           const uuid=id?`Compendium.${pack.collection}.Item.${id}`:'';
-          offer(itemClass(entry,pack.title??pack.metadata?.label??pack.collection,uuid,pack.collection===BASE_PACK,pack.collection));
+          offer(itemClass(entry,classSource(entry,pack),uuid,pack.collection===BASE_PACK,pack.collection));
         }
       }catch(error){
         errors.push(pack.collection);
@@ -133,7 +174,7 @@ export async function getClassCatalogOptions({refresh=false}={}){
     entries.push({key,name:String(known.name??key),uuid:String(known.uuid??''),sources:[],unavailable:true});
   }
   entries.sort((a,b)=>a.name.localeCompare(b.name));
-  return {entries:entries.map(e=>({...e,enabled:selected.has(e.key),sourceLabel:e.sources?.join(' · ')||'Source unavailable'})),errors:discovered.errors,initialized:stored.initialized};
+  return {entries:entries.map(e=>({...e,enabled:selected.has(e.key),sourceLabel:displaySources(e.sources).join(' · ')||'Source unavailable'})),errors:discovered.errors,initialized:stored.initialized};
 }
 
 export async function saveClassCatalog(selectedKeys,entries){

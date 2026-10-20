@@ -4,6 +4,15 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.6 — Class Catalog Compact UI and Bibliographic Sources
+
+- **Compact, collapsible Class Catalog:** global Module Settings now opens with the catalog folded into one summary line showing enabled/available class counts. Click or keyboard-toggle the accessible disclosure to edit. Expanded classes use dense two-column rows; no automatic full-window rerenders, and the existing selections remain in the DOM when collapsed.
+- **Correct bibliographic labels:** inspect indexed `Item.system.source` before `pack.metadata.flags.dnd5e.sourceBook` and fall back to the pack title only when no source exists. The generic collection label "Character Classes" is no longer incorrectly presented as the source when real book metadata is present. PHB 2024 is shown only when confirmed by document/pack metadata. Multiple valid sources for one class remain visible, with books preferred before SRD.
+- **Safety:** no changes to `rankClassCatalog` storage, folder settings, quests, factions, ledgers, Journals, payouts or grant logic; `dataVersion` remains 7. The approved Folder Management UI is untouched and Rank Benefits granting remains deferred.
+- **QA:** syntax/package checks, mocked disabled-pack/source precedence/dedup/unchanged saved-selection checks, template disclosure/DOM preservation and unchanged managed-folder template checks. Live Foundry V14 / D&D5e 6.0.6 visual validation still required.
+
+---
+
 ## v0.1.5 — Local Test: Class Catalog Layout and Custom Folder Names
 
 - **Class Catalog layout fix:** resolve Foundry's generic `.hqr-app label { flex-direction:column }` cascade. Compact entries now explicitly position the checkbox on the left and the class name / real source compendium label on two aligned lines. The two-column list preserves source search, visible selection, and saved class identities. No Item grants are enabled.

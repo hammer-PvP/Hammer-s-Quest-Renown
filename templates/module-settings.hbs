@@ -3,28 +3,38 @@
     <h2>Module Settings</h2><p>World settings • GM Only • Shared across Factions</p>
   </div></header>
   <div class="hqr-scroll">
-    <div class="hqr-panel">
-      <h3><i class="fa-solid fa-list-check"></i> Class Catalog</h3>
-      <p class="hqr-hint">Choose which classes appear in Class Specific rank slots. Classes from enabled D&amp;D5e Sources and World Items can be selected individually. This does not restrict Feats or Spells from the same books.</p>
-      {{#unless initialized}}<p class="hqr-catalog-info">Default selection starts with classes from the native D&amp;D5e Classes compendium. Save your selection to customize it.</p>{{/unless}}
-      {{#if errors.length}}<p class="hqr-catalog-warning">Could not index some compendiums: {{#each errors}}{{this}} {{/each}}</p>{{/if}}
-      <div class="hqr-class-catalog-toolbar">
-        <input type="search" data-class-search placeholder="Filter class or source" aria-label="Search classes">
-        <button type="button" data-action="select-all-classes">Select Visible</button>
-        <button type="button" data-action="clear-classes">Clear Visible</button>
-      </div>
-      <div class="hqr-class-catalog-list" data-class-list>
-        {{#each classes}}
-        <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}">
-          <input type="checkbox" aria-label="Enable {{name}}" {{#if enabled}}checked{{/if}}>
-          <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Source currently unavailable{{/if}}</small></span>
-          {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Previously enabled source unavailable"></i>{{/if}}
-        </label>
-        {{else}}
-        <p class="hqr-hint">No classes discovered. Check the D&amp;D5e Compendium Browser Sources or World Items.</p>
-        {{/each}}
-      </div>
-      <p class="hqr-hint"><strong data-class-count>{{selectedCount}}</strong> of {{totalClasses}} classes selected. Empty Class Specific slots remain valid.</p>
+    <div class="hqr-panel hqr-class-catalog-panel">
+      <details class="hqr-class-catalog-details" data-class-catalog-details>
+        <summary class="hqr-class-catalog-summary">
+          <span class="hqr-class-catalog-summary-name"><i class="fa-solid fa-list-check"></i> <strong>Class Catalog</strong></span>
+          <span class="hqr-class-catalog-summary-actions">
+            <span class="hqr-class-catalog-summary-count"><strong data-class-count>{{selectedCount}}</strong> / {{totalClasses}} classes enabled</span>
+            <i class="fa-solid fa-chevron-down hqr-class-catalog-chevron" aria-hidden="true"></i>
+          </span>
+        </summary>
+        <div class="hqr-class-catalog-body">
+          <p class="hqr-hint">Choose the classes for Class Specific ranks. Sources come from enabled D&amp;D5e Compendiums and World Items; choosing a class here does not restrict Spells or Feats.</p>
+          {{#unless initialized}}<p class="hqr-catalog-info">Default selection starts with the D&amp;D5e native Classes compendium. Select additional classes explicitly, then save.</p>{{/unless}}
+          {{#if errors.length}}<p class="hqr-catalog-warning">Could not index some compendiums: {{#each errors}}{{this}} {{/each}}</p>{{/if}}
+          <div class="hqr-class-catalog-toolbar">
+            <input type="search" data-class-search placeholder="Filter class or source" aria-label="Search classes">
+            <button type="button" data-action="select-all-classes">Select Visible</button>
+            <button type="button" data-action="clear-classes">Clear Visible</button>
+          </div>
+          <div class="hqr-class-catalog-list" data-class-list>
+            {{#each classes}}
+            <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}" title="{{name}} — {{sourceLabel}}">
+              <input type="checkbox" aria-label="Enable {{name}}" {{#if enabled}}checked{{/if}}>
+              <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Source unavailable{{/if}}</small></span>
+              {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Previously enabled source unavailable"></i>{{/if}}
+            </label>
+            {{else}}
+            <p class="hqr-hint">No classes found. Check the D&amp;D5e Compendium Browser Sources or World Items.</p>
+            {{/each}}
+          </div>
+          <p class="hqr-hint">Only the Class Specific slots are affected. Empty slots remain valid.</p>
+        </div>
+      </details>
     </div>
     <div class="hqr-panel hqr-folder-management">
       <h3><i class="fa-solid fa-folder-tree"></i> Folder Management</h3>
