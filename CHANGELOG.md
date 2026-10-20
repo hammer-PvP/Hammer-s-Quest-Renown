@@ -4,6 +4,18 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.5 — Local Test: Class Catalog Layout and Custom Folder Names
+
+- **Class Catalog layout fix:** resolve Foundry's generic `.hqr-app label { flex-direction:column }` cascade. Compact entries now explicitly position the checkbox on the left and the class name / real source compendium label on two aligned lines. The two-column list preserves source search, visible selection, and saved class identities. No Item grants are enabled.
+- **World Folder Management:** extend the GM-only World Settings page with editable names alongside existing native Folder colors for all five logical roles: Factions, Quests, GM Only, Active, Finished. Add Reset Default Names independently from Reset Default Colors.
+- **Stable native Folder identity:** new additive World settings `managedFolderNames` and `managedFolderIds`; persisted native Folder role flag `flags.hammer-s-quest-renown.managedFolderRole`. Resolution now prioritizes real Folder IDs / flags instead of display names and safely adopts existing v0.1.4 folders. Renaming or recoloring updates the SAME Folder documents; Journal UUIDs, folder memberships, ownership and Actor ledgers are not modified.
+- **Validation/recovery:** reject empty, overly long, duplicate sibling names and collisions with unrelated folders before saving. Store desired names/colors before applying native changes, so a partial Foundry interruption can be resumed idempotently at GM startup.
+- **Migration:** hidden `dataVersion` moves **6 → 7** after safe Folder identity setup and existing additive Faction rank migration. Legacy Quests/Factions and Character outcomes remain untouched. All previously selected classes and configured colors remain preserved.
+- **Scope:** Quest Manager v0.1.3 UX and v0.1.4 administrative folders are unchanged; Rank Benefits drag-and-drop/granting stays frozen. README remains a user guide; CHANGELOG contains development history.
+- **QA:** synthetic World folder-ID retention, rename/restart, duplicate/collision checks, unchanged Journal progress, syntax/package checks, and isolated browser layout verification. Requires Foundry V14 / D&D5e 6.0.6 live QA before public GitHub publication.
+
+---
+
 ## v0.1.4 — Local Test: Global Settings and GM Only Folder Migration
 
 - **Dedicated GM-only module settings:** registered a World Configuration submenu under Game Settings → Module Settings. It contains the global Class Catalog and a palette of five configurable native folder colors. Removed the Class Catalog button from the Faction Editor without modifying any rank or benefit records.

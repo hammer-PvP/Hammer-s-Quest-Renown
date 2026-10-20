@@ -1,7 +1,7 @@
 import {ID,assertGM,report} from "../constants.mjs";
 import {getClassCatalogOptions,saveClassCatalog} from "../services/class-catalog.mjs";
-import {COLOR_FIELDS,DEFAULT_FOLDER_COLORS,getFolderColors,saveFolderColors} from "../services/folder-settings.mjs";
-import {applyManagedFolderColors} from "../services/documents.mjs";
+import {FOLDER_FIELDS,DEFAULT_FOLDER_COLORS,DEFAULT_FOLDER_NAMES,getFolderColors,getFolderNames,saveFolderColors,saveFolderNames,validateFolderNames} from "../services/folder-settings.mjs";
+import {applyManagedFolderSettings,validateManagedFolderNames} from "../services/documents.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
 /** Single GM-only World settings window: global class choices and native folder colors. */
 export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(ApplicationV2){
@@ -13,11 +13,11 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
     assertGM();
     const catalog=await getClassCatalogOptions({refresh:true});
     this.classOptions=catalog.entries;
-    const saved=getFolderColors();
+    const savedColors=getFolderColors(),savedNames=getFolderNames();
     return {classes:catalog.entries,totalClasses:catalog.entries.length,
       selectedCount:catalog.entries.filter(entry=>entry.enabled).length,
       initialized:catalog.initialized,errors:catalog.errors,
-      colors:COLOR_FIELDS.map(field=>({...field,value:saved[field.key]}))};
+      folders:FOLDER_FIELDS.map(field=>({...field,name:savedNames[field.key],color:savedColors[field.key]}))};
   }
   _onRender(){
     const root=this.element;
@@ -44,6 +44,12 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
         if(color){input.value=color;this._updateColorLabel(input);}
       }
     });
+    root.querySelector('[data-action="reset-names"]')?.addEventListener("click",()=>{
+      for(const input of root.querySelectorAll('[data-folder-name]')){
+        const name=DEFAULT_FOLDER_NAMES[input.dataset.folderName];
+        if(name)input.value=name;
+      }
+    });
     for(const input of root.querySelectorAll('[data-folder-color]')){
       input.addEventListener('input',()=>this._updateColorLabel(input));
       this._updateColorLabel(input);
@@ -54,18 +60,22 @@ export class HQRModuleSettingsApp extends HandlebarsApplicationMixin(Application
       const button=root.querySelector('[data-action="save-settings"]');
       if(button)button.disabled=true;
       try{
-        const colors={};
+        const colors={},names={};
         for(const input of root.querySelectorAll('[data-folder-color]'))colors[input.dataset.folderColor]=input.value;
-        // Validate *before* any world setting is modified.
+        for(const input of root.querySelectorAll('[data-folder-name]'))names[input.dataset.folderName]=input.value;
+        // Validate *all* fields and folder-name collisions before saving anything.
         for(const key of Object.keys(DEFAULT_FOLDER_COLORS)){
           if(!/^#[0-9a-f]{6}$/i.test(colors[key]??''))throw new Error(`Invalid color: ${key}`);
         }
+        validateFolderNames(names);
+        validateManagedFolderNames(names);
         const classKeys=selected().map(row=>row.dataset.key);
+        // Desired state is durable before modifying native folders: a partial
+        // Foundry update will be resumed safely on the next GM startup.
+        await saveFolderNames(names);
         await saveFolderColors(colors);
+        await applyManagedFolderSettings();
         await saveClassCatalog(classKeys,this.classOptions);
-        // If a folder update fails, the world setting remains durable and
-        // the GM can retry safely; the next startup also reapplies the palette.
-        await applyManagedFolderColors();
         ui.notifications.info("Hammer's Quest & Renown settings saved.");
         await this.close();
       }catch(error){report(error,'Save Module Settings failed');}

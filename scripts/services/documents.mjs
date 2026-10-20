@@ -1,5 +1,5 @@
 import {normalizeFactionRanks} from "./rank-benefits.mjs";
-import {getFolderColors} from "./folder-settings.mjs";
+import {DEFAULT_FOLDER_NAMES,FOLDER_FIELDS,getFolderColors,getFolderNames,getFolderIds,saveFolderIds,validateFolderNames} from "./folder-settings.mjs";
 import {ID,FOLDER_FACTIONS,FOLDER_QUESTS,LEGACY_FOLDER_FACTIONS,LEGACY_FOLDER_QUESTS,DEFAULT_RANKS,assertGM,esc,htmlText,factions,ownerUsers,eligible,groupMembers,CURRENCIES} from "../constants.mjs";
 
 export const COLORS = Object.freeze({questRoot:"#ab960d",questCategory:"#776809",factionRoot:"#890b1e"}); // legacy defaults, kept for API compatibility
@@ -18,42 +18,75 @@ const pageText = (name, html, gmOnly=false) => ({
 function docPage(doc, isGMPage) { return doc.pages.find(p=>Boolean(p.getFlag(ID,"gmOnly"))===isGMPage); }
 export function getFaction(uuid) { return factions().find(f=>f.uuid===uuid) ?? null; }
 const directFolder = (name,parent=null) => game.folders.find(f=>f.type==="JournalEntry" && f.name===name && (f.folder?.id??null)===(parent?.id??null));
-export async function ensureFolder(name, parent=null, color=null) {
-  assertGM();
-  const folder = directFolder(name,parent);
-  if(folder){
-    if(color && String(folder.color??"").toLowerCase()!==color)await folder.update({color});
-    return folder;
+const parentId=parent=>parent?.id??null;
+const matchesParent=(folder,parent)=>folder?.type==="JournalEntry" && (folder.folder?.id??null)===parentId(parent);
+/** Locate a managed Folder by immutable ID/role first, never by its current visible name. */
+function findManaged(role,parent=null){
+  const byId=game.folders.get(getFolderIds()[role]);
+  if(matchesParent(byId,parent))return byId;
+  const byRole=game.folders.find(f=>matchesParent(f,parent) && f.getFlag?.(ID,"managedFolderRole")===role);
+  if(byRole)return byRole;
+  const names=getFolderNames();
+  for(const name of [names[role],DEFAULT_FOLDER_NAMES[role],
+    role==="factionRoot"?LEGACY_FOLDER_FACTIONS:null,
+    role==="questRoot"?LEGACY_FOLDER_QUESTS:null].filter(Boolean)){
+    const candidate=directFolder(name,parent);
+    // Never adopt a folder explicitly owned by another logical role.
+    if(candidate && !candidate.getFlag?.(ID,"managedFolderRole"))return candidate;
   }
-  return Folder.create({name,type:"JournalEntry",folder:parent?.id??null,...(color?{color}:{})});
+  return null;
 }
-/** Prefer renaming the existing module root: this retains native Folder IDs and
- * preserves user sorting/expansion. If both old and new exist, use the new one;
- * the old root is pruned only after its documents and children are relocated.
- */
-async function moduleRoot(name,legacyName,color){
-  const existing=directFolder(name);
-  if(existing)return ensureFolder(name,null,color);
-  const legacy=directFolder(legacyName);
-  if(legacy){await legacy.update({name,color});return legacy;}
-  return ensureFolder(name,null,color);
-}
-export async function roots() {
+/** Retained as a generic exported helper for older integrations. */
+export async function ensureFolder(name,parent=null,color=null){
   assertGM();
-  const colors=getFolderColors();
-  return {factions:await moduleRoot(FOLDER_FACTIONS,LEGACY_FOLDER_FACTIONS,colors.factionRoot),
-    quests:await moduleRoot(FOLDER_QUESTS,LEGACY_FOLDER_QUESTS,colors.questRoot)};
+  const existing=directFolder(name,parent);
+  if(existing){if(color && String(existing.color??"").toLowerCase()!==color)await existing.update({color});return existing;}
+  return Folder.create({name,type:"JournalEntry",folder:parentId(parent),...(color?{color}:{})});
 }
-/** Administrative state controls a Quest's single native folder.
- * Character results are individual and NEVER determine physical Journal location.
- * The faction argument remains accepted for backwards module API compatibility.
- */
-export async function questFolder(_faction, status="available") {
+async function ensureManaged(role,parent=null){
+  assertGM();
+  const names=getFolderNames(),colors=getFolderColors();
+  const wanted=names[role],color=colors[role];
+  let folder=findManaged(role,parent);
+  if(!folder){
+    folder=await Folder.create({name:wanted,type:"JournalEntry",folder:parentId(parent),color,
+      flags:{[ID]:{managedFolderRole:role}}});
+  }else{
+    const changes={};
+    if(folder.name!==wanted)changes.name=wanted;
+    if(String(folder.color??"").toLowerCase()!==color)changes.color=color;
+    if(folder.getFlag?.(ID,"managedFolderRole")!==role)changes[`flags.${ID}.managedFolderRole`]=role;
+    if(Object.keys(changes).length)await folder.update(changes);
+  }
+  if(getFolderIds()[role]!==folder.id)await saveFolderIds({[role]:folder.id});
+  return folder;
+}
+/** Detect collisions with unrelated folders before persisting any custom names. */
+export function validateManagedFolderNames(next){
+  const names=validateFolderNames(next);
+  const rootF=findManaged("factionRoot"),rootQ=findManaged("questRoot");
+  const ours=new Set([rootF?.id,rootQ?.id,
+    ...["gmOnly","active","finished"].map(role=>findManaged(role,rootQ)?.id)].filter(Boolean));
+  for(const {key,parent} of FOLDER_FIELDS){
+    const expectedParent=parent?rootQ:null;
+    for(const folder of game.folders){
+      if(!matchesParent(folder,expectedParent) || ours.has(folder.id))continue;
+      if(folder.name.toLocaleLowerCase()===names[key].toLocaleLowerCase())
+        throw new Error(`A different Journal folder already uses the name "${names[key]}". Choose another name.`);
+    }
+  }
+  return names;
+}
+export async function roots(){
+  assertGM();
+  return {factions:await ensureManaged("factionRoot"),quests:await ensureManaged("questRoot")};
+}
+/** Administrative state controls a Quest's single physical Journal folder. */
+export async function questFolder(_faction,status="available"){
   const {quests:root}=await roots();
-  const colors=getFolderColors();
-  if(status==="unavailable")return ensureFolder(GM_ONLY_FOLDER,root,colors.gmOnly);
-  if(status==="inactive")return ensureFolder(FINISHED_FOLDER,root,colors.finished);
-  return ensureFolder(ACTIVE_FOLDER,root,colors.active);
+  if(status==="unavailable")return ensureManaged("gmOnly",root);
+  if(status==="inactive")return ensureManaged("finished",root);
+  return ensureManaged("active",root);
 }
 function folderDepth(folder){let depth=0;const visited=new Set();for(let p=folder?.folder;p&&!visited.has(p.id);p=p.folder){visited.add(p.id);depth++;}return depth;}
 function within(folder,root){const seen=new Set();for(let p=folder;p&&!seen.has(p.id);p=p.folder){if(p.id===root.id)return true;seen.add(p.id);}return false;}
@@ -70,10 +103,9 @@ export async function synchronizeQuestFolders(){
   const legacyQuestRoot=directFolder(LEGACY_FOLDER_QUESTS);
   const legacyFactionRoot=directFolder(LEGACY_FOLDER_FACTIONS);
   const {quests:questRoot,factions:factionRoot}=await roots();
-  const colors=getFolderColors();
-  const gmOnly=await ensureFolder(GM_ONLY_FOLDER,questRoot,colors.gmOnly);
-  const active=await ensureFolder(ACTIVE_FOLDER,questRoot,colors.active);
-  const finished=await ensureFolder(FINISHED_FOLDER,questRoot,colors.finished);
+  const gmOnly=await ensureManaged("gmOnly",questRoot);
+  const active=await ensureManaged("active",questRoot);
+  const finished=await ensureManaged("finished",questRoot);
   const recognizedRoots=[questRoot,...(legacyQuestRoot && legacyQuestRoot.id!==questRoot.id?[legacyQuestRoot]:[])];
   // Capture old faction/Inactive folders before moving their last Quest.
   const oldFolderIds=new Set();
@@ -108,24 +140,20 @@ export async function synchronizeQuestFolders(){
   }
   return {quests:taggedQuests.length,factions:taggedFactions.length};
 }
-/** Repaint existing managed folders without creating/moving Journal documents.
- * Changing colors never changes Faction, Quest, Actor, or ownership flags.
+/** Apply World settings only to the five native Folder documents. No Journal moves,
+ * Actor updates or new Folder IDs occur when renaming/recoloring existing folders.
+ * Persisted IDs/role flags keep this idempotent after F5 or future upgrades.
  */
-export async function applyManagedFolderColors(){
+export async function applyManagedFolderSettings(){
   assertGM();
-  const colors=getFolderColors();
-  const rootF=directFolder(FOLDER_FACTIONS)??directFolder(LEGACY_FOLDER_FACTIONS);
-  const rootQ=directFolder(FOLDER_QUESTS)??directFolder(LEGACY_FOLDER_QUESTS);
-  const pairs=[[rootF,colors.factionRoot],[rootQ,colors.questRoot]];
-  if(rootQ){
-    pairs.push([directFolder(GM_ONLY_FOLDER,rootQ),colors.gmOnly],
-      [directFolder(ACTIVE_FOLDER,rootQ),colors.active],
-      [directFolder(FINISHED_FOLDER,rootQ),colors.finished]);
-  }
-  for(const [folder,color] of pairs){
-    if(folder && String(folder.color??"").toLowerCase()!==color)await folder.update({color});
-  }
+  const {factions,quests}=await roots();
+  await ensureManaged("gmOnly",quests);
+  await ensureManaged("active",quests);
+  await ensureManaged("finished",quests);
+  return {factions:factions.id,quests:quests.id};
 }
+/** Historical exported name for the v0.1.4 settings integration. */
+export async function applyManagedFolderColors(){return applyManagedFolderSettings();}
 
 function sortedRanks(ranks) {
   // Retain stable rank/benefit IDs and future-compatible metadata on every save.

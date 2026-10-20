@@ -292,3 +292,62 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
 .hqr-module-settings .hqr-folder-color-row code{font-family:monospace;font-size:11px;color:#cdbb94;background:transparent}
 .hqr-module-settings .hqr-folder-colors button{margin-top:9px;font-size:11px}
 @media(max-width:560px){.hqr-module-settings .hqr-folder-color-row{grid-template-columns:minmax(0,1fr) 55px 75px;gap:5px}}
+
+/* v0.1.5 — Correct native label vertical cascade in Class Catalog. The GM
+   settings dialog uses dense two-column entries with explicit horizontal rows. */
+.hqr-app.hqr-module-settings .hqr-class-catalog-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;
+  max-height:280px;overflow:auto;align-content:start;
+}
+.hqr-app.hqr-module-settings label.hqr-class-catalog-row{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start;gap:10px;min-width:0;min-height:45px;
+  padding:7px 9px!important;margin:0!important;box-sizing:border-box;
+  line-height:1.2;cursor:pointer;
+}
+.hqr-app.hqr-module-settings label.hqr-class-catalog-row[hidden]{display:none!important}
+.hqr-app.hqr-module-settings .hqr-class-catalog-row input[type="checkbox"]{
+  display:block!important;position:static!important;inset:auto!important;
+  width:16px!important;height:16px!important;min-height:16px!important;
+  max-width:16px;margin:0!important;padding:0!important;flex:0 0 16px;
+  align-self:center;appearance:auto;
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-text{
+  display:flex!important;flex-direction:column!important;align-items:flex-start;
+  justify-content:center;gap:3px;min-width:0;flex:1 1 auto;
+  overflow-wrap:anywhere;line-height:1.2;
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-text strong,
+.hqr-app.hqr-module-settings .hqr-class-catalog-text small{
+  display:block;width:100%;margin:0;padding:0;position:static;
+  white-space:normal;line-height:1.25;
+}
+.hqr-app.hqr-module-settings .hqr-class-catalog-text strong{font-size:12px}
+.hqr-app.hqr-module-settings .hqr-class-catalog-text small{font-size:10px;font-weight:400}
+.hqr-app.hqr-module-settings .hqr-folder-management-head{
+  display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:12px;
+  font-size:10px;text-transform:uppercase;color:#bfb29b;
+}
+.hqr-app.hqr-module-settings .hqr-folder-management-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:12px;
+  align-items:end;border-bottom:1px solid rgba(209,176,107,.20);
+  padding:5px 4px 9px;min-width:0;
+}
+.hqr-app.hqr-module-settings .hqr-folder-name-field{min-width:0;gap:5px}
+.hqr-app.hqr-module-settings .hqr-folder-name-field span{font-size:11px}
+.hqr-app.hqr-module-settings .hqr-folder-name-field input{min-width:0;min-height:32px;padding:5px 8px}
+.hqr-app.hqr-module-settings .hqr-folder-color-field{display:flex;align-items:center;gap:7px;min-width:0;padding-bottom:1px}
+.hqr-app.hqr-module-settings .hqr-folder-color-field input[type="color"]{
+  appearance:auto;flex:0 0 48px;width:48px!important;height:31px;min-height:31px;
+  padding:1px 3px;background:#252227;border:1px solid #695a49;border-radius:3px;
+  cursor:pointer;
+}
+.hqr-app.hqr-module-settings .hqr-folder-color-field code{font-size:10px;color:#cdbb94;background:transparent;white-space:nowrap}
+.hqr-app.hqr-module-settings .hqr-folder-management-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:6px}
+.hqr-app.hqr-module-settings .hqr-folder-management-actions button{font-size:11px}
+@media(max-width:630px){
+  .hqr-app.hqr-module-settings .hqr-class-catalog-list{grid-template-columns:1fr}
+  .hqr-app.hqr-module-settings .hqr-folder-management-row{grid-template-columns:minmax(0,1fr) 123px;gap:7px}
+  .hqr-app.hqr-module-settings .hqr-folder-management-head{grid-template-columns:minmax(0,1fr) 123px;gap:7px}
+  .hqr-app.hqr-module-settings .hqr-folder-color-field input[type="color"]{flex-basis:38px;width:38px!important}
+}

@@ -24,7 +24,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | GM Only / Active / Finished filing | Automatically file prepared, available, and closed Quests by GM administrative status without changing individual results |
 | Quest Manager filters | Browse All, GM Only, Available, Accepted and Finished; live search by Quest name or Faction with category counts |
-| World Module Settings | Choose allowed rank-benefit classes and custom colors for native managed folders in one GM-only settings screen |
+| World Module Settings | Choose allowed rank-benefit classes and custom names and colors for native managed folders in one GM-only settings screen |
 
 ## Compatibility
 
@@ -47,7 +47,7 @@ The Reputation tab is designed for the native D&D5e Character and Group sheets. 
 
 3. Install the module, then enable **Hammer's Quest & Renown** in your D&D5e World under **Manage Modules**.
 4. Log in as GM. The module migrates and maintains its managed Journal folders automatically.
-5. Open the **Journal Directory** to access Quest/Faction tools. Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** for the global Class Catalog and folder colors.
+5. Open the **Journal Directory** to access Quest/Faction tools. Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** for the global Class Catalog and folder names/colors.
 
 You can also obtain release files from [GitHub Releases](https://github.com/hammer-PvP/Hammer-s-Quest-Renown/releases).
 
@@ -116,8 +116,10 @@ Journal Directory
 
 Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** (GM only). In this single screen:
 
-- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Search classes by name or source; the list is compact and supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
-- **Folder Colors:** use the native color controls to change `Hammer's Factions`, `Hammer's Quests`, `GM Only`, `Active`, and `Finished` individually, or use **Reset Default Colors**. Click **Save Settings** to persist these colors for the World and recolor existing managed folders. No Journals, Renown, or Quest outcomes are rewritten by changing colors.
+- **Class Catalog:** choose individually which classes appear in each Faction's optional Class Specific rank slots. Each selection shows the class name and its source compendium on a separate line, with the checkbox on the left. Search classes by name or source; the list supports selecting/clearing visible entries. Previously saved selections from the v0.1.2 catalog are retained.
+- **Folder Management:** customize the **name and color** of each of the five managed native Journal folders, or use **Reset Default Names** / **Reset Default Colors**. You can call your Quest root *Missões*, the GM-only folder *Ocultas*, and Finished *Concluídas* without altering their roles. Click **Save Settings** to apply changes to the current World. Existing Folder documents are renamed/recolored in place, retaining their IDs and all child Journals; Quest status rules never depend on the visible names. Folder names must not be blank or collide with another folder under the same parent.
+
+Folder colors and names are World-wide settings for the GM; changes survive closing the configuration window and reloading the game. If you use a custom folder name, the module continues to move Quests by their global status into the same physical Folder IDs.
 
 The Faction Editor is now dedicated to Faction properties, ranks, and optional benefit blocks. It no longer contains the global Class Catalog button. The World-wide class selection can be changed independently of any Faction.
 

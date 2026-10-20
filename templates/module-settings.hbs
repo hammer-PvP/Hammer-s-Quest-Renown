@@ -16,7 +16,7 @@
       <div class="hqr-class-catalog-list" data-class-list>
         {{#each classes}}
         <label class="hqr-class-catalog-row" data-key="{{key}}" data-search="{{name}} {{sourceLabel}}">
-          <input type="checkbox" {{#if enabled}}checked{{/if}}>
+          <input type="checkbox" aria-label="Enable {{name}}" {{#if enabled}}checked{{/if}}>
           <span class="hqr-class-catalog-text"><strong>{{name}}</strong><small>{{sourceLabel}}{{#if unavailable}} · Source currently unavailable{{/if}}</small></span>
           {{#if unavailable}}<i class="fa-solid fa-triangle-exclamation" title="Previously enabled source unavailable"></i>{{/if}}
         </label>
@@ -26,17 +26,26 @@
       </div>
       <p class="hqr-hint"><strong data-class-count>{{selectedCount}}</strong> of {{totalClasses}} classes selected. Empty Class Specific slots remain valid.</p>
     </div>
-    <div class="hqr-panel hqr-folder-colors">
-      <h3><i class="fa-solid fa-palette"></i> Default Folder Colors</h3>
-      <p class="hqr-hint">Native Journal folder colors for the module's managed folders. Does not change individual Quest or Faction data.</p>
-      {{#each colors}}
-      <label class="hqr-folder-color-row">
-        <span>{{label}}</span>
-        <input type="color" data-folder-color="{{key}}" value="{{value}}" aria-label="Color for {{label}}">
-        <code data-color-label="{{key}}">{{value}}</code>
-      </label>
+    <div class="hqr-panel hqr-folder-management">
+      <h3><i class="fa-solid fa-folder-tree"></i> Folder Management</h3>
+      <p class="hqr-hint">Customize the name and native color of each module-managed Journal folder. The folder roles and Quest status rules remain unchanged. Existing folders are renamed in place, preserving IDs and Journals.</p>
+      <div class="hqr-folder-management-head" aria-hidden="true"><span>Folder role / Display name</span><span>Color</span></div>
+      {{#each folders}}
+      <div class="hqr-folder-management-row">
+        <label class="hqr-folder-name-field">
+          <span>{{label}}</span>
+          <input type="text" data-folder-name="{{key}}" value="{{name}}" maxlength="100" aria-label="Folder name for {{label}}" spellcheck="false">
+        </label>
+        <div class="hqr-folder-color-field">
+          <input type="color" data-folder-color="{{key}}" value="{{color}}" aria-label="Folder color for {{label}}">
+          <code data-color-label="{{key}}">{{color}}</code>
+        </div>
+      </div>
       {{/each}}
-      <button type="button" data-action="reset-colors" class="hqr-quiet"><i class="fa-solid fa-rotate-left"></i> Reset Default Colors</button>
+      <div class="hqr-folder-management-actions">
+        <button type="button" data-action="reset-names" class="hqr-quiet"><i class="fa-solid fa-rotate-left"></i> Reset Default Names</button>
+        <button type="button" data-action="reset-colors" class="hqr-quiet"><i class="fa-solid fa-palette"></i> Reset Default Colors</button>
+      </div>
     </div>
   </div>
   <footer class="hqr-actions">
