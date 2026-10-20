@@ -251,3 +251,27 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
 .hqr-class-catalog .hqr-catalog-info{color:#d2bc8d;background:#34302a;border:1px solid #605238;border-radius:5px;padding:9px;font-size:12px}
 .hqr-class-catalog .hqr-catalog-warning{color:#f2b5a1;background:#3d2727;border:1px solid #815050;border-radius:5px;padding:9px;font-size:12px}
 .hqr-class-catalog .hqr-class-catalog-count{margin-right:auto;font-size:12px;color:#d2c4a9}
+
+/* v0.1.3 — compact, searchable Quest Manager (scoped: no effects on Faction or Rank editing). */
+.hqr-quest-manager .hqr-quest-controls{flex:none;background:#211b1e;border-bottom:1px solid var(--hqr-border)}
+.hqr-quest-manager .hqr-quest-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px 16px 3px}
+.hqr-quest-manager .hqr-quest-tabs button{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:4px 9px;background:#30292b;border-color:rgba(209,176,107,.25);font-size:12px}
+.hqr-quest-manager .hqr-quest-tabs button.is-active{background:#823238;border-color:#c58c79;color:white}
+.hqr-quest-manager .hqr-filter-count{min-width:18px;padding:1px 5px;background:rgba(0,0,0,.25);border-radius:8px;text-align:center;font-size:10px;font-variant-numeric:tabular-nums}
+.hqr-quest-manager .hqr-quest-toolbar{padding:7px 16px 10px;background:transparent;border:0;align-items:center}
+.hqr-quest-manager .hqr-quest-toolbar label{min-width:0}
+.hqr-quest-manager .hqr-quest-toolbar input{min-height:32px}
+.hqr-quest-manager .hqr-quest-scroll{padding:12px 16px;gap:10px}
+.hqr-quest-manager .hqr-quest-record{padding:10px 13px;gap:8px;border:1px solid rgba(209,176,107,.43);background:#1c1a1c}
+.hqr-quest-manager .hqr-quest-record[hidden],.hqr-quest-manager .hqr-quest-empty-filter[hidden]{display:none!important}
+.hqr-quest-manager .hqr-record-heading h3{font-size:15px;line-height:1.25}
+.hqr-quest-manager .hqr-quest-record .hqr-hint{font-size:11px;line-height:1.3;margin:2px 0 0}
+.hqr-quest-manager .hqr-record-heading .hqr-pill{padding:4px 7px;line-height:1.2;white-space:nowrap}
+.hqr-quest-manager .hqr-record-actions{gap:5px}
+.hqr-quest-manager .hqr-record-actions button{min-height:27px;padding:4px 8px;font-size:11px;line-height:1.25}
+.hqr-quest-manager .hqr-quest-attention{margin:0;font-size:11px;color:#e1bb82}
+.hqr-quest-manager .hqr-quest-empty-filter{border:1px dashed var(--hqr-border);border-radius:6px;text-align:center;padding:16px 10px;color:#c6b9a6}
+.hqr-quest-manager .hqr-quest-empty-filter p{margin:0;font-size:12px}
+.hqr-quest-manager .hqr-quest-footer{display:flex;justify-content:space-between;gap:10px;padding:7px 16px;border-top:1px solid rgba(209,176,107,.22);font-size:10px;color:#a99e8b;background:#17171a}
+.hqr-quest-manager .hqr-quest-footer strong{font-variant-numeric:tabular-nums;color:#e2c68d}
+@media(max-width:720px){.hqr-quest-manager .hqr-quest-tabs{padding:8px 10px 3px}.hqr-quest-manager .hqr-quest-toolbar{padding:7px 10px}.hqr-quest-manager .hqr-quest-scroll{padding:10px;gap:8px}.hqr-quest-manager .hqr-quest-footer span:last-child{display:none}}

@@ -4,6 +4,17 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.3 — Local Test: Quest Manager Filtering and Compact Cards
+
+- **Five live filters:** All, GM Only (global `unavailable`), Available (global `available` with no pending Characters), Accepted (global `available` with one or more pending Characters), Finished (global `inactive`). Individual Completed/Failed results do not move a Quest between administrative folders.
+- **Search and counts:** Client-side search matches Quest and Faction names, ignores accents/case, combines with the chosen filter and updates counts per category. Filtering does not call `ApplicationV2.render()` or modify any Document.
+- **Dense layout:** Approximately 20% less vertical space per Quest card, with a clearer border and compact action buttons. All existing actions and permission checks remain unchanged. A non-destructive warning highlights Unavailable Quests that still have unfinished assigned Characters.
+- **Render reliability:** Explicit Refresh and external Journal updates preserve the manager's scroll position, active filter and search-focus context. Reuse a single updateJournalEntry hook per manager; remove the hook when it closes.
+- **No folder/schema migration:** Native Journal structure stays `Hammer's Quests / Active` and `/ Finished`. `GM Only` and `Accepted` are views, *not physical folders* yet. Module `dataVersion` remains **5**, and Faction/Rank Benefits data from v0.1.2, Quest flags, historical results, payout and Renown ledgers are untouched. A future patch will migrate global Unavailable Quests into a GM-only folder with an access audit.
+- **QA:** Static syntax/package checks and mocked classification, counts, filtering, data-preservation and rerender-context tests. Confirm in Foundry V14/D&D5e 6.0.6 before treating this as stable. Local test build; do not publish on GitHub until approved.
+
+---
+
 ## v0.1.2 — Local Test: Class Catalog and Class Specific Slots
 
 - **GM Class Catalog:** Discover class Items from the D&D5e 6.0.6

@@ -1,32 +1,66 @@
 import {ID,assertGM,report,quests,factions,esc} from "../constants.mjs";
 import {setQuestAvailability} from "../services/documents.mjs";
+import {questCategory,normalizeQuestSearch,QUEST_CATEGORIES} from "../services/quest-manager-view.mjs";
 import {QuestApp} from "./quest-app.mjs";
 import {QuestLifecycleApp} from "./quest-lifecycle-app.mjs";
 import {QuestResultsApp} from "./quest-results-app.mjs";
 import {FailureReversalApp} from "./failure-reversal-app.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
+
 export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
   static DEFAULT_OPTIONS={classes:["hqr-app","hqr-quest-manager"],position:{width:870,height:780},window:{title:"Quest Manager",resizable:true},tag:"section"};
   static PARTS={main:{template:`modules/${ID}/templates/quest-manager.hbs`}};
   constructor(opts={}){
-    super(opts);this.search="";this._refreshQueued=false;
+    super(opts);
+    this.search="";
+    this.category="all";
+    this._refreshQueued=false;
+    this._pendingView=null;
+    const queueRefresh=()=>{
+      if(this._refreshQueued)return;
+      this._refreshQueued=true;
+      queueMicrotask(async()=>{
+        try{await this._renderPreservingView();}catch{/* Closed window: no refresh necessary. */}
+        finally{this._refreshQueued=false;}
+      });
+    };
     this._journalHook=Hooks.on("updateJournalEntry",(journal,changes)=>{
       if(journal.getFlag(ID,"kind")!=="quest")return;
       if(!("flags" in changes)&&!("name" in changes)&&!("folder" in changes))return;
-      if(this._refreshQueued)return;
-      this._refreshQueued=true;
-      queueMicrotask(async()=>{this._refreshQueued=false;try{await this.render();}catch{ /* window closed */ }});
+      queueRefresh();
+    });
+    this._createHook=Hooks.on("createJournalEntry",journal=>{
+      if(journal.getFlag(ID,"kind")==="quest")queueRefresh();
+    });
+    this._deleteHook=Hooks.on("deleteJournalEntry",journal=>{
+      if(journal.getFlag(ID,"kind")==="quest")queueRefresh();
     });
   }
   async _onClose(options){
-    if(this._journalHook!==null){Hooks.off("updateJournalEntry",this._journalHook);this._journalHook=null;}
+    for(const [event,key] of [["updateJournalEntry","_journalHook"],["createJournalEntry","_createHook"],["deleteJournalEntry","_deleteHook"]]){
+      if(this[key]!=null){Hooks.off(event,this[key]);this[key]=null;}
+    }
     await super._onClose?.(options);
+  }
+  /** Only an external Quest document update or explicit Refresh rerenders the window.
+   * Filters and text search touch the existing DOM, never scroll or focus drafts.
+   */
+  async _renderPreservingView(){
+    const root=this.element;
+    const scroller=root?.querySelector(".hqr-scroll");
+    const focused=root?.contains(document.activeElement)?document.activeElement:null;
+    this._pendingView={scrollTop:scroller?.scrollTop??0,
+      focus:focused?.name==="filter"?"search":focused?.hasAttribute("data-category")?focused.dataset.category:null,
+      selectionStart:focused?.name==="filter"?focused.selectionStart:null,
+      selectionEnd:focused?.name==="filter"?focused.selectionEnd:null};
+    try{await this.render();}catch(error){this._pendingView=null;throw error;}
   }
   async _prepareContext(){
     assertGM();
+    const factionsByUuid=new Map(factions().map(f=>[f.uuid,f.name]));
     const entries=quests().map(q=>{
       const status=q.getFlag(ID,"status")??"unavailable";
-      const faction=factions().find(f=>f.uuid===q.getFlag(ID,"factionUuid"));
+      const faction=factionsByUuid.get(q.getFlag(ID,"factionUuid"))??"Unlinked";
       const assignees=q.getFlag(ID,"assignees")??[];
       const progress=q.getFlag(ID,"progress")??{};
       const counts={completed:0,failed:0,active:0};
@@ -36,6 +70,7 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(s==="failed")counts.failed++;
         else counts.active++;
       }
+      const category=questCategory(status,counts.active);
       const canGive=status==="available";
       const canTurnIn=canGive && (counts.active>0 || !!q.getFlag(ID,"activeTurnIn"));
       const failPending=!!q.getFlag(ID,"activeFailureTurnIn");
@@ -43,21 +78,74 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
       const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
       const hasUndo=counts.failed>0 || !!q.getFlag(ID,"activeFailureReversal");
-      return {id:q.id,name:q.name,faction:faction?.name??"Unlinked",status,statusLabel:status==="inactive"?"Finished":status.replaceAll("-"," "),
+      return {id:q.id,name:q.name,faction,status,category,
+        statusLabel:status==="inactive"?"Finished":status.replaceAll("-"," "),
         total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,hasUndo,
+        hasPendingUnavailable:status==="unavailable"&&counts.active>0,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
     return {entries,query:this.search,total:entries.length};
+  }
+  _applyFilters(){
+    const root=this.element;
+    if(!root)return;
+    const needle=normalizeQuestSearch(this.search);
+    const counts=Object.fromEntries(QUEST_CATEGORIES.map(category=>[category,0]));
+    let visible=0;
+    const rows=root.querySelectorAll(".hqr-quest-record");
+    for(const row of rows){
+      const matches=!needle||normalizeQuestSearch(`${row.dataset.questName??""} ${row.dataset.factionName??""}`).includes(needle);
+      const kind=row.dataset.category;
+      if(matches){counts.all++;if(Object.hasOwn(counts,kind))counts[kind]++;}
+      const show=matches&&(this.category==="all"||kind===this.category);
+      row.hidden=!show;
+      if(show)visible++;
+    }
+    for(const button of root.querySelectorAll("[data-category]")){
+      const kind=button.dataset.category;
+      button.classList.toggle("is-active",kind===this.category);
+      button.setAttribute("aria-pressed",String(kind===this.category));
+      const count=button.querySelector(".hqr-filter-count");
+      if(count)count.textContent=String(counts[kind]??0);
+    }
+    const message=root.querySelector(".hqr-quest-empty-filter");
+    if(message){
+      message.hidden=visible>0 || rows.length===0;
+      const text=message.querySelector(".hqr-empty-text");
+      if(text)text.textContent=counts.all===0&&needle?"No Quests match this search.":"No Quests match the selected filter.";
+    }
+    const shown=root.querySelector("[data-visible-quests]");
+    if(shown)shown.textContent=String(visible);
   }
   _onRender(){
     const root=this.element;
     root.querySelector('[data-action="new"]')?.addEventListener("click",()=>new QuestApp().render(true));
     root.querySelector('[name="filter"]')?.addEventListener("input",event=>{
       this.search=event.target.value;
-      const search=this.search.trim().toLocaleLowerCase();
-      root.querySelectorAll(".hqr-quest-record").forEach(row=>{row.hidden=!!search&&!row.textContent.toLocaleLowerCase().includes(search);});
+      this._applyFilters();
     });
-    root.querySelector('[data-action="refresh"]')?.addEventListener("click",()=>this.render());
+    for(const button of root.querySelectorAll("[data-category]")){
+      button.addEventListener("click",()=>{
+        this.category=button.dataset.category;
+        this._applyFilters();
+      });
+    }
+    root.querySelector('[data-action="refresh"]')?.addEventListener("click",()=>this._renderPreservingView().catch(error=>report(error,"Quest Manager refresh failed")));
+    this._applyFilters();
+    const pending=this._pendingView;
+    this._pendingView=null;
+    if(pending){
+      const scroller=root.querySelector(".hqr-scroll");
+      if(scroller)scroller.scrollTop=pending.scrollTop;
+      const focus=pending.focus==="search"?root.querySelector('[name="filter"]'):
+        pending.focus?root.querySelector(`[data-category="${pending.focus}"]`):null;
+      if(focus){
+        focus.focus({preventScroll:true});
+        if(pending.focus==="search"&&pending.selectionStart!==null){
+          focus.setSelectionRange(pending.selectionStart,pending.selectionEnd??pending.selectionStart);
+        }
+      }
+    }
     root.querySelectorAll("[data-quest-id]").forEach(row=>row.addEventListener("click",async event=>{
       const button=event.target.closest("[data-action]");if(!button)return;
       const journal=game.journal.get(row.dataset.questId);if(!journal)return;
@@ -77,7 +165,9 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
               yes:{label:"Finish Quest (No Automatic Failure)"},no:{label:"Cancel"}});
             if(!yes)return;
           }
-          await setQuestAvailability(journal,action);await this.render();
+          // The native updateJournalEntry hook refreshes the record after status changes.
+          // Do not force a second render: it would interrupt scroll or focus.
+          await setQuestAvailability(journal,action);
         }
       }catch(error){report(error,"Quest Manager action failed");}
     }));

@@ -23,6 +23,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Reputation Manager | Inspect balances, ranks, and history; make manual adjustments for one or many Actors |
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | Active / Finished filing | Automatically organize Quest Journals by administrative state, not by faction or individual outcome |
+| Quest Manager filters | Browse All, GM Only, Available, Accepted and Finished; live search by Quest name or Faction with category counts |
 | Rank Benefits Class Catalog | Select enabled classes independently of other book content; preview optional class-specific slots on any faction rank |
 
 ## Compatibility
@@ -215,7 +216,19 @@ A new Quest is saved **Unavailable** with no assigned Characters. Use the Quest 
 
 ## Managing Quests
 
-Open **Quest Manager** to search by Quest name, Faction, or status. Each Quest displays its global availability, count of assigned Characters, and counts of active, completed, and failed Characters.
+Open **Quest Manager** to find Quests in a preconfigured World without scrolling through a single long list. Use the five category buttons above the search box:
+
+| Filter | What it shows |
+| --- | --- |
+| **All** | Every Quest, regardless of availability or outcome |
+| **GM Only** | Globally **Unavailable** Quests, prepared but not currently available for Quest Giving |
+| **Available** | Globally **Available** Quests with no pending assigned Characters (including Quests whose former participants already finished) |
+| **Accepted** | Globally **Available** Quests with at least one unfinished assigned Character |
+| **Finished** | Quests globally closed by the GM (`Inactive`), regardless of the individual Completed/Failed results |
+
+Type in **Search by Quest or Faction** to narrow the current category. The numeric category counters respect the search term. Both the search and category controls filter the existing list without resetting your scroll position. The cards show a Quest's global availability, assigned Character count, and totals for active, completed, and failed Characters. All existing Journal, Editor, Giving, Turn-In, Failure, Undo and Results actions remain available when applicable.
+
+**Important:** the **GM Only** filter is a *Quest Manager view*, not yet a native Journal folder or a new permission level. In this build, **Unavailable** Quests still live in **Hammer's Quests / Active**, exactly as before. A Quest may be Unavailable while it still has historically assigned Characters; these are flagged for GM review without revoking previous Observer access. The dedicated physical GM Only folder and its explicit access-handling migration are planned separately. Likewise, **Accepted** is a *view based on any pending Character*, not a new global Quest status or a folder. No Actor, Journal, ownership, outcome or payout changes when switching filters.
 
 ### Quest Giving
 

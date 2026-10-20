@@ -1,9 +1,19 @@
 <div class="hqr-shell">
-<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>One Journal, individual progress and Each rewards. Finished quests remain archived, with individual outcomes preserved.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
-<div class="hqr-toolbar"><label>Filter Quests<input type="search" name="filter" placeholder="Search by name, faction or status..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="refresh" title="Refresh"><i class="fa-solid fa-rotate"></i></button></div>
-<div class="hqr-scroll">
-{{#each entries}}<article class="hqr-quest-record hqr-panel" data-quest-id="{{id}}">
+<header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Quest Manager</h2><p>Browse prepared, available, accepted and finished Quests. Character outcomes remain independent.</p></div><span class="hqr-pill">{{total}} Quests</span></header>
+<div class="hqr-quest-controls">
+  <div class="hqr-quest-tabs" role="group" aria-label="Filter Quests by status">
+    <button type="button" data-category="all" aria-pressed="true">All <span class="hqr-filter-count">{{total}}</span></button>
+    <button type="button" data-category="gm" aria-pressed="false">GM Only <span class="hqr-filter-count">0</span></button>
+    <button type="button" data-category="available" aria-pressed="false">Available <span class="hqr-filter-count">0</span></button>
+    <button type="button" data-category="accepted" aria-pressed="false">Accepted <span class="hqr-filter-count">0</span></button>
+    <button type="button" data-category="finished" aria-pressed="false">Finished <span class="hqr-filter-count">0</span></button>
+  </div>
+  <div class="hqr-toolbar hqr-quest-toolbar"><label><span class="sr-only">Search Quests by name or faction</span><input type="search" name="filter" aria-label="Search Quests by name or faction" placeholder="Search by Quest or Faction..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="refresh" title="Refresh Quests" aria-label="Refresh Quests"><i class="fa-solid fa-rotate"></i></button></div>
+</div>
+<div class="hqr-scroll hqr-quest-scroll">
+{{#each entries}}<article class="hqr-quest-record hqr-panel" data-quest-id="{{id}}" data-category="{{category}}" data-quest-name="{{name}}" data-faction-name="{{faction}}">
  <div class="hqr-record-heading"><div><h3>{{name}}</h3><p class="hqr-hint">{{faction}} · {{completed}} Completed · {{failed}} Failed · {{active}} Active ({{total}} assigned)</p></div><span class="hqr-pill">{{statusLabel}}</span></div>
+ {{#if hasPendingUnavailable}}<p class="hqr-quest-attention"><i class="fa-solid fa-circle-exclamation"></i> Unavailable with pending assigned Characters. Existing progress and access are unchanged.</p>{{/if}}
  <div class="hqr-record-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
  {{#if canMakeAvailable}}<button type="button" data-action="available"><i class="fa-solid fa-lock-open"></i> {{#if isInactive}}Reopen (Available){{else}}Make Available{{/if}}</button>{{/if}}
  {{#if canMakeUnavailable}}<button type="button" data-action="unavailable"><i class="fa-solid fa-lock"></i> Make Unavailable</button>{{/if}}
@@ -14,5 +24,8 @@
  {{#if hasUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}
  {{#if hasHistory}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}
  </div>
-</article>{{else}}<div class="hqr-panel"><p>No Quests yet. Create one to begin.</p></div>{{/each}}
-</div></div>
+</article>{{else}}<div class="hqr-panel hqr-quest-no-records"><p>No Quests yet. Create one to begin.</p></div>{{/each}}
+<div class="hqr-quest-empty-filter" hidden><p class="hqr-empty-text">No Quests match the selected filter.</p></div>
+</div>
+<footer class="hqr-quest-footer"><span><strong data-visible-quests>{{total}}</strong> visible Quests</span><span>Filters use global status and pending Character progress; no Journal folders are changed.</span></footer>
+</div>
