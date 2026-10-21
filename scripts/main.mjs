@@ -10,6 +10,7 @@ import {renderQuestStatus} from "./sheets/quest-status.mjs";
 import {registerReputationSettings,migrateReputationSchema,isRenownBatchRunning} from "./services/batch-reputation.mjs";
 import {registerClassCatalogSettings} from "./services/class-catalog.mjs";
 import {registerFolderColorSettings} from "./services/folder-settings.mjs";
+import {questDeletionStatus} from "./services/quest-deletion.mjs";
 import {HQRModuleSettingsApp} from "./apps/module-settings-app.mjs";
 
 function startFaction(doc=null){ if(!isGM())return;new FactionApp(doc).render(true); }
@@ -115,7 +116,7 @@ Hooks.once('init',()=>{
     hint:"Configure eligible classes and native Journal folder names/colors for this World.",
     icon:"fa-solid fa-sliders",type:HQRModuleSettingsApp,restricted:true
   });
-  console.info(`${ID} | Initializing v0.1.10`);
+  console.info(`${ID} | Initializing v0.1.11`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}
@@ -186,3 +187,13 @@ Hooks.on('updateJournalEntry',(journal,change)=>{
 });
 
 Hooks.on('updateJournalEntryPage',page=>{if(page.getFlag(ID,'gmOnly'))queuePermissions();});
+
+// Prevent native Journal Directory deletion from bypassing the same protection
+// as Quest Manager (including paid Quests and interrupted transactions).
+Hooks.on('preDeleteJournalEntry',journal=>{
+  if(journal.getFlag(ID,'kind')!=='quest')return;
+  const check=questDeletionStatus(journal);
+  if(check.allowed)return;
+  if(game.user?.isGM)ui.notifications.warn(`Cannot delete Quest: ${check.reason}`);
+  return false;
+});

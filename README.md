@@ -25,6 +25,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Native D&D5e sheet integration | Compact Reputation tab on supported Character and Group sheets |
 | GM Only / Active / Finished filing | Automatically file prepared, available, and closed Quests by GM administrative status without changing individual results |
 | Quest Manager filters | Browse All, GM Only, Available, Accepted and Finished; live search by Quest name or Faction with category counts |
+| Delete unused Quests | GM-confirmed permanent deletion of Quests that have no final outcome, payouts or pending transactions; paid Quests remain protected |
 | World Module Settings | Configure Class Sources separately from logical Enabled Classes; customize native managed folder names and colors |
 
 ## Compatibility
@@ -68,6 +69,8 @@ For a complete first Quest, follow this order:
 4. **Give it to your players.** Select **Quest Giving**, choose eligible Characters, and confirm. Each new recipient starts with **Accepted** status.
 5. **Resolve each Character's outcome.** Use **Quest Turn-In** for success or **Fail Turn-In** for failure. The two actions are independent; one Character may complete the Quest while another fails or is still working on it.
 6. **Finish the Quest when appropriate.** Select **Finish Quest** to move its Journal to **Finished**. This does **not** automatically mark unfinished Characters as Failed.
+
+To remove a test or unused Quest, open **Quest Manager → Delete Quest** and confirm. An unfinished Quest can be deleted even if assigned, but its recipients lose that Journal and unfinished progress. Quests with recorded completion/failure, issued rewards/penalties or pending payout operations are intentionally **not deletable**. Use **Finish Quest** for historical Quests; deleting their Journal would leave Actor reward records without their source.
 
 ## Where to find the controls
 

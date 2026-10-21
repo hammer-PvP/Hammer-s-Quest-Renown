@@ -1,5 +1,6 @@
 import {ID,assertGM,report,quests,esc} from "../constants.mjs";
 import {setQuestAvailability,questFactionLabel} from "../services/documents.mjs";
+import {questDeletionStatus,deleteQuest} from "../services/quest-deletion.mjs";
 import {questCategory,normalizeQuestSearch,QUEST_CATEGORIES} from "../services/quest-manager-view.mjs";
 import {QuestApp} from "./quest-app.mjs";
 import {QuestLifecycleApp} from "./quest-lifecycle-app.mjs";
@@ -77,9 +78,11 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
       const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
       const hasUndo=counts.failed>0 || !!q.getFlag(ID,"activeFailureReversal");
+      const deletion=questDeletionStatus(q);
       return {id:q.id,name:q.name,faction,status,category,
         statusLabel:status==="inactive"?"Finished":status.replaceAll("-"," "),
         total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,hasUndo,
+        canDelete:deletion.allowed,deleteReason:deletion.reason??"",
         hasPendingUnavailable:status==="unavailable"&&counts.active>0,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
@@ -157,6 +160,23 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(action==="fail")new QuestLifecycleApp(journal,"failure").render(true);
         else if(action==="results")new QuestResultsApp(journal).render(true);
         else if(action==="undo-failure")new FailureReversalApp(journal).render(true);
+        else if(action==="delete"){
+          // Revalidate immediately before displaying the confirmation and again
+          // in the service after confirmation: statuses may have changed meanwhile.
+          const info=questDeletionStatus(journal);
+          if(!info.allowed){ui.notifications.warn(`Cannot delete Quest: ${info.reason}`);return;}
+          const detail=info.assigned
+            ? `<p><strong>${info.assigned} Character(s)</strong> have received this Quest. Deleting it removes their access and unfinished progress; it does not modify their Actors.</p>`
+            : `<p>This Quest has no assigned Characters.</p>`;
+          const confirmed=await foundry.applications.api.DialogV2.confirm({
+            window:{title:"Delete Quest Permanently"},
+            content:`<p>Delete the Quest <strong>${esc(journal.name)}</strong> and its Journal pages, including GM Notes?</p>${detail}<p><strong>This cannot be undone.</strong> Quests with completed results, payouts, penalties or Actor reward records cannot be deleted.</p>`,
+            yes:{label:"Delete Quest Permanently"},no:{label:"Cancel"}
+          });
+          if(!confirmed)return;
+          await deleteQuest(journal);
+          ui.notifications.info(`Quest deleted: ${journal.name}`);
+        }
         else if(["available","unavailable","inactive"].includes(action)){
           if(action==="inactive"){
             const yes=await foundry.applications.api.DialogV2.confirm({window:{title:"Finish Quest"},

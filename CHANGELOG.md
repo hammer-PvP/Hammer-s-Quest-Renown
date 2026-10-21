@@ -4,6 +4,16 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.11 — Delete Unused Quests Safely
+
+- **Quest Manager:** added a red `Delete Quest` action for Quests without paid rewards, recorded success/failure/Undo outcomes, or pending transactions. Explicit GM confirmation names the Quest and warns that its native Journal and GM Notes will be permanently removed.
+- **Already assigned but unfinished Quests:** deletion is permitted with an extra recipient warning; their assignment and progress lived on the deleted Journal, so no Actor is rewritten.
+- **Historical payout integrity:** delete actions are disabled for any Quest with Success/Failure/Undo receipts, terminal Character results, Group results, pending operations, or historical currency, Item, or Renown references found in Actors. Native Journal deletion is also guarded, so Foundry's context menu cannot bypass the constraint.
+- **Maintenance:** native `deleteJournalEntry` hook already refreshes Quest Manager after removal. No schema or data migration (`dataVersion` remains 9). Existing v0.1.10 toolbar, owner-Faction editing, Class Sources and Quest workflows are unchanged.
+- **QA:** verify unassigned deletion, assigned-unresolved deletion, Cancel, retry after a state change, and blocked historical receipts/Actor records in Foundry. Local automated tests run without a full Foundry client; live verification is required before production approval.
+
+---
+
 ## v0.1.10 — Journal Toolbar Hotfix & Editable Quest Owner Faction
 
 - **Fixed unusable native Journal Directory controls introduced in v0.1.9:** mount HQR's toolbar as its own full-width row **after** the native Create Entry/Folder action row, never as a child of `.header-actions`. The three HQR cells take equal width. The Renown cell is icon-only but retains the third full-width click target, tooltip and accessible label. Native controls remain untouched. Injection is idempotent across render hooks and refreshes.

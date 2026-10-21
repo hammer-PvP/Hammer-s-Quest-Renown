@@ -453,3 +453,8 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
 .hqr-app.hqr-module-settings .hqr-class-catalog-row .hqr-class-catalog-text small{
   color:#bdb3a3;font-size:10px;line-height:1.1
 }
+
+/* v0.1.11 — explicit, guarded removal of unused Quests. */
+.hqr-quest-manager .hqr-record-actions .hqr-delete-quest{margin-left:auto;background:#372025;border-color:#a65a61;color:#f4d1d2}
+.hqr-quest-manager .hqr-record-actions .hqr-delete-quest:hover:not(:disabled){background:#702d36;border-color:#d8999c}
+.hqr-quest-manager .hqr-record-actions .hqr-delete-quest:disabled{background:#292629;border-color:#534a4d;color:#a8a0a2;opacity:.58}
