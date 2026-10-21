@@ -4,6 +4,16 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.10 — Journal Toolbar Hotfix & Editable Quest Owner Faction
+
+- **Fixed unusable native Journal Directory controls introduced in v0.1.9:** mount HQR's toolbar as its own full-width row **after** the native Create Entry/Folder action row, never as a child of `.header-actions`. The three HQR cells take equal width. The Renown cell is icon-only but retains the third full-width click target, tooltip and accessible label. Native controls remain untouched. Injection is idempotent across render hooks and refreshes.
+- **Owner Faction is editable regardless of Giving/Turn-In state:** permit any valid Faction or explicit `No Faction` for an existing Quest, including ones with Success payouts, Failure payouts or Undo Failure history. Owner changes only adjust the Quest metadata, public label and search display; they do not change assigned Characters, individual outcomes, quest availability/folder, receipt IDs, Actor ledgers, Items or currency already awarded. The owner is independent from reward/penalty Faction targets, whose existing payout locks remain intact.
+- **Missing Faction protection stays:** unresolved non-empty legacy owners are preserved when untouched, but new assignments to unknown UUIDs still fail. No automatic conversion or new pseudo-Faction.
+- **QA:** v0.1.10 mocked directory injection tests cover native row preservation, 3-cell layout, after-native placement with direct and nested wrappers, duplicate prevention and callbacks. Quest smoke tests cover owner changes after Giving, Success/Failure Turn-In and audit/ledger preservation, plus unchanged payout definition lock. This is **not** yet a live Foundry visual test.
+- **Migration:** none; `dataVersion` stays **9**. Safe to test on a backed-up v0.1.9 World, without rewriting it.
+
+---
+
 ## v0.1.9 — Independent Quests, Journal Directory Controls & Class Source Filter
 
 - **Factionless Quests (explicitly authorized):** the Quest Editor's optional `Owner Faction` selector defaults to `No Faction — Independent Quest`. Quests can be created before any Faction exists. New independent Quests persist `flags.hammer-s-quest-renown.factionUuid = null` and keep the existing native Journal/folder/assignment/reward/status lifecycle. Legacy empty owner values are read as ownerless without a bulk migration; existing owned Quests and any real `General` Faction are left intact.

@@ -24,12 +24,9 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     const ownerUuid=questOwnerUuid(this.data.factionUuid);
     const factionOptions=factions();
     const missingOwner=Boolean(ownerUuid&&!factionOptions.some(f=>f.uuid===ownerUuid));
-    const ownerLocked=Boolean((this.doc?.getFlag(ID,'payouts')??[]).length || this.doc?.getFlag(ID,'activeTurnIn') ||
-      (this.doc?.getFlag(ID,'failurePayouts')??[]).length || this.doc?.getFlag(ID,'activeFailureTurnIn') ||
-      this.doc?.getFlag(ID,'activeFailureReversal'));
     return {...this.data,isEdit:!!this.doc,claimed:!!(this.doc?.getFlag(ID,"payouts")??[]).length || !!this.doc?.getFlag(ID,"activeTurnIn"),
       factions:factionOptions.map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===ownerUuid})),
-      noOwner:!ownerUuid,missingOwner,missingOwnerUuid:missingOwner?ownerUuid:'',ownerLocked,
+      noOwner:!ownerUuid,missingOwner,missingOwnerUuid:missingOwner?ownerUuid:'',
       statusLabel:String(this.doc?.getFlag(ID,"status")??"unavailable").replaceAll("-"," "),
       objectives:this.data.objectives.map((o,index)=>({...o,index})),
       items:this.data.items.map((o,index)=>({...o,index,img:o.img||"icons/svg/item-bag.svg"})),
@@ -42,7 +39,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     const r=this.element, value=n=>r.querySelector(`[name="${n}"]`)?.value??"";
     this.data.name=value("name");
     const ownerInput=r.querySelector('[name="factionUuid"]');
-    this.data.factionUuid=questOwnerUuid(ownerInput?.disabled?this.data.factionUuid:ownerInput?.value);
+    this.data.factionUuid=questOwnerUuid(ownerInput?.value);
     this.data.flavor=value("flavor");this.data.notes=value("notes");
     this.data.renownRewards=Array.from(r.querySelectorAll('.hqr-renown-reward')).map(row=>({
       id:row.dataset.rewardId, factionUuid:row.querySelector('[data-field="faction"]')?.value??"",

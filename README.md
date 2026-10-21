@@ -71,7 +71,7 @@ For a complete first Quest, follow this order:
 
 ## Where to find the controls
 
-When logged in as GM, the **Journal Directory** adds three buttons in this order:
+When logged in as GM, the **Journal Directory** adds **a separate full-width row directly below Foundry's native Create Entry / Create Folder buttons**, split into three equal columns in this order:
 
 | Button | Purpose |
 | --- | --- |
@@ -227,7 +227,7 @@ The Quest Editor also has:
 - **Failure Penalties**, disabled by default. When enabled, define negative whole-number Renown changes against one or more Factions. These values are **not published** in the public Quest Briefing.
 - **GM Notes**, stored in a separate protected Journal page rather than in the public page.
 
-**After a Success Turn-In**, reward definitions are locked to protect previously issued per-Character rewards. **After a Failure Turn-In**, failure penalty definitions are likewise locked to protect existing failure records. The Owner Faction cannot be changed after any recorded or pending payout or reversal. A deleted owner displays **Missing Faction**, not **No Faction**, to avoid accidental reclassification. Plan changes before issuing the first corresponding Turn-In.
+**After a Success Turn-In**, reward definitions remain locked to protect previously issued per-Character rewards. **After a Failure Turn-In**, failure penalty definitions are likewise locked to protect existing failure records. **Owner Faction is only a label/reference and remains editable at any time, including after giving or paying a Quest.** To convert an existing Quest that was assigned to a placeholder `General` Faction, edit the Quest, select **No Faction — Independent Quest**, and save. Its recipients, progress, completed/failed outcomes, rewards, and historical Renown ledgers remain unchanged. Renown reward/penalty rows independently reference the Factions they affect; clearing the owner does **not** remove or alter those targets. A deleted owner displays **Missing Faction**, not **No Faction**, to avoid accidental reclassification.
 
 A new Quest is saved **Unavailable** with no assigned Characters. Use the Quest Manager to change its availability and distribute it.
 

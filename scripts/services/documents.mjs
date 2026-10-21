@@ -267,11 +267,9 @@ export async function saveQuest(doc, {name,notes,...data}) {
   // they must never be silently adopted as independent or introduced on new Quests.
   if(ownerUuid&&!faction && (!doc || ownerUuid!==questOwnerUuid(doc.getFlag(ID,'factionUuid'))))
     throw new Error('Owner Faction no longer exists. Select No Faction or another existing Faction.');
-  const ownerLocked=Boolean((doc?.getFlag(ID,'payouts')??[]).length || doc?.getFlag(ID,'activeTurnIn') ||
-    (doc?.getFlag(ID,'failurePayouts')??[]).length || doc?.getFlag(ID,'activeFailureTurnIn') ||
-    doc?.getFlag(ID,'activeFailureReversal'));
-  if(ownerLocked && ownerUuid!==questOwnerUuid(doc?.getFlag(ID,'factionUuid')))
-    throw new Error('Owner Faction is locked after the first Turn-In or pending payout.');
+  // Owner Faction only labels the Quest: renown payouts reference their own
+  // Faction UUIDs. Allow owner changes after Giving, payouts, failures or Undo.
+  // No historical ledgers, recipients or payment definitions are rewritten.
   if((doc?.getFlag(ID,"payouts")??[]).length || doc?.getFlag(ID,"activeTurnIn")) {
     const orig=doc.flags[ID];
     const normalizedItems=rows=>(rows??[]).map(({uuid,quantity})=>({uuid,quantity:Number(quantity)}));
