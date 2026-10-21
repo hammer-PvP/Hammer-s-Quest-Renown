@@ -4,6 +4,18 @@ Technical development history. This file records version-specific changes,
 migrations, fixes and compatibility notes. For installation, configuration and
 normal use, consult [README.md](README.md) instead.
 
+## v0.1.9 — Independent Quests, Journal Directory Controls & Class Source Filter
+
+- **Factionless Quests (explicitly authorized):** the Quest Editor's optional `Owner Faction` selector defaults to `No Faction — Independent Quest`. Quests can be created before any Faction exists. New independent Quests persist `flags.hammer-s-quest-renown.factionUuid = null` and keep the existing native Journal/folder/assignment/reward/status lifecycle. Legacy empty owner values are read as ownerless without a bulk migration; existing owned Quests and any real `General` Faction are left intact.
+- **Rewards remain separately targeted:** independent Quests may pay currency or Items with no Factions configured, or Success Renown / negative Failure Renown to *actual* target Factions when present. No synthetic Faction and no owner-based ledger destination. Public Briefings, native Journal status, GM-only Notes, Giving/Turn-In/Failure/Undo and Quest Manager use the existing engines.
+- **Safety:** distinguish deliberate `No Faction` from nonempty unresolved `Missing Faction` references. Never silently convert a deleted-owner reference to ownerless. Lock owner changes after any recorded or pending Success/Failure Turn-In or Undo Failure, preserving receipts. An actual owner can be reassigned/cleared before that lock. No existing Journal, page, Actor, Folder or ledger is re-created or remapped.
+- **Journal Directory:** GM toolbar is now `Factions → Quest Manager → [compact Renown icon]`. Removed only the redundant `New Quest` directory button; `Quest Manager → Create Quest`, native Quest Editor and public `api.newQuest` remain functional. Compact Renown retains accessible name/tooltip/keyboard navigation. Guard against duplicate injection remains.
+- **Class Source filter:** only classes with ≥1 authorized source definition show in `Enabled Classes`, count toward enabled/available totals or appear in Class Specific rank slots. Source filters and Select Visible / Clear Visible apply locally without rerender; hidden previously checked classes remain checked/persisted and return when the source is reauthorized. Multiple permitted class UUIDs still form one logical class slot. Missing/historical definitions are neither silently replaced nor eligible for future grants.
+- **Compatibility:** `dataVersion` stays **9**; existing settings/catalog schemas and all Folder Management markup and behavior are unchanged. No World-wide migration or new gameplay engine; Rank Benefit grants remain disabled.
+- **QA:** syntax checks and local Node mocked smoke tests cover independent Quest save, Factionless currency-free Turn-In, Renown targeting, locks, status/folder assignment, Class Sources and selection preservation. **Live Foundry V14 + D&D5e 6.0.6 validation remains required.** Install on an offline-backed-up World before publishing.
+
+---
+
 ## v0.1.8 — Independent Class Sources and Multi-Definition Class Eligibility
 
 - **Two independent controls:** World Module Settings now has two separately collapsible panels: `Class Sources` (authorize any number of class compendiums / World Items) and `Enabled Classes` (enable logical classes such as Fighter and Wizard). Each logical class has one rank slot, regardless of the number of authorized definitions. The approved Folder Management markup and service remain unchanged.

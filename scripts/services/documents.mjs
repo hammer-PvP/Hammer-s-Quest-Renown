@@ -17,6 +17,14 @@ const pageText = (name, html, gmOnly=false) => ({
 });
 function docPage(doc, isGMPage) { return doc.pages.find(p=>Boolean(p.getFlag(ID,"gmOnly"))===isGMPage); }
 export function getFaction(uuid) { return factions().find(f=>f.uuid===uuid) ?? null; }
+/** An empty legacy owner and a deliberately independent Quest are equivalent.
+ * A nonempty but unresolved UUID is NOT independent (it is a broken link).
+ */
+export function questOwnerUuid(value){const uuid=String(value??'').trim();return uuid||null;}
+export function questFactionLabel(value){
+  const uuid=questOwnerUuid(value);
+  return uuid?(getFaction(uuid)?.name??'Missing Faction'):'No Faction';
+}
 const directFolder = (name,parent=null) => game.folders.find(f=>f.type==="JournalEntry" && f.name===name && (f.folder?.id??null)===(parent?.id??null));
 const parentId=parent=>parent?.id??null;
 const matchesParent=(folder,parent)=>folder?.type==="JournalEntry" && (folder.folder?.id??null)===parentId(parent);
@@ -163,7 +171,6 @@ function factionHTML(name, description, image, ranks) {
   return `<section class="hqr-journal"><h1>${esc(name)}</h1>${image?`<figure class="hqr-faction-media"><img class="hqr-faction-art" src="${esc(image)}" alt="${esc(name)}"></figure>`:""}<div>${htmlText(description)}</div><h2>Renown Ranks</h2><table><thead><tr><th>Rank</th><th>Minimum Renown</th></tr></thead><tbody>${ranks.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.min}</td></tr>`).join("")}</tbody></table></section>`;
 }
 export function questHTML(name,data) {
-  const faction=getFaction(data.factionUuid);
   const status=String(data.status??"available").replaceAll("-"," ");
   const objectives=(data.objectives??[]).map(o=>`<li>${o.done?"☑":"☐"} ${esc(o.text)}</li>`).join("");
   const rewards=[];
@@ -182,7 +189,7 @@ export function questHTML(name,data) {
   }
   const names = (data.assignees??[]).map(id=>game.actors.get(id)?.name).filter(Boolean);
   const assigned = names.join(", ") || "Not yet assigned";
-  return `<section class="hqr-journal"><h1>${esc(name)}</h1><p class="hqr-journal-subtitle">${esc(faction?.name??"No Faction")} · ${esc(status)}</p><h2>Quest Briefing</h2><div>${htmlText(data.flavor??"")}</div><h2>Objectives</h2><ul>${objectives||"<li>No objectives listed.</li>"}</ul><h2>Accepted By</h2><p>${esc(assigned)}</p><h2>Rewards</h2><ul>${rewards.join("")||"<li>No announced rewards.</li>"}</ul></section>`;
+  return `<section class="hqr-journal"><h1>${esc(name)}</h1><p class="hqr-journal-subtitle">${esc(questFactionLabel(data.factionUuid))} · ${esc(status)}</p><h2>Quest Briefing</h2><div>${htmlText(data.flavor??"")}</div><h2>Objectives</h2><ul>${objectives||"<li>No objectives listed.</li>"}</ul><h2>Accepted By</h2><p>${esc(assigned)}</p><h2>Rewards</h2><ul>${rewards.join("")||"<li>No announced rewards.</li>"}</ul></section>`;
 }
 async function setPage(doc, gmOnly, name, html) {
   const page=docPage(doc,gmOnly);
@@ -253,20 +260,29 @@ export async function saveQuest(doc, {name,notes,...data}) {
       JSON.stringify(failurePenalties)!==JSON.stringify(orig.failurePenalties??[]))
       throw new Error("Failure Penalties already issued; penalty definitions are locked.");
   }
+  const ownerUuid=questOwnerUuid(data.factionUuid);
+  // None is a legitimate selection; an unresolved nonempty UUID is not.
+  const faction=ownerUuid?getFaction(ownerUuid):null;
+  // Existing orphan references can be retained unchanged during unrelated edits;
+  // they must never be silently adopted as independent or introduced on new Quests.
+  if(ownerUuid&&!faction && (!doc || ownerUuid!==questOwnerUuid(doc.getFlag(ID,'factionUuid'))))
+    throw new Error('Owner Faction no longer exists. Select No Faction or another existing Faction.');
+  const ownerLocked=Boolean((doc?.getFlag(ID,'payouts')??[]).length || doc?.getFlag(ID,'activeTurnIn') ||
+    (doc?.getFlag(ID,'failurePayouts')??[]).length || doc?.getFlag(ID,'activeFailureTurnIn') ||
+    doc?.getFlag(ID,'activeFailureReversal'));
+  if(ownerLocked && ownerUuid!==questOwnerUuid(doc?.getFlag(ID,'factionUuid')))
+    throw new Error('Owner Faction is locked after the first Turn-In or pending payout.');
   if((doc?.getFlag(ID,"payouts")??[]).length || doc?.getFlag(ID,"activeTurnIn")) {
     const orig=doc.flags[ID];
     const normalizedItems=rows=>(rows??[]).map(({uuid,quantity})=>({uuid,quantity:Number(quantity)}));
-    if(data.factionUuid!==orig.factionUuid ||
-       JSON.stringify(data.currency??{})!==JSON.stringify(orig.currency??{}) ||
+    if(JSON.stringify(data.currency??{})!==JSON.stringify(orig.currency??{}) ||
        JSON.stringify(normalizedItems(data.items))!==JSON.stringify(normalizedItems(orig.items)) ||
        JSON.stringify(renownRewards)!==JSON.stringify(orig.renownRewards??[]))
       throw new Error("Rewards have already been issued; reward definitions are locked.");
   }
-  const faction=getFaction(data.factionUuid);
-  if(!faction) throw new Error("Select an existing Faction for this Quest.");
   const folder = await questFolder(faction,doc?.getFlag(ID,"status")??"unavailable");
   const normalized={
-    factionUuid:faction?.uuid??"", status:doc?.getFlag(ID,"status")??"unavailable", flavor:String(data.flavor??""),
+    factionUuid:ownerUuid, status:doc?.getFlag(ID,"status")??"unavailable", flavor:String(data.flavor??""),
     assignment:doc?.getFlag(ID,"assignment")==="individual"?"individual":"none",
     assignees:doc?.getFlag(ID,"assignees")??[], progress:doc?.getFlag(ID,"progress")??{},
     payouts:doc?.getFlag(ID,"payouts")??[], groupAwards:doc?.getFlag(ID,"groupAwards")??{},

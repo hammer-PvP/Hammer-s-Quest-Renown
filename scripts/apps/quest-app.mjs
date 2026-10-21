@@ -1,7 +1,7 @@
 import {ID,CURRENCIES,assertGM,report,factions,CLONE,esc} from "../constants.mjs";
-import {saveQuest,getGMNotes} from "../services/documents.mjs";
+import {saveQuest,getGMNotes,questOwnerUuid} from "../services/documents.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
-const defaults=()=>({name:"",factionUuid:"",status:"unavailable",flavor:"",objectives:[],items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],failurePenaltiesEnabled:false,failurePenalties:[],notes:""});
+const defaults=()=>({name:"",factionUuid:null,status:"unavailable",flavor:"",objectives:[],items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],failurePenaltiesEnabled:false,failurePenalties:[],notes:""});
 function itemRow(item,index){
   const row=document.createElement("div");row.className="hqr-item-row";
   row.dataset.index=String(index);
@@ -21,9 +21,15 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
   }
   async _prepareContext(){
     assertGM();
+    const ownerUuid=questOwnerUuid(this.data.factionUuid);
+    const factionOptions=factions();
+    const missingOwner=Boolean(ownerUuid&&!factionOptions.some(f=>f.uuid===ownerUuid));
+    const ownerLocked=Boolean((this.doc?.getFlag(ID,'payouts')??[]).length || this.doc?.getFlag(ID,'activeTurnIn') ||
+      (this.doc?.getFlag(ID,'failurePayouts')??[]).length || this.doc?.getFlag(ID,'activeFailureTurnIn') ||
+      this.doc?.getFlag(ID,'activeFailureReversal'));
     return {...this.data,isEdit:!!this.doc,claimed:!!(this.doc?.getFlag(ID,"payouts")??[]).length || !!this.doc?.getFlag(ID,"activeTurnIn"),
-      factions:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===this.data.factionUuid})),
-      hasFac:factions().length>0,
+      factions:factionOptions.map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===ownerUuid})),
+      noOwner:!ownerUuid,missingOwner,missingOwnerUuid:missingOwner?ownerUuid:'',ownerLocked,
       statusLabel:String(this.doc?.getFlag(ID,"status")??"unavailable").replaceAll("-"," "),
       objectives:this.data.objectives.map((o,index)=>({...o,index})),
       items:this.data.items.map((o,index)=>({...o,index,img:o.img||"icons/svg/item-bag.svg"})),
@@ -34,7 +40,10 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
   }
   _collect(){
     const r=this.element, value=n=>r.querySelector(`[name="${n}"]`)?.value??"";
-    this.data.name=value("name");this.data.factionUuid=value("factionUuid");this.data.flavor=value("flavor");this.data.notes=value("notes");
+    this.data.name=value("name");
+    const ownerInput=r.querySelector('[name="factionUuid"]');
+    this.data.factionUuid=questOwnerUuid(ownerInput?.disabled?this.data.factionUuid:ownerInput?.value);
+    this.data.flavor=value("flavor");this.data.notes=value("notes");
     this.data.renownRewards=Array.from(r.querySelectorAll('.hqr-renown-reward')).map(row=>({
       id:row.dataset.rewardId, factionUuid:row.querySelector('[data-field="faction"]')?.value??"",
       amount:Number(row.querySelector('[data-field="amount"]')?.value)
@@ -129,7 +138,6 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     root.querySelector('[data-action="save"]')?.addEventListener('click',async()=>{
       try{
         const data=this._collect();
-        if(!data.factionUuid)throw new Error("Select a Faction before saving.");
         if(!data.name.trim())throw new Error("Quest name is required.");
         if(!data.objectives.every(x=>x.text.trim()))throw new Error("Fill or remove empty objectives.");
         if(data.items.some(x=>!x.uuid||!x.name||!Number.isInteger(x.quantity)||x.quantity<1))throw new Error("Dropped Items must have a valid quantity.");

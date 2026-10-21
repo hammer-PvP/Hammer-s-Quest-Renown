@@ -13,6 +13,7 @@ Create quest briefings and faction profiles, assign adventures to individual cha
 | Feature | What it does |
 | --- | --- |
 | Native Quest Journals | Public briefing, objectives, announced rewards, and a separate private GM Notes page |
+| Independent Quests | Optionally create Quests with no owner Faction, without losing Faction-targeted Renown rewards |
 | Factions | Public profiles, optional emblems, customizable Renown ranks, and private lore |
 | Individual quest progress | One Quest Journal can have different `Accepted`, `Completed`, and `Failed` outcomes for different characters |
 | Quest Giving | Assign an available Quest to eligible player-owned Characters, including additional Characters later |
@@ -61,8 +62,8 @@ Until a test build is published on GitHub, its release manifest does **not** pro
 
 For a complete first Quest, follow this order:
 
-1. **Create a Faction.** In the Journal Directory, select **Factions**. Name it, describe it, and optionally configure an emblem, rank thresholds, and GM-only notes. Save.
-2. **Create a Quest.** Select **New Quest**, enter a title, choose the Faction, add its public briefing and objectives, then configure any rewards. Save. New Quests start as **Unavailable**.
+1. **Optional — Create a Faction.** In the Journal Directory, select **Factions** if you want a Quest owned by a Faction or Renown rewards/penalties. An independent Quest can be created with no Factions in the World.
+2. **Create a Quest.** Open **Quest Manager → Create Quest**, enter a title, choose an Owner Faction or **No Faction — Independent Quest**, add a briefing and objectives, then configure any rewards. Save. New Quests start as **Unavailable**.
 3. **Make the Quest Available.** Open **Quest Manager**, find the Quest, and select **Make Available**.
 4. **Give it to your players.** Select **Quest Giving**, choose eligible Characters, and confirm. Each new recipient starts with **Accepted** status.
 5. **Resolve each Character's outcome.** Use **Quest Turn-In** for success or **Fail Turn-In** for failure. The two actions are independent; one Character may complete the Quest while another fails or is still working on it.
@@ -70,14 +71,13 @@ For a complete first Quest, follow this order:
 
 ## Where to find the controls
 
-When logged in as GM, the **Journal Directory** adds four buttons:
+When logged in as GM, the **Journal Directory** adds three buttons in this order:
 
 | Button | Purpose |
 | --- | --- |
-| **New Quest** | Open the Quest Editor |
-| **Quest Manager** | Manage Quest availability, assignment, outcomes, results, and corrections |
 | **Factions** | Create and edit Factions |
-| **Renown** | Open the Reputation Manager |
+| **Quest Manager** | Create Quests and manage availability, assignment, outcomes, results, and corrections |
+| **Renown (icon)** | Open the Reputation Manager; icon-only to save toolbar space (tooltip and accessible label) |
 
 Managed Quest and Faction Journals also have an **Edit Quest / Faction** control for GMs. A supported D&D5e Character or Group sheet provides Reputation access through its custom tab or a header control where available.
 
@@ -105,7 +105,7 @@ Journal Directory
 - **GM Only:** Quests that are **Unavailable** and have not been offered to new Characters. A new Quest is filed here.
 - **Active:** Quests that are globally **Available**, whether any Characters have already accepted them or not.
 - **Finished:** Quests the GM has administratively finished (internally `Inactive`), whether Characters succeeded, failed, or still have unfinished records.
-- A Quest's owner Faction is stored as a **reference**, not a folder. A Quest can affect other Factions through its rewards or penalties.
+- A Quest's optional owner Faction is stored as a **reference**, not a folder. A Quest without an owner still uses these folders and may affect actual Factions through its rewards or penalties.
 
 **Important:** each Quest is **one shared native Journal**, and a native Journal has only one physical folder. Its location reflects the **GM's global administrative status**, not the result of any single Character. `Finished` can therefore contain mixed individual outcomes.
 
@@ -116,7 +116,7 @@ Journal Directory
 
 Open **Game Settings → Configure Settings → Module Settings → Hammer's Quest & Renown → Open Settings** (GM only). In this single screen:
 
-- **Class Sources and Enabled Classes:** use the two separate collapsible sections in World Module Settings. First expand **Class Sources** and check every class compendium (or World Items) permitted in the campaign. Then expand **Enabled Classes** to choose which logical classes may receive Class Specific rank benefits. A single Fighter slot accepts **every Fighter definition** found in the authorized Class Sources; PHB and custom supplement Fighters are not mutually exclusive. Each source document keeps its original UUID, source, and edition for future eligibility checks. Classes remain individually selectable without enabling the entire book's Feats or Spells, and empty Class Specific slots are valid. Both sections start collapsed to save space. Changing Class Sources does not automatically uncheck previously selected classes.
+- **Class Sources and Enabled Classes:** use the two separate collapsible sections in World Module Settings. First expand **Class Sources** and check every class compendium (or World Items) permitted in the campaign. Then expand **Enabled Classes** to choose which logical classes may receive Class Specific rank benefits. A single Fighter slot accepts **every Fighter definition** found in the authorized Class Sources; PHB and custom supplement Fighters are not mutually exclusive. Each source document keeps its original UUID, source, and edition for future eligibility checks. Only classes with an authorized definition are shown in Enabled Classes, including its counters and Select Visible / Clear Visible. Classes remain individually selectable without enabling the entire book's Feats or Spells, and empty Class Specific slots are valid. Both sections start collapsed to save space. Changing Class Sources does not automatically uncheck previously selected classes; hidden selections are preserved and return if the source is restored.
 - **Folder Management:** customize the **name and color** of each of the five managed native Journal folders, or use **Reset Default Names** / **Reset Default Colors**. You can call your Quest root *Missões*, the GM-only folder *Ocultas*, and Finished *Concluídas* without altering their roles. Click **Save Settings** to apply changes to the current World. Existing Folder documents are renamed/recolored in place, retaining their IDs and all child Journals; Quest status rules never depend on the visible names. Folder names must not be blank or collide with another folder under the same parent.
 
 Folder colors and names are World-wide settings for the GM; changes survive closing the configuration window and reloading the game. If you use a custom folder name, the module continues to move Quests by their global status into the same physical Folder IDs.
@@ -179,7 +179,7 @@ an individual benefit block to remove it, then select **Save Faction**.
 1. As GM, open **Game Settings → Configure Settings → Module Settings**.
 2. Under **Hammer's Quest & Renown**, click **Open Settings**.
 3. Open **Class Sources**, the first collapsible section, and enable **all** class compendiums you want the campaign to recognize (plus World Items if desired). A class can be recognized from multiple books at the same time; this does not enable or restrict other game-system content.
-4. Open the separate **Enabled Classes** section and check which logical classes should have Class Specific rank slots. Fighter needs to be checked only once even if two authorized sources contain a Fighter. The class count shows how many distinct authorized definitions exist, and the tooltip lists their provenance. This configuration does not grant Items to Characters.
+4. Open the separate **Enabled Classes** section and check which logical classes should have Class Specific rank slots. Fighter needs to be checked only once even if two authorized sources contain a Fighter. The counter reports logical classes available/enabled under the active source filter; the tooltip lists authorized definitions. This configuration does not grant Items to Characters.
 5. Check or uncheck individual classes, then click **Save Settings**. This is independent of editing or saving a Faction.
 
 On first use, only classes found in the D&D5e system's native **Classes (SRD)**
@@ -194,7 +194,8 @@ This is a **World-wide class selection**, shared by every Faction. Hiding a
 class does **not** remove any previously configured rank data, change any
 Actor's actual class, or block the use of Feats, Spells, equipment or other
 Items from that compendium. Previously enabled classes whose sources are no
-longer available are shown with a warning, rather than silently deleted.
+longer available disappear from the active class list and rank slots without losing
+their saved selections; they return if an eligible source is restored.
 
 **Current limitation:** General blocks and the individual Class Specific rows
 are **placeholders only**. Item/Feat/Feature/Spell drag-and-drop and real grants
@@ -204,13 +205,13 @@ empty class slots are displayed and saved.
 
 ## Creating a Quest
 
-Select **New Quest** or **Quest Manager → Create Quest**.
+Select **Quest Manager → Create Quest**.
 
 ### Public information
 
 The **Quest Editor** lets the GM configure:
 
-- **Quest name** and **owner Faction** (an existing Faction is currently required).
+- **Quest name** and optional **Owner Faction**. Choose **No Faction — Independent Quest** if the Quest has no owner; this works even when the World has no Factions yet.
 - **Flavor Text** for the public Quest Briefing.
 - **Objectives**, with checkboxes in the editor; these are shared Quest fields, **not separate per-Character objective trackers**.
 - **Currency rewards:** Platinum, Gold, Electrum, Silver, and Copper pieces.
@@ -226,7 +227,7 @@ The Quest Editor also has:
 - **Failure Penalties**, disabled by default. When enabled, define negative whole-number Renown changes against one or more Factions. These values are **not published** in the public Quest Briefing.
 - **GM Notes**, stored in a separate protected Journal page rather than in the public page.
 
-**After a Success Turn-In**, reward definitions are locked to protect previously issued per-Character rewards. **After a Failure Turn-In**, failure penalty definitions are likewise locked to protect existing failure records. Plan changes before issuing the first corresponding Turn-In.
+**After a Success Turn-In**, reward definitions are locked to protect previously issued per-Character rewards. **After a Failure Turn-In**, failure penalty definitions are likewise locked to protect existing failure records. The Owner Faction cannot be changed after any recorded or pending payout or reversal. A deleted owner displays **Missing Faction**, not **No Faction**, to avoid accidental reclassification. Plan changes before issuing the first corresponding Turn-In.
 
 A new Quest is saved **Unavailable** with no assigned Characters. Use the Quest Manager to change its availability and distribute it.
 
@@ -383,7 +384,7 @@ If you encounter a bug, include your Foundry version, D&D5e system version, modu
 
 ## Current scope and limitations
 
-- A new Quest **requires an existing Faction** as its owner. Standalone factionless Quests are not supported yet.
+- A Quest can be **independent** (no owner Faction), but each Renown reward or penalty still requires its own real target Faction. If no Factions exist, you can still create Quests with objectives, currency and Item rewards.
 - Quest progress and Turn-In outcomes are **individual per Character**; Group membership does not automatically copy personal progress or Renown.
 - Objectives belong to the shared Quest document; **independent per-Character objective completion** is not provided.
 - Failure Penalties currently affect **Renown only**. Automatic currency deductions and Item removal are not part of Failure Turn-In.

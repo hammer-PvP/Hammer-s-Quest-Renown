@@ -1,5 +1,5 @@
 import {ID,esc,eligible} from "../constants.mjs";
-import {progressOf,getFaction} from "../services/documents.mjs";
+import {progressOf,questFactionLabel} from "../services/documents.mjs";
 
 /** Adds a per-Character read-only outcome to the native Journal sheet.
  * The page text itself remains shared; no per-user Journal duplication or GM-secret disclosure.
@@ -46,7 +46,7 @@ export function renderQuestStatus(app,html){
   // Legacy Quest Briefings store global availability. Display contextual status
   // without rewriting or migrating the shared Journal page content.
   const subtitle=content.querySelector(":scope > .hqr-journal-subtitle");
-  const factionLabel=getFaction(doc.getFlag(ID,"factionUuid"))?.name??"No Faction";
+  const factionLabel=questFactionLabel(doc.getFlag(ID,"factionUuid"));
   if(subtitle)subtitle.textContent=game.user.isGM
     ? `${factionLabel} · ${doc.getFlag(ID,"status")==="inactive"?"Finished":doc.getFlag(ID,"status")??"Unavailable"}`
     : factionLabel;

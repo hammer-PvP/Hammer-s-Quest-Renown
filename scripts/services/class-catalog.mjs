@@ -154,7 +154,7 @@ export async function getClassCatalogOptions({refresh=false}={}){
  */
 export async function getEnabledClasses({refresh=false}={}){
   const data=await getClassCatalogOptions({refresh});
-  return data.entries.filter(e=>e.enabled).map(e=>({key:e.key,name:e.name,
+  return data.entries.filter(e=>e.enabled && !e.unavailable).map(e=>({key:e.key,name:e.name,
     uuid:e.definitions[0]?.uuid??'',sourceId:e.definitions[0]?.sourceId??'',source:e.definitions[0]?.source??'',
     definitions:e.definitions.map(d=>({...d})),
     unavailable:e.definitions.length===0,ambiguous:false}));

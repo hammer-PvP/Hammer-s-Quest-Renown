@@ -24,8 +24,17 @@ function addDirectoryButtons(app,html){
   const host=root.querySelector('.directory-header .header-actions') ?? root.querySelector('.directory-header') ?? root.querySelector('header');
   if(!host)return;
   const row=document.createElement('div');row.className='hqr-directory-tools';
-  const buttons=[['fa-scroll','New Quest',()=>startQuest()],['fa-list-check','Quest Manager',()=>startQuestManager()],['fa-shield-halved','Factions',()=>startFaction()],['fa-book-open','Renown',()=>startReputation()]];
-  for(const [icon,label,cb] of buttons){const btn=document.createElement('button');btn.type='button';btn.className='hqr-directory-button';btn.innerHTML=label==='Renown' ? `<img class="hqr-directory-identity" src="modules/${ID}/assets/book-feather.svg" alt=""> ${label}` : `<i class="fa-solid ${icon}"></i> ${label}`;btn.title=`Hammer's Quest & Renown — ${label}`;btn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();cb();});row.append(btn);}
+  const buttons=[['fa-shield-halved','Factions',()=>startFaction()],['fa-list-check','Quest Manager',()=>startQuestManager()],['fa-book-open','Renown',()=>startReputation()]];
+  for(const [icon,label,cb] of buttons){
+    const btn=document.createElement('button');btn.type='button';
+    const compact=label==='Renown';
+    btn.className=`hqr-directory-button${compact?' hqr-directory-button-icon':''}`;
+    btn.setAttribute('aria-label',label);
+    btn.title=`Hammer's Quest & Renown — ${label}`;
+    btn.innerHTML=compact?`<img class="hqr-directory-identity" src="modules/${ID}/assets/book-feather.svg" alt="">`:`<i class="fa-solid ${icon}" aria-hidden="true"></i> ${label}`;
+    btn.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();cb();});
+    row.append(btn);
+  }
   host.append(row);
 }
 function attachItemTooltips(root){
@@ -85,7 +94,7 @@ Hooks.once('init',()=>{
     hint:"Configure eligible classes and native Journal folder names/colors for this World.",
     icon:"fa-solid fa-sliders",type:HQRModuleSettingsApp,restricted:true
   });
-  console.info(`${ID} | Initializing v0.1.8`);
+  console.info(`${ID} | Initializing v0.1.9`);
 });
 Hooks.once('ready',async()=>{
   if(game.system.id!=="dnd5e"){ui.notifications.warn("Hammer's Quest & Renown is designed for D&D5e 6.x.");return;}

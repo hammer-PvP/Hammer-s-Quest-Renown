@@ -1,5 +1,5 @@
-import {ID,assertGM,report,quests,factions,esc} from "../constants.mjs";
-import {setQuestAvailability} from "../services/documents.mjs";
+import {ID,assertGM,report,quests,esc} from "../constants.mjs";
+import {setQuestAvailability,questFactionLabel} from "../services/documents.mjs";
 import {questCategory,normalizeQuestSearch,QUEST_CATEGORIES} from "../services/quest-manager-view.mjs";
 import {QuestApp} from "./quest-app.mjs";
 import {QuestLifecycleApp} from "./quest-lifecycle-app.mjs";
@@ -57,10 +57,9 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
   }
   async _prepareContext(){
     assertGM();
-    const factionsByUuid=new Map(factions().map(f=>[f.uuid,f.name]));
     const entries=quests().map(q=>{
       const status=q.getFlag(ID,"status")??"unavailable";
-      const faction=factionsByUuid.get(q.getFlag(ID,"factionUuid"))??"Unlinked";
+      const faction=questFactionLabel(q.getFlag(ID,"factionUuid"));
       const assignees=q.getFlag(ID,"assignees")??[];
       const progress=q.getFlag(ID,"progress")??{};
       const counts={completed:0,failed:0,active:0};
