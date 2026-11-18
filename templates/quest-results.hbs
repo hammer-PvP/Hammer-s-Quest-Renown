@@ -23,6 +23,7 @@
     {{#each currency}}<div class="hqr-balance"><span>{{name}}</span><strong>{{amount}} per Character</strong></div>{{/each}}
     {{#each items}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}} per Character</strong></div>{{/each}}
   </div>
+<div class="hqr-panel"><h3>Undo Success History</h3>{{#each successReversals}}<p><strong>{{people}}</strong> — {{at}}<br><small>{{reason}}</small></p>{{else}}<p class="hqr-hint">No Success corrections recorded.</p>{{/each}}</div>
 </div>
-<footer class="hqr-actions">{{#if canUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}<button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button></footer>
+<footer class="hqr-actions">{{#if canUndoSuccess}}<button type="button" data-action="undo-success"><i class="fa-solid fa-rotate-left"></i> Undo Success</button>{{/if}}{{#if canUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}<button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Open Journal</button></footer>
 </div>

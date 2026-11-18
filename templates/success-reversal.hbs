@@ -1,0 +1,10 @@
+<div class="hqr-shell"><header class="hqr-banner"><i class="fa-solid fa-rotate-left"></i><div><h2>Undo Success</h2><p>{{name}} · GM correction</p></div></header>
+<div class="hqr-scroll">
+{{#if pending}}<section class="hqr-panel hqr-warning"><h3>Interrupted reversal</h3><p>{{pendingCount}} Characters are in a pending correction. Resume the frozen transaction before starting anything else.</p></section>
+{{else}}<section class="hqr-panel"><h3>Completed Characters</h3><p class="hqr-hint">Only selected Characters will have their completed results restored to Accepted. Paid currency and Items must still be present and unchanged.</p>
+<div class="hqr-selection-toolbar"><strong>{{selectedCount}} / {{total}} selected</strong><div><button type="button" data-action="all">Select All</button><button type="button" data-action="clear">Clear</button></div></div>
+{{#each people}}<label class="hqr-check"><input type="checkbox" name="successCharacters" value="{{id}}" {{#if checked}}checked{{/if}}><span>{{name}}</span></label>{{else}}<p>No Completed Characters.</p>{{/each}}</section>
+<section class="hqr-panel"><h3>Group Renown — Optional</h3><p class="hqr-hint">The Group's original Renown is only compensated if explicitly selected and all remaining completed recipients from that payout are included.</p>
+{{#each groups}}<label class="hqr-check"><input type="checkbox" name="successGroups" value="{{id}}" {{#if checked}}checked{{/if}} {{#unless available}}disabled{{/unless}}><span>{{name}} <small>{{note}}</small></span></label>{{else}}<p>No eligible Group award.</p>{{/each}}</section>
+<section class="hqr-panel"><h3>Reason (required)</h3><textarea name="reason" rows="3" placeholder="Why is this Success Turn-In being reversed?">{{reason}}</textarea></section>{{/if}}
+</div><footer class="hqr-actions"><button type="button" class="hqr-primary" data-action="undo"><i class="fa-solid fa-rotate-left"></i> {{#if pending}}Resume Undo Success{{else}}Undo Selected Successes{{/if}}</button></footer></div>

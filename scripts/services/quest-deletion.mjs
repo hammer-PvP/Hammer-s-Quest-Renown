@@ -13,9 +13,11 @@ export function questDeletionStatus(doc){
     ["activeTurnIn","A Success Turn-In is pending."],
     ["activeFailureTurnIn","A Failure Turn-In is pending."],
     ["activeFailureReversal","An Undo Failure is pending."],
+    ["activeSuccessReversal","An Undo Success is pending."],
     ["payouts","Success Turn-In results have been recorded."],
     ["failurePayouts","Failure Turn-In results have been recorded."],
-    ["failureReversals","Undo Failure history has been recorded."]
+    ["failureReversals","Undo Failure history has been recorded."],
+    ["successReversals","Undo Success history has been recorded."]
   ]){
     const value=doc.getFlag(ID,flag);
     if(Array.isArray(value)?value.length>0:!!value)return {allowed:false,reason};

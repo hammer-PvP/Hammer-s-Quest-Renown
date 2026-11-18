@@ -172,7 +172,7 @@ function factionHTML(name, description, image, ranks) {
 }
 export function questHTML(name,data) {
   const status=String(data.status??"available").replaceAll("-"," ");
-  const objectives=(data.objectives??[]).map(o=>`<li>${o.done?"☑":"☐"} ${esc(o.text)}</li>`).join("");
+  const objectives=(data.objectives??[]).map(o=>`<li>${data.objectiveTracking!=="individual"&&o.done?"☑":"☐"} ${esc(o.text)}</li>`).join("");
   const rewards=[];
   const currency=CURRENCIES.filter(k=>Number(data.currency?.[k])>0).map(k=>`${Number(data.currency[k])} ${k.toUpperCase()}`).join(", ");
   if (currency) rewards.push(`<li><strong>Currency:</strong> ${esc(currency)}</li>`);
@@ -254,10 +254,14 @@ export async function saveQuest(doc, {name,notes,...data}) {
     failureSeen.add(row.factionUuid);
   }
   const failureEnabled=Boolean(data.failurePenaltiesEnabled);
+  const normalizeCurrency=currency=>Object.fromEntries(CURRENCIES.map(k=>[k,Math.max(0,Math.trunc(Number(currency?.[k])||0))]));
+  const normalizedFailureCurrency=normalizeCurrency(data.failureCurrency);
   if((doc?.getFlag(ID,"failurePayouts")??[]).length || doc?.getFlag(ID,"activeFailureTurnIn")){
     const orig=doc.flags[ID];
     if(failureEnabled!==Boolean(orig.failurePenaltiesEnabled) ||
-      JSON.stringify(failurePenalties)!==JSON.stringify(orig.failurePenalties??[]))
+      JSON.stringify(failurePenalties)!==JSON.stringify(orig.failurePenalties??[]) ||
+      JSON.stringify(normalizedFailureCurrency)!==JSON.stringify(normalizeCurrency(orig.failureCurrency)) ||
+      JSON.stringify(data.failureItems??[])!==JSON.stringify(orig.failureItems??[]))
       throw new Error("Failure Penalties already issued; penalty definitions are locked.");
   }
   const ownerUuid=questOwnerUuid(data.factionUuid);
@@ -284,10 +288,15 @@ export async function saveQuest(doc, {name,notes,...data}) {
     assignment:doc?.getFlag(ID,"assignment")==="individual"?"individual":"none",
     assignees:doc?.getFlag(ID,"assignees")??[], progress:doc?.getFlag(ID,"progress")??{},
     payouts:doc?.getFlag(ID,"payouts")??[], groupAwards:doc?.getFlag(ID,"groupAwards")??{},
-    objectives:Array.isArray(data.objectives)?data.objectives:[],
+    objectiveTracking:data.objectiveTracking==='individual'?'individual':'global',
+    objectiveProgress:doc?.getFlag(ID,'objectiveProgress')??{},
+    objectives:(Array.isArray(data.objectives)?data.objectives:[]).map(o=>({
+      ...o,id:String(o.id??'').trim()||foundry.utils.randomID(),text:String(o.text??''),done:!!o.done})),
     currency:Object.fromEntries(CURRENCIES.map(k=>[k,Math.max(0,Math.trunc(Number(data.currency?.[k])||0))])),
     items:Array.isArray(data.items)?data.items:[], renownRewards,
     failurePenaltiesEnabled:failureEnabled, failurePenalties,
+    failureCurrency:normalizedFailureCurrency,
+    failureItems:(Array.isArray(data.failureItems)?data.failureItems:[]).map(x=>({...x,quantity:Math.max(1,Math.trunc(Number(x.quantity)||1))})),
     failurePayouts:doc?.getFlag(ID,"failurePayouts")??[],
     groupFailures:doc?.getFlag(ID,"groupFailures")??{},
     lootRecipientId:doc?.getFlag(ID,"lootRecipientId")??""
@@ -353,7 +362,7 @@ export async function setQuestAvailability(doc, status) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
   if(!["available","unavailable","inactive"].includes(status))throw new Error("Invalid Quest availability.");
-  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn") || doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resolve the pending Turn-In or Undo Failure before changing availability.");
+  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn") || doc.getFlag(ID,"activeFailureReversal") || doc.getFlag(ID,'activeSuccessReversal'))throw new Error("Resolve pending Turn-In or reversal before changing availability.");
   // Availability is not a per-Character outcome. Never auto-fail recipients.
   // In particular, preserve all Completed and historical Failed records in production.
   const faction=getFaction(doc.getFlag(ID,"factionUuid"));
@@ -374,7 +383,7 @@ export async function giveQuest(doc,{assignees}={}) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest")throw new Error("Choose a Quest.");
   if(doc.getFlag(ID,"status")!=="available")throw new Error("Only Available Quests can be given.");
-  if(doc.getFlag(ID,"activeFailureReversal"))throw new Error("Resume pending Undo Failure before Giving this Quest.");
+  if(doc.getFlag(ID,"activeFailureReversal")||doc.getFlag(ID,'activeSuccessReversal'))throw new Error("Resume pending Quest correction before Giving this Quest.");
   const ids=[...new Set(assignees??[])];
   if(!ids.length||ids.some(id=>!eligible(game.actors.get(id))))
     throw new Error("Select at least one eligible Character with an explicit non-GM Owner.");

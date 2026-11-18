@@ -3,6 +3,10 @@ import {setQuestAvailability,questFactionLabel} from "../services/documents.mjs"
 import {questDeletionStatus,deleteQuest} from "../services/quest-deletion.mjs";
 import {questCategory,normalizeQuestSearch,QUEST_CATEGORIES} from "../services/quest-manager-view.mjs";
 import {QuestApp} from "./quest-app.mjs";
+import {QuestObjectivesApp} from "./quest-objectives-app.mjs";
+import {QuestLibraryApp} from "./quest-library-app.mjs";
+import {SuccessReversalApp} from "./success-reversal-app.mjs";
+import {duplicateQuest} from "../services/quest-library.mjs";
 import {QuestLifecycleApp} from "./quest-lifecycle-app.mjs";
 import {QuestResultsApp} from "./quest-results-app.mjs";
 import {FailureReversalApp} from "./failure-reversal-app.mjs";
@@ -78,11 +82,12 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         (counts.active>0 || failPending || assignees.some(id=>progress[id]?.reason==="Quest became Inactive"&&!progress[id]?.failurePayoutId));
       const hasHistory=(q.getFlag(ID,"payouts")??[]).length>0||(q.getFlag(ID,"failurePayouts")??[]).length>0||counts.failed>0;
       const hasUndo=counts.failed>0 || !!q.getFlag(ID,"activeFailureReversal");
+      const hasUndoSuccess=counts.completed>0 || !!q.getFlag(ID,'activeSuccessReversal');
       const deletion=questDeletionStatus(q);
       return {id:q.id,name:q.name,faction,status,category,
         statusLabel:status==="inactive"?"Finished":status.replaceAll("-"," "),
         total:assignees.length,...counts,canGive,canTurnIn,canFail,hasHistory,hasUndo,
-        canDelete:deletion.allowed,deleteReason:deletion.reason??"",
+        canDelete:deletion.allowed,deleteReason:deletion.reason??"",hasUndoSuccess,
         hasPendingUnavailable:status==="unavailable"&&counts.active>0,
         canMakeAvailable:status!=="available",canMakeUnavailable:status==="available",canMakeInactive:status!=="inactive",isInactive:status==="inactive"};
     });
@@ -122,6 +127,7 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
   _onRender(){
     const root=this.element;
     root.querySelector('[data-action="new"]')?.addEventListener("click",()=>new QuestApp().render(true));
+    root.querySelector('[data-action="library"]')?.addEventListener("click",()=>new QuestLibraryApp().render(true));
     root.querySelector('[name="filter"]')?.addEventListener("input",event=>{
       this.search=event.target.value;
       this._applyFilters();
@@ -159,7 +165,16 @@ export class QuestManagerApp extends HandlebarsApplicationMixin(ApplicationV2){
         else if(action==="turnin")new QuestLifecycleApp(journal,"turnin").render(true);
         else if(action==="fail")new QuestLifecycleApp(journal,"failure").render(true);
         else if(action==="results")new QuestResultsApp(journal).render(true);
+        else if(action==="objectives")new QuestObjectivesApp(journal).render(true);
+        else if(action==="duplicate"){
+          const confirmed=await foundry.applications.api.DialogV2.confirm({window:{title:'Duplicate Quest'},
+            content:`<p>Create a new Unavailable copy of <strong>${esc(journal.name)}</strong>?</p><p>Recipients, results and payment history will not be duplicated.</p>`,yes:{label:'Duplicate Quest'},no:{label:'Cancel'}});
+          if(!confirmed)return;
+          const copy=await duplicateQuest(journal);ui.notifications.info(`Quest duplicated: ${copy.name}`);
+          new QuestApp(copy).render(true);
+        }
         else if(action==="undo-failure")new FailureReversalApp(journal).render(true);
+        else if(action==="undo-success")new SuccessReversalApp(journal).render(true);
         else if(action==="delete"){
           // Revalidate immediately before displaying the confirmation and again
           // in the service after confirmation: statuses may have changed meanwhile.

@@ -8,19 +8,20 @@
     <button type="button" data-category="accepted" aria-pressed="false">Accepted <span class="hqr-filter-count">0</span></button>
     <button type="button" data-category="finished" aria-pressed="false">Finished <span class="hqr-filter-count">0</span></button>
   </div>
-  <div class="hqr-toolbar hqr-quest-toolbar"><label><span class="sr-only">Search Quests by name or faction</span><input type="search" name="filter" aria-label="Search Quests by name or faction" placeholder="Search by Quest or Faction..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="refresh" title="Refresh Quests" aria-label="Refresh Quests"><i class="fa-solid fa-rotate"></i></button></div>
+  <div class="hqr-toolbar hqr-quest-toolbar"><label><span class="sr-only">Search Quests by name or faction</span><input type="search" name="filter" aria-label="Search Quests by name or faction" placeholder="Search by Quest or Faction..." value="{{query}}"></label><button type="button" data-action="new" class="hqr-primary"><i class="fa-solid fa-plus"></i> Create Quest</button><button type="button" data-action="library" title="Export or Import Quest and Faction definitions"><i class="fa-solid fa-file-export"></i> Library</button><button type="button" data-action="refresh" title="Refresh Quests" aria-label="Refresh Quests"><i class="fa-solid fa-rotate"></i></button></div>
 </div>
 <div class="hqr-scroll hqr-quest-scroll">
 {{#each entries}}<article class="hqr-quest-record hqr-panel" data-quest-id="{{id}}" data-category="{{category}}" data-quest-name="{{name}}" data-faction-name="{{faction}}">
  <div class="hqr-record-heading"><div><h3>{{name}}</h3><p class="hqr-hint">{{faction}} · {{completed}} Completed · {{failed}} Failed · {{active}} Active ({{total}} assigned)</p></div><span class="hqr-pill">{{statusLabel}}</span></div>
  {{#if hasPendingUnavailable}}<p class="hqr-quest-attention"><i class="fa-solid fa-circle-exclamation"></i> Unavailable with pending assigned Characters. Existing progress and access are unchanged.</p>{{/if}}
- <div class="hqr-record-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button>
+ <div class="hqr-record-actions"><button type="button" data-action="open"><i class="fa-solid fa-book-open"></i> Journal</button><button type="button" data-action="edit"><i class="fa-solid fa-pen"></i> Edit</button><button type="button" data-action="duplicate"><i class="fa-solid fa-copy"></i> Duplicate</button><button type="button" data-action="objectives"><i class="fa-solid fa-list-check"></i> Objectives</button>
  {{#if canMakeAvailable}}<button type="button" data-action="available"><i class="fa-solid fa-lock-open"></i> {{#if isInactive}}Reopen (Available){{else}}Make Available{{/if}}</button>{{/if}}
  {{#if canMakeUnavailable}}<button type="button" data-action="unavailable"><i class="fa-solid fa-lock"></i> Make Unavailable</button>{{/if}}
  {{#if canMakeInactive}}<button type="button" data-action="inactive"><i class="fa-solid fa-hourglass-end"></i> Finish Quest</button>{{/if}}
  {{#if canGive}}<button type="button" class="hqr-primary" data-action="give"><i class="fa-solid fa-handshake"></i> Quest Giving</button>{{/if}}
  {{#if canTurnIn}}<button type="button" class="hqr-primary" data-action="turnin"><i class="fa-solid fa-flag-checkered"></i> Quest Turn-In</button>{{/if}}
  {{#if canFail}}<button type="button" class="hqr-danger-action" data-action="fail"><i class="fa-solid fa-xmark"></i> Fail Turn-In</button>{{/if}}
+ {{#if hasUndoSuccess}}<button type="button" data-action="undo-success"><i class="fa-solid fa-rotate-left"></i> Undo Success</button>{{/if}}
  {{#if hasUndo}}<button type="button" data-action="undo-failure"><i class="fa-solid fa-rotate-left"></i> Undo Failure</button>{{/if}}
  {{#if hasHistory}}<button type="button" data-action="results"><i class="fa-solid fa-clipboard-check"></i> View Results</button>{{/if}}
  {{#if canDelete}}<button type="button" class="hqr-delete-quest" data-action="delete" title="Permanently delete this Quest"><i class="fa-solid fa-trash-can"></i> Delete Quest</button>{{else}}<button type="button" class="hqr-delete-quest" disabled title="Deletion blocked: {{deleteReason}}" aria-label="Delete Quest unavailable: {{deleteReason}}"><i class="fa-solid fa-lock"></i> Delete Locked</button>{{/if}}

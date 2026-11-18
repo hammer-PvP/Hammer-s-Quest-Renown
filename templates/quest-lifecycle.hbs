@@ -13,7 +13,11 @@
   {{#if canTurnIn}}
     {{#if isFailure}}
       <div class="hqr-panel hqr-failure-editor"><h3><i class="fa-solid fa-xmark"></i> Failed — Optional Penalties</h3>
-        <p class="hqr-hint">Mark chosen Characters as Failed. No Success Rewards will be granted. {{#unless hasRenown}}This Quest has no enabled Failure Penalties; only outcomes will be recorded.{{/unless}}</p>
+        <p class="hqr-hint">Mark chosen Characters as Failed. Normal Success Rewards will not be granted.</p>
+        {{#if hasMaterialPenalties}}{{#unless pending}}<label class="hqr-check"><input type="checkbox" name="applyMaterialPenalties" {{#if applyMaterialPenalties}}checked{{/if}}> Apply configured Currency and Item forfeitures</label>{{/unless}}
+        <p class="hqr-hint">To avoid blocking a Failure result when Characters cannot pay, uncheck material penalties for this Turn-In. Renown penalties are independent.</p>
+        {{#each failureCurrency}}<div class="hqr-balance"><span>{{key}}</span><strong>{{amount}} forfeited per Character</strong></div>{{/each}}
+        {{#each failureItems}}<div class="hqr-balance"><span>{{name}}</span><strong>×{{quantity}} forfeited per Character</strong></div>{{/each}}{{/if}}
       </div>
     {{else}}
     <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Each — Full Rewards per Character</h3>
@@ -37,6 +41,15 @@
         <p class="hqr-hint"><strong data-selected="groups">{{selectedGroupCount}}</strong> Groups selected. You may leave every Group unchecked.</p>
       </div>{{/if}}
     {{/if}}
+    {{#unless isFailure}}{{#unless pending}}{{#if individualRewardRows}}
+    <details class="hqr-panel"><summary><strong>Individual Rewards</strong> — customize recipients</summary>
+      <p class="hqr-hint">Each selected Character starts with the full default rewards. Change amounts or quantities for individual Characters; use zero to omit an Item. Group Renown remains independent.</p>
+      {{#each individualRewardRows}}<div class="hqr-individual-reward" data-actor-id="{{id}}"><h4>{{name}}</h4>
+        <div class="hqr-currencies">{{#each currency}}<label>{{label}}<input type="number" step="1" min="0" data-currency="{{key}}" value="{{amount}}"></label>{{/each}}</div>
+        {{#each items}}<label class="hqr-individual-field">{{name}} (quantity)<input type="number" step="1" min="0" data-item-index="{{index}}" value="{{quantity}}"></label>{{/each}}
+        {{#each renown}}<label class="hqr-individual-field">{{name}} Renown<input type="number" step="1" data-renown-id="{{id}}" value="{{amount}}"></label>{{/each}}
+      </div>{{/each}}
+    </details>{{/if}}{{/unless}}{{/unless}}
     {{#if hasRenown}}<div class="hqr-panel"><h3>{{#if isFailure}}Failure Renown Penalties{{else}}Faction Renown Rewards{{/if}}</h3>
       <p class="hqr-hint">Each selected Character receives the configured signed value personally. Checked Groups receive it once collectively, unless disabled for that row.</p>
       {{#each renown}}<div class="hqr-turnin-renown-row" data-reward-id="{{id}}"><strong>{{factionName}}</strong><span class="{{#if positive}}hqr-positive{{else}}hqr-negative{{/if}}">{{amountLabel}}</span>

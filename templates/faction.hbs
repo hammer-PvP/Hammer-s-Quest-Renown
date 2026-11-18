@@ -27,7 +27,7 @@
             <button type="button" data-action="remove-rank" title="Remove Rank"><i class="fa-solid fa-trash"></i></button>
           </div>
           <div class="hqr-rank-benefits">
-            <h4>Rank Benefits <span class="hqr-foundation-label">Foundation</span></h4>
+            <h4>Rank Benefits</h4>
             <div class="hqr-block-list">
               {{#each benefits}}
               <div class="hqr-benefit-block" data-benefit-id="{{id}}" data-benefit-type="{{type}}">
@@ -36,19 +36,19 @@
                   <button type="button" data-action="remove-benefit" title="Remove benefit block"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 {{#if isGeneral}}
-                  <p class="hqr-hint">All eligible Characters. Item and Spell source linking is planned for a later version.</p>
+                  <div class="hqr-benefit-drop"><span class="hqr-hint">Drop Items, Feats, Features or Spells</span><div class="hqr-benefit-sources"></div></div>
                 {{else}}
                   <div class="hqr-class-slot-list">
                     {{#each slots}}
                     <div class="hqr-class-slot {{#if unavailable}}hqr-class-slot-unavailable{{/if}}" data-class-key="{{key}}">
                       <strong class="hqr-class-slot-name">{{name}}</strong>
-                      <span class="hqr-class-slot-empty">Empty — optional</span>
+                      <div class="hqr-benefit-drop" data-class-key="{{key}}"><span class="hqr-hint">Drop Items, Feats, Features or Spells</span><div class="hqr-benefit-sources"></div></div>
                     </div>
                     {{else}}
                     <p class="hqr-hint hqr-no-classes">No classes enabled. Configure them in Module Settings.</p>
                     {{/each}}
                   </div>
-                  <p class="hqr-hint">Class slots are optional placeholders; drag-and-drop will follow in a later version.</p>
+                  <p class="hqr-hint">Class-specific sources grant only when the Character has an eligible class.</p>
                 {{/if}}
               </div>
               {{/each}}
@@ -62,7 +62,7 @@
         {{/each}}
       </div>
       <button type="button" class="hqr-quiet" data-action="add-rank"><i class="fa-solid fa-plus"></i> Add Rank</button>
-      <p class="hqr-hint">Class Specific slots follow the global Class Catalog. Empty slots are valid and do not grant Items, Feats, Features or Spells to Characters.</p>
+      <p class="hqr-hint">Benefits are granted on GM request in Reputation Manager. Empty slots are allowed. Granted Items carry traceable Faction and Rank provenance.</p>
     </div>
     <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots, key NPCs, contingencies...">{{notes}}</textarea></label><p class="hqr-hint">This text is stored only on a private JournalEntryPage, never in public Journal flags.</p></div>
   </div>

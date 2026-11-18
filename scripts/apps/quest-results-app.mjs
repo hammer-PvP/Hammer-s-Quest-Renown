@@ -1,5 +1,6 @@
 import {ID,assertGM,factions,CURRENCIES} from "../constants.mjs";
 import {FailureReversalApp} from "./failure-reversal-app.mjs";
+import {SuccessReversalApp} from "./success-reversal-app.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
 export class QuestResultsApp extends HandlebarsApplicationMixin(ApplicationV2){
   static DEFAULT_OPTIONS={classes:["hqr-app","hqr-results"],position:{width:700,height:610},window:{title:"Quest Results",resizable:true},tag:"section"};
@@ -12,6 +13,7 @@ export class QuestResultsApp extends HandlebarsApplicationMixin(ApplicationV2){
     const payouts=doc.getFlag(ID,"payouts")??[];
     const failures=doc.getFlag(ID,"failurePayouts")??[];
     const reversals=doc.getFlag(ID,"failureReversals")??[];
+    const successReversals=doc.getFlag(ID,'successReversals')??[];
     const rows=(doc.getFlag(ID,"assignees")??[]).map(id=>({name:game.actors.get(id)?.name??`Missing Actor (${id})`,
       status:progress[id]?.status??"accepted",at:progress[id]?.completedAt??progress[id]?.failedAt??""}));
     const resultRows=payouts.map((run,index)=>({index:index+1,at:run.completedAt,
@@ -32,8 +34,12 @@ export class QuestResultsApp extends HandlebarsApplicationMixin(ApplicationV2){
     const currency=doc.getFlag(ID,"currency")??{};
     return {name:doc.name,status:doc.getFlag(ID,"status"),rows,resultRows,failureRows,reversalRows,canUndo,
       currency:CURRENCIES.filter(k=>Number(currency[k])>0).map(k=>({name:k.toUpperCase(),amount:currency[k]})),
-      items:(doc.getFlag(ID,"items")??[]).map(item=>({name:item.name,quantity:item.quantity}))};
+      items:(doc.getFlag(ID,"items")??[]).map(item=>({name:item.name,quantity:item.quantity})),
+      canUndoSuccess:Object.values(progress).some(row=>row.status==='completed')||!!doc.getFlag(ID,'activeSuccessReversal'),
+      successReversals:successReversals.map(x=>({at:x.at,reason:x.reason,
+        people:(x.characterIds??[]).map(id=>game.actors.get(id)?.name??id).join(', ')}))};
   }
   _onRender(){this.element.querySelector('[data-action="open"]')?.addEventListener('click',()=>this.doc.sheet?.render(true));
+    this.element.querySelector('[data-action="undo-success"]')?.addEventListener('click',()=>new SuccessReversalApp(this.doc).render(true));
     this.element.querySelector('[data-action="undo-failure"]')?.addEventListener('click',()=>new FailureReversalApp(this.doc).render(true));}
 }

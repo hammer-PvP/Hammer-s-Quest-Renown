@@ -6,7 +6,7 @@
   <p class="hqr-hint">Owner Faction is optional. Independent Quests can still award or deduct Renown for existing Factions through the reward and failure rows. Owner Faction may be changed at any time; earned rewards, recipients, and payout history are not changed.</p>
   <p class="hqr-hint">New Quests are saved as Unavailable without any recipients. Availability and recipients are controlled separately in Quest Manager.</p>
   <div class="hqr-panel"><h3><i class="fa-solid fa-eye"></i> Public Quest Briefing</h3><label>Flavor Text<textarea name="flavor" rows="6" placeholder="The description players will read...">{{flavor}}</textarea></label>
-    <h4>Objectives</h4><div class="hqr-objectives hqr-list">{{#each objectives}}<div class="hqr-objective"><input type="checkbox" {{#if done}}checked{{/if}} title="Complete"><input type="text" value="{{text}}" placeholder="Objective"><button type="button" data-action="remove-objective" title="Remove"><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div>
+    <h4>Objectives</h4><label>Objective Tracking<select name="objectiveTracking"><option value="global" {{#unless individualTracking}}selected{{/unless}}>Shared across all Characters</option><option value="individual" {{#if individualTracking}}selected{{/if}}>Separate for each Character</option></select></label><div class="hqr-objectives hqr-list">{{#each objectives}}<div class="hqr-objective" data-objective-id="{{id}}"><input type="checkbox" {{#if done}}checked{{/if}} title="Complete"><input type="text" value="{{text}}" placeholder="Objective"><button type="button" data-action="remove-objective" title="Remove"><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div>
     <button type="button" class="hqr-quiet" data-action="add-objective"><i class="fa-solid fa-plus"></i> Add Objective</button>
   </div>
   <div class="hqr-panel"><h3><i class="fa-solid fa-gift"></i> Announced Rewards</h3>
@@ -36,6 +36,11 @@
           <button type="button" data-action="remove-failure" title="Remove penalty" {{#if ../failureClaimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button>
         </div>{{/each}}</div>
       <button type="button" class="hqr-quiet" data-action="add-failure" {{#if failureClaimed}}disabled{{/if}}><i class="fa-solid fa-plus"></i> Add Failure Penalty</button>
+      <h4>Currency forfeited on Failure (per Character)</h4>
+      <div class="hqr-currencies">{{#each failureCurrencies}}<label>{{label}}<input name="failureCurrency_{{id}}" type="number" min="0" step="1" value="{{value}}" {{#if ../failureClaimed}}readonly{{/if}}></label>{{/each}}</div>
+      <h4>Items forfeited on Failure (per Character)</h4>
+      <p class="hqr-hint">Matching Items must exist in every selected Character's inventory. A penalty never removes unrelated or ambiguous Items.</p>
+      <div class="hqr-item-drop hqr-failure-item-drop"><div class="hqr-drop-prompt">Drop Item definitions for forfeiture</div><div class="hqr-failure-item-list hqr-items hqr-list">{{#each failureItems}}<div class="hqr-item-row"><div class="hqr-item-label"><img class="hqr-item-img" src="{{img}}" alt=""><span class="hqr-item-name">{{name}}</span><input type="hidden" data-field="uuid" value="{{uuid}}"></div><label class="hqr-qty">Qty.<input data-field="quantity" type="number" min="1" step="1" value="{{quantity}}" {{#if ../failureClaimed}}readonly{{/if}}></label><button type="button" data-action="remove-item" {{#if ../failureClaimed}}disabled{{/if}}><i class="fa-solid fa-trash"></i></button></div>{{/each}}</div></div>
     </div>
   </div>
   <div class="hqr-panel hqr-private"><h3><i class="fa-solid fa-lock"></i> GM Only</h3><label>Private Notes<textarea name="notes" rows="7" placeholder="Secrets, plots and GM-only notes...">{{notes}}</textarea></label><p class="hqr-hint">Separate private Journal page, unavailable to players.</p></div>

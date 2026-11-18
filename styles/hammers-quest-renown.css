@@ -397,8 +397,7 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
   .hqr-app.hqr-module-settings .hqr-class-catalog-summary-count{font-size:10px}
 }
 
-/* v0.1.7 — explicit class-source authorization, with source-bound definitions.
-   The existing Folder Management markup and rules are intentionally untouched. */
+/* Class-source selection and logical eligibility. */
 .hqr-app.hqr-module-settings .hqr-class-source-header{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   margin:9px 0 5px;color:#e4ca93;font-size:12px
@@ -443,8 +442,7 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
   .hqr-app.hqr-module-settings .hqr-class-source-list{grid-template-columns:1fr}
 }
 
-/* v0.1.8 — Class Sources and Enabled Classes are separate, independently
-   collapsible configuration panels. Approved native Folder Management intact. */
+/* Separate source and class selection controls. */
 .hqr-app.hqr-module-settings .hqr-class-sources-panel,
 .hqr-app.hqr-module-settings .hqr-class-catalog-panel{margin-bottom:10px}
 .hqr-app.hqr-module-settings .hqr-class-sources-panel .hqr-class-catalog-chevron,
@@ -454,7 +452,23 @@ section.hqr-journal > section.hqr-personal-quest-state .hqr-status-line .hqr-out
   color:#bdb3a3;font-size:10px;line-height:1.1
 }
 
-/* v0.1.11 — explicit, guarded removal of unused Quests. */
+/* Guarded Quest deletion controls. */
 .hqr-quest-manager .hqr-record-actions .hqr-delete-quest{margin-left:auto;background:#372025;border-color:#a65a61;color:#f4d1d2}
 .hqr-quest-manager .hqr-record-actions .hqr-delete-quest:hover:not(:disabled){background:#702d36;border-color:#d8999c}
 .hqr-quest-manager .hqr-record-actions .hqr-delete-quest:disabled{background:#292629;border-color:#534a4d;color:#a8a0a2;opacity:.58}
+
+/* Rank benefit source lists */
+.hqr-benefit-drop{padding:8px;border:1px dashed var(--color-border-light-primary,#716954);border-radius:6px;margin:6px 0;min-height:48px;}
+.hqr-benefit-drop.dragover{border-color:#d1ac66;background:rgba(171,150,13,.1);}
+.hqr-benefit-source{display:flex;align-items:center;gap:8px;margin:5px 0;padding:4px;border-radius:4px;background:rgba(70,60,45,.12)}
+.hqr-benefit-source img{width:28px;height:28px;object-fit:cover;border:0}
+.hqr-benefit-source span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hqr-benefit-source button{flex:0 0 auto}
+.hqr-class-slot{display:flex;flex-direction:column;align-items:stretch;margin-top:8px}
+.hqr-class-slot>strong{margin-bottom:2px}
+.hqr-library input[type=file]{max-width:100%}
+
+.hqr-personal-objective-summary{margin:8px 0 6px;padding:8px 10px;border-top:1px solid rgba(209,176,107,.28);font-size:.9em}
+.hqr-personal-objective-summary strong{color:#e4ca93}
+.hqr-personal-objective-summary ul{list-style:none;margin:5px 0 0;padding-left:0}
+.hqr-personal-objective-summary li{padding:2px 0;overflow-wrap:anywhere}

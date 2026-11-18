@@ -1,0 +1,7 @@
+<div class="hqr-shell"><header class="hqr-banner"><i class="fa-solid fa-list-check"></i><div><h2>Objective Tracking</h2><p>{{name}}</p></div></header>
+<div class="hqr-scroll"><section class="hqr-panel"><h3>{{#if individual}}Individual Objectives{{else}}Shared Objectives{{/if}}</h3>
+{{#if individual}}<p class="hqr-hint">Track objectives separately for each assigned Character. Their completion does not automatically pay or finish the Quest.</p>
+{{#if hasPeople}}<label>Character<select name="actor">{{#each people}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>{{else}}<p>No Characters have received this Quest yet.</p>{{/if}}
+{{else}}<p class="hqr-hint">Shared objective status is visible in the Quest Journal. Completing objectives does not trigger Turn-In.</p>{{/if}}
+{{#each objectives}}<label class="hqr-check"><input type="checkbox" data-objective-id="{{id}}" {{#if checked}}checked{{/if}} {{#if ../individual}}{{#unless ../hasPeople}}disabled{{/unless}}{{/if}}><span>{{text}}</span></label>{{else}}<p>No objectives defined. Add them in the Quest Editor.</p>{{/each}}
+</section></div></div>

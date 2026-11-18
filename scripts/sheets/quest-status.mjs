@@ -74,8 +74,13 @@ export function renderQuestStatus(app,html){
     const stamp=progress==="completed"?"completed":progress==="failed"?"failed":null;
     const seal=stamp?`<span class="hqr-outcome-stamp hqr-stamp-${stamp}" role="img" aria-label="${esc(stateLabel[progress])}"></span>`:"";
     const selector=allowed.length>1?`<label class="hqr-quest-character-selector">Character <select data-hqr-character>${allowed.map(a=>`<option value="${esc(a.id)}" ${a.id===selected?"selected":""}>${esc(a.name)}</option>`).join("")}</select></label>`:"";
+    const personalObjectives=doc.getFlag(ID,"objectiveTracking")==="individual"
+      ? (doc.getFlag(ID,"objectives")??[]):[];
+    const done=doc.getFlag(ID,"objectiveProgress")?.[actor.id]??{};
+    const objectiveSummary=personalObjectives.length
+      ? `<div class="hqr-personal-objective-summary"><strong>My Objectives</strong><ul>${personalObjectives.map(o=>`<li>${done[o.id]?"☑":"☐"} ${esc(o.text)}</li>`).join("")}</ul></div>`:"";
     panel.className=`hqr-personal-quest-state hqr-state-${progress}`;
-    panel.innerHTML=`${selector}<div class="hqr-status-line">${seal}<div class="hqr-status-caption"><strong>${esc(stateLabel[progress]??progress.toUpperCase())}</strong><span>${esc(actor.name)}</span>${progress==="failed"?"<small>This Quest was recorded as failed.</small>":""}</div></div>`;
+    panel.innerHTML=`${selector}<div class="hqr-status-line">${seal}<div class="hqr-status-caption"><strong>${esc(stateLabel[progress]??progress.toUpperCase())}</strong><span>${esc(actor.name)}</span>${progress==="failed"?"<small>This Quest was recorded as failed.</small>":""}</div></div>${objectiveSummary}`;
     panel.dataset.actorId=actor.id;
     panel.querySelector("[data-hqr-character]")?.addEventListener("change",event=>{selected=event.target.value;update();});
   }

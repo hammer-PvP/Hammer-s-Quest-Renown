@@ -4,7 +4,7 @@
  * Changes are compensating ledger entries with immutable keys, recorded before
  * individual outcomes are restored, so an interrupted reversal is safe to resume.
  */
-import {ID, assertGM} from "../constants.mjs";
+import {ID, assertGM, CURRENCIES} from "../constants.mjs";
 import {reconcileAccess} from "./documents.mjs";
 import {adjust, historyFor} from "./reputation.mjs";
 
@@ -65,7 +65,7 @@ export function pendingFailureReversal(doc) {
 export async function undoQuestFailure(doc,{characterIds=[],groupIds=[],reason=""}={}) {
   assertGM();
   if(doc?.getFlag(ID,"kind")!=="quest") throw new Error("Select a managed Quest Journal.");
-  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn"))
+  if(doc.getFlag(ID,"activeTurnIn") || doc.getFlag(ID,"activeFailureTurnIn") || doc.getFlag(ID,'activeSuccessReversal'))
     throw new Error("Resolve the interrupted Turn-In before undoing a failure.");
   let plan=pendingFailureReversal(doc);
   if(!plan && doc.getFlag(ID,"activeFailureReversal"))
@@ -91,7 +91,11 @@ export async function undoQuestFailure(doc,{characterIds=[],groupIds=[],reason="
       return {id,payoutId:outcome.failurePayoutId??null,
         restoreStatus:["accepted","in-progress"].includes(outcome.previousStatus)?outcome.previousStatus:"accepted",
         previousFailedAt:outcome.failedAt??null,
-        penalties:originalPenalties(doc,game.actors.get(id),run,"personal")};
+        penalties:originalPenalties(doc,game.actors.get(id),run,"personal"),
+        currency:run?.forfeitures?.[id]?.currency??{},
+        confiscations:run?.forfeitures?.[id]?.items??[],
+        currencyDebitKey:run?.forfeitures?.[id]?`quest:${doc.uuid}:failure:${run.id}:currency:${id}`:null,
+        itemDebitPrefix:run?.forfeitures?.[id]?`quest:${doc.uuid}:failure:${run.id}:item:${id}:`:null};
     });
     const groupPlans=groups.map(id=>{
       const credit=groupMap(doc)[id];
@@ -118,6 +122,34 @@ export async function undoQuestFailure(doc,{characterIds=[],groupIds=[],reason="
       const key=`quest:${doc.uuid}:failure-reversal:${plan.id}:${actor.id}:${penalty.sourceKey}`;
       if(await adjust(actor,penalty.factionUuid,-penalty.delta,
         `Undo quest failure: ${doc.name}. ${plan.reason}`,{source:doc.uuid,key,reconcile:false})) compensated++;
+    }
+    if(item.currencyDebitKey){
+      const debited=actor.getFlag(ID,'failureDebitedCurrency')??[];
+      const total=CURRENCIES.reduce((sum,k)=>sum+Number(item.currency?.[k]??0),0);
+      if(total>0){
+        if(!debited.includes(item.currencyDebitKey))throw new Error(`Original currency penalty for ${actor.name} is not recorded.`);
+        const key=`quest:${doc.uuid}:failure-reversal:${plan.id}:currency:${actor.id}`;
+        const reversed=actor.getFlag(ID,'failureReversedCurrency')??[];
+        if(!reversed.includes(key)){
+          const changes={[`flags.${ID}.failureReversedCurrency`]:[...reversed,key]};
+          for(const k of CURRENCIES){const amount=Number(item.currency?.[k]??0);
+            if(amount)changes[`system.currency.${k}`]=Number(actor.system?.currency?.[k]??0)+amount;
+          }
+          await actor.update(changes);compensated++;
+        }
+      }
+      for(const [index,forfeit] of (item.confiscations??[]).entries()){
+        const embedded=actor.items.get(forfeit.itemId);
+        if(!embedded)throw new Error(`Cannot restore confiscated ${forfeit.name}: original Item is missing from ${actor.name}.`);
+        const debitKey=`${item.itemDebitPrefix}${index}`;
+        if(!(embedded.getFlag(ID,'failureDebitKeys')??[]).includes(debitKey))
+          throw new Error(`Original Item penalty is missing for ${forfeit.name}.`);
+        const key=`quest:${doc.uuid}:failure-reversal:${plan.id}:item:${actor.id}:${index}`;
+        const restored=embedded.getFlag(ID,'failureRestoredKeys')??[];
+        if(restored.includes(key))continue;
+        await embedded.update({'system.quantity':Number(embedded.system?.quantity??0)+Number(forfeit.amount),
+          [`flags.${ID}.failureRestoredKeys`]:[...restored,key]});compensated++;
+      }
     }
   }
   const progress={...progressMap(doc)};

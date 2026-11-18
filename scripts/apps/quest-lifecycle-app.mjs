@@ -11,7 +11,7 @@ export class QuestLifecycleApp extends HandlebarsApplicationMixin(ApplicationV2)
     this.people=[];
     this.selectedParticipants=[];
     this.selectedGroups=[];
-    this.rowTargets={};
+    this.rowTargets={};this.individualOverrides={};this.applyMaterialPenalties=true;
   }
   async _prepareContext(){
     assertGM();
@@ -58,7 +58,20 @@ export class QuestLifecycleApp extends HandlebarsApplicationMixin(ApplicationV2)
       hasGroups:groups.length>0,selectedGroupCount:this.selectedGroups.length,
       currency:CURRENCIES.filter(k=>Number(curr[k])>0).map(k=>({key:k.toUpperCase(),amount:curr[k]})),
       items:items.map(item=>({name:item.name,quantity:item.quantity})),
-      pending,hasPayouts:payouts.length>0};
+      pending,hasPayouts:payouts.length>0,
+      applyMaterialPenalties:this.applyMaterialPenalties,
+      hasMaterialPenalties:isFailure&&Boolean(doc.getFlag(ID,'failurePenaltiesEnabled'))&&
+        (CURRENCIES.some(k=>Number(doc.getFlag(ID,'failureCurrency')?.[k])>0)||(doc.getFlag(ID,'failureItems')??[]).length>0),
+      failureCurrency:CURRENCIES.filter(k=>Number(doc.getFlag(ID,'failureCurrency')?.[k])>0)
+        .map(k=>({key:k.toUpperCase(),amount:doc.getFlag(ID,'failureCurrency')[k]})),
+      failureItems:doc.getFlag(ID,'failureItems')??[],
+      individualRewardRows:!isFailure?this.selectedParticipants.map(id=>{
+        const actor=game.actors.get(id),overrides=this.individualOverrides[id]??{};
+        return {id,name:actor?.name??id,
+          currency:CURRENCIES.map(k=>({key:k,label:k.toUpperCase(),amount:overrides.currency?.[k]??curr[k]??0})),
+          items:items.map((row,index)=>({index,name:row.name,quantity:overrides.items?.[index]??row.quantity??1})),
+          renown:renown.map(row=>({id:row.id,name:row.factionName,amount:overrides.renown?.[row.id]??row.amount}))};
+      }):[]};
   }
   _onRender(){
     const root=this.element;
@@ -72,6 +85,18 @@ export class QuestLifecycleApp extends HandlebarsApplicationMixin(ApplicationV2)
       this.selectedParticipants=listIds("participants");await this._renderPreservingScroll();
     }));
     root.querySelectorAll('[name="groups"]').forEach(el=>el.addEventListener("change",()=>{this.selectedGroups=listIds("groups");this._updateCounts();}));
+    root.querySelector('[name="applyMaterialPenalties"]')?.addEventListener('change',event=>{
+      this.applyMaterialPenalties=event.target.checked;
+    });
+    root.querySelectorAll('.hqr-individual-reward input').forEach(input=>input.addEventListener('change',()=>{
+      const actorId=input.closest('.hqr-individual-reward')?.dataset.actorId;
+      if(!actorId)return;
+      const state=this.individualOverrides[actorId]??={currency:{},items:{},renown:{}};
+      const value=Number(input.value);
+      if(input.dataset.currency)state.currency[input.dataset.currency]=value;
+      if(input.dataset.itemIndex!==undefined)state.items[input.dataset.itemIndex]=value;
+      if(input.dataset.renownId)state.renown[input.dataset.renownId]=value;
+    }));
     root.querySelectorAll(".hqr-turnin-renown-row").forEach(row=>row.querySelectorAll('input[type="checkbox"]').forEach(el=>el.addEventListener("change",()=>{
       this.rowTargets[row.dataset.rewardId]={personal:row.querySelector('[name="targetPersonal"]')?.checked??false,
         group:row.querySelector('[name="targetGroup"]')?.checked??false};
@@ -98,9 +123,10 @@ export class QuestLifecycleApp extends HandlebarsApplicationMixin(ApplicationV2)
               : `<p>Complete <strong>${esc(this.doc.name)}</strong> for <strong>${this.selectedParticipants.length} Character(s)</strong>?</p><p>Each selected Character receives the full Currency, Items and personal Renown. <strong>${this.selectedGroups.length} Group(s)</strong> will receive the collective Renown once. No Group is required.</p>`,
           yes:{label:failure?"Mark Failed & Apply Penalties":"Complete & Grant Each"},no:{label:"Cancel"}});
         if(!confirmed)return;
-        const details={participantIds:this.selectedParticipants,groupIds:this.selectedGroups,rowTargets:this.rowTargets};
+        const details={participantIds:this.selectedParticipants,groupIds:this.selectedGroups,rowTargets:this.rowTargets,
+          individualOverrides:this.individualOverrides,applyMaterialPenalties:this.applyMaterialPenalties};
         if(failure)await failQuest(this.doc,details);else await awardQuest(this.doc,details);
-        this.selectedParticipants=[];this.selectedGroups=[];
+        this.selectedParticipants=[];this.selectedGroups=[];this.individualOverrides={};
         await this.render();
       }catch(error){report(error,failure?"Failure Turn-In failed":"Success Turn-In failed");}
     });

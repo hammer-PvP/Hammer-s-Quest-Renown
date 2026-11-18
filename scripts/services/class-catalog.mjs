@@ -1,11 +1,7 @@
 /**
- * Rank Benefits — independent Class Sources and logical Enabled Classes (v0.1.8).
- * Selecting multiple permitted sources authorizes ALL class definitions from
- * those sources. A single class:<name> slot matches any allowed definition,
- * but no Item/Spell/Feature grants are performed by this module version.
- *
- * World settings v3 retain legacy snapshots and exact per-source UUIDs.
- * Existing Faction rank slots and Journal/Actor data are never rewritten.
+ * Discover Class Sources and identify logical Enabled Classes.
+ * Benefit grants match the Character's actual classes against authorized slots.
+ * Settings preserve per-source UUIDs and historical Faction definitions.
  */
 import {ID,assertGM} from '../constants.mjs';
 

@@ -1,7 +1,7 @@
 import {ID,CURRENCIES,assertGM,report,factions,CLONE,esc} from "../constants.mjs";
 import {saveQuest,getGMNotes,questOwnerUuid} from "../services/documents.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
-const defaults=()=>({name:"",factionUuid:null,status:"unavailable",flavor:"",objectives:[],items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],failurePenaltiesEnabled:false,failurePenalties:[],notes:""});
+const defaults=()=>({name:"",factionUuid:null,status:"unavailable",flavor:"",objectives:[],objectiveTracking:"global",items:[],currency:{pp:0,gp:0,ep:0,sp:0,cp:0},renownRewards:[],failurePenaltiesEnabled:false,failurePenalties:[],failureCurrency:{pp:0,gp:0,ep:0,sp:0,cp:0},failureItems:[],notes:""});
 function itemRow(item,index){
   const row=document.createElement("div");row.className="hqr-item-row";
   row.dataset.index=String(index);
@@ -28,19 +28,22 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
       factions:factionOptions.map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===ownerUuid})),
       noOwner:!ownerUuid,missingOwner,missingOwnerUuid:missingOwner?ownerUuid:'',
       statusLabel:String(this.doc?.getFlag(ID,"status")??"unavailable").replaceAll("-"," "),
+      individualTracking:this.data.objectiveTracking==='individual',
       objectives:this.data.objectives.map((o,index)=>({...o,index})),
       items:this.data.items.map((o,index)=>({...o,index,img:o.img||"icons/svg/item-bag.svg"})),
       failureClaimed:!!((this.doc?.getFlag(ID,"failurePayouts")??[]).length || this.doc?.getFlag(ID,"activeFailureTurnIn")),
       failurePenalties:(this.data.failurePenalties??[]).map(row=>({...row,choices:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===row.factionUuid}))})),
       renownRewards:(this.data.renownRewards??[]).map(row=>({...row,choices:factions().map(f=>({uuid:f.uuid,name:f.name,selected:f.uuid===row.factionUuid}))})),
-      currencies:CURRENCIES.map(id=>({id,label:id.toUpperCase(),value:this.data.currency?.[id]??0}))};
+      currencies:CURRENCIES.map(id=>({id,label:id.toUpperCase(),value:this.data.currency?.[id]??0})),
+      failureCurrencies:CURRENCIES.map(id=>({id,label:id.toUpperCase(),value:this.data.failureCurrency?.[id]??0})),
+      failureItems:(this.data.failureItems??[]).map(o=>({...o,img:o.img||'icons/svg/item-bag.svg'}))};
   }
   _collect(){
     const r=this.element, value=n=>r.querySelector(`[name="${n}"]`)?.value??"";
     this.data.name=value("name");
     const ownerInput=r.querySelector('[name="factionUuid"]');
     this.data.factionUuid=questOwnerUuid(ownerInput?.value);
-    this.data.flavor=value("flavor");this.data.notes=value("notes");
+    this.data.flavor=value("flavor");this.data.notes=value("notes");this.data.objectiveTracking=value("objectiveTracking")||"global";
     this.data.renownRewards=Array.from(r.querySelectorAll('.hqr-renown-reward')).map(row=>({
       id:row.dataset.rewardId, factionUuid:row.querySelector('[data-field="faction"]')?.value??"",
       amount:Number(row.querySelector('[data-field="amount"]')?.value)
@@ -51,8 +54,14 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
       amount:Number(row.querySelector('[data-field="amount"]')?.value)
     }));
     this.data.currency=Object.fromEntries(CURRENCIES.map(k=>[k,Number(value(`currency_${k}`))||0]));
-    this.data.objectives=Array.from(r.querySelectorAll(".hqr-objective")).map(row=>({text:row.querySelector('input[type="text"]').value,done:row.querySelector('input[type="checkbox"]').checked}));
-    this.data.items=Array.from(r.querySelectorAll(".hqr-item-row")).map(row=>({uuid:row.querySelector('[data-field="uuid"]').value,name:row.querySelector('.hqr-item-name').textContent,img:row.querySelector('.hqr-item-img').getAttribute('src'),quantity:Math.trunc(Number(row.querySelector('[data-field="quantity"]').value))}));
+    this.data.failureCurrency=Object.fromEntries(CURRENCIES.map(k=>[k,Number(value(`failureCurrency_${k}`))||0]));
+    this.data.failureItems=Array.from(r.querySelectorAll('.hqr-failure-item-list .hqr-item-row')).map(row=>({
+      uuid:row.querySelector('[data-field="uuid"]').value,
+      name:row.querySelector('.hqr-item-name').textContent,
+      img:row.querySelector('.hqr-item-img').getAttribute('src'),
+      quantity:Math.trunc(Number(row.querySelector('[data-field="quantity"]').value))}));
+    this.data.objectives=Array.from(r.querySelectorAll(".hqr-objective")).map(row=>({id:row.dataset.objectiveId||foundry.utils.randomID(),text:row.querySelector('input[type="text"]').value,done:row.querySelector('input[type="checkbox"]').checked}));
+    this.data.items=Array.from(r.querySelectorAll(".hqr-item-drop:not(.hqr-failure-item-drop) .hqr-item-row")).map(row=>({uuid:row.querySelector('[data-field="uuid"]').value,name:row.querySelector('.hqr-item-name').textContent,img:row.querySelector('.hqr-item-img').getAttribute('src'),quantity:Math.trunc(Number(row.querySelector('[data-field="quantity"]').value))}));
     return this.data;
   }
   _onRender(){
@@ -103,6 +112,7 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
     });
     root.querySelector('[data-action="add-objective"]')?.addEventListener('click',()=>{
       const row=document.createElement('div');row.className='hqr-objective';
+      row.dataset.objectiveId=foundry.utils.randomID();
       row.innerHTML='<input type="checkbox" title="Completed"><input type="text" placeholder="Objective"><button type="button" data-action="remove-objective" title="Remove"><i class="fa-solid fa-trash"></i></button>';
       root.querySelector('.hqr-objectives').append(row);row.querySelector('input[type="text"]').focus();
     });
@@ -131,6 +141,28 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
         else rows.append(itemRow({uuid:item.uuid,name:item.name,img:item.img,quantity:1},rows.children.length));
       }catch(error){report(error,'Item drop failed');}
     });
+    const failureDrop=root.querySelector('.hqr-failure-item-drop');
+    failureDrop?.addEventListener('dragover',e=>{e.preventDefault();failureDrop.classList.add('dragover');});
+    failureDrop?.addEventListener('dragleave',e=>{if(!failureDrop.contains(e.relatedTarget))failureDrop.classList.remove('dragover');});
+    failureDrop?.addEventListener('drop',async e=>{
+      e.preventDefault();e.stopPropagation();failureDrop.classList.remove('dragover');
+      if(this.doc?.getFlag(ID,'activeFailureTurnIn')||(this.doc?.getFlag(ID,'failurePayouts')??[]).length){ui.notifications.warn('Failure Penalties are locked.');return;}
+      try{
+        const payload=foundry.applications.ux.TextEditor?.implementation?.getDragEventData?.(e)??JSON.parse(e.dataTransfer.getData('text/plain'));
+        if(payload.type!=='Item')throw new Error('Drop an Item to confiscate.');
+        const uuid=payload.uuid??(payload.pack&&payload.id?`Compendium.${payload.pack}.Item.${payload.id}`:payload.id?`Item.${payload.id}`:null);
+        const item=uuid?await fromUuid(uuid):null;
+        if(item?.documentName!=='Item')throw new Error('Cannot resolve the Item.');
+        const list=root.querySelector('.hqr-failure-item-list');
+        const rows=[...list.querySelectorAll('.hqr-item-row')];
+        const existing=rows.find(r=>r.querySelector('[data-field="uuid"]').value===item.uuid);
+        if(existing){const quantity=existing.querySelector('[data-field="quantity"]');quantity.value=String(Number(quantity.value)+1);}
+        else list.append(itemRow({uuid:item.uuid,name:item.name,img:item.img,quantity:1},rows.length));
+      }catch(error){report(error,'Add confiscated Item failed');}
+    });
+    root.querySelector('.hqr-failure-item-list')?.addEventListener('click',e=>{
+      const button=e.target.closest('[data-action="remove-item"]');if(button)button.closest('.hqr-item-row')?.remove();
+    });
     root.querySelectorAll('.hqr-item-row').forEach(row=>{row.querySelector('.hqr-item-name')?.setAttribute('title',row.querySelector('[data-field="uuid"]').value);});
     root.querySelector('[data-action="save"]')?.addEventListener('click',async()=>{
       try{
@@ -141,6 +173,10 @@ export class QuestApp extends HandlebarsApplicationMixin(ApplicationV2){
         if(CURRENCIES.some(k=>data.currency[k]<0||!Number.isInteger(data.currency[k])))throw new Error("Currency amounts must be non-negative whole numbers.");
         if(data.renownRewards.some(r=>!r.factionUuid || !Number.isInteger(r.amount)))throw new Error("Choose a Faction and an integer for every Renown reward.");
         if(new Set(data.renownRewards.map(r=>r.factionUuid)).size!==data.renownRewards.length)throw new Error("Each Faction can appear only once in Renown rewards.");
+        if(CURRENCIES.some(k=>data.failureCurrency[k]<0||!Number.isSafeInteger(data.failureCurrency[k])))
+          throw new Error('Failure Currency Penalties must be non-negative whole numbers.');
+        if(data.failureItems.some(r=>!r.uuid||!Number.isSafeInteger(r.quantity)||r.quantity<1))
+          throw new Error('Failure Items must have valid positive quantities.');
         if(data.failurePenalties.some(r=>!r.factionUuid || !Number.isSafeInteger(r.amount)||r.amount>=0))
           throw new Error("Failure Penalties must be negative whole Renown values linked to Factions.");
         if(new Set(data.failurePenalties.map(r=>r.factionUuid)).size!==data.failurePenalties.length)

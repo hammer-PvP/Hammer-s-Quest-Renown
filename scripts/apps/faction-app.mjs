@@ -4,62 +4,46 @@ import {normalizeFactionRanks,newBenefitBlock} from "../services/rank-benefits.m
 import {getEnabledClasses} from "../services/class-catalog.mjs";
 const {ApplicationV2,HandlebarsApplicationMixin}=foundry.applications.api;
 
-/** Placeholder rows reflect selected classes only. They do not create or change
- * Item grants, class Items, Actor flags or the saved Faction benefit map.
- */
+/** Benefit lists retain source UUIDs; dragging from a World or Compendium
+ * creates references here, never copies an Item until the GM issues a grant. */
+function sourceNode(item){
+  const row=document.createElement('div');row.className='hqr-benefit-source';
+  row.dataset.sourceId=item.id??item.uuid;
+  const image=document.createElement('img');image.src=item.img||'icons/svg/item-bag.svg';image.alt='';
+  const label=document.createElement('span');label.textContent=item.name||item.uuid;
+  label.title=item.uuid;
+  const button=document.createElement('button');button.type='button';button.dataset.action='remove-source';
+  button.title='Remove benefit source';button.innerHTML='<i class="fa-solid fa-trash"></i>';
+  row.append(image,label,button);return row;
+}
+function slotNode(cls){
+  const row=document.createElement('div');row.className='hqr-class-slot';row.dataset.classKey=cls.key;
+  const title=document.createElement('strong');title.textContent=cls.name;
+  const drop=document.createElement('div');drop.className='hqr-benefit-drop';drop.dataset.classKey=cls.key;
+  drop.innerHTML='<span class="hqr-hint">Drop Items, Feats, Features or Spells</span><div class="hqr-benefit-sources"></div>';
+  row.append(title,drop);
+  if(cls.unavailable){row.classList.add('hqr-class-slot-unavailable');row.title='Class source is unavailable.';}
+  return row;
+}
 function classSlotsNode(classes){
-  const list=document.createElement('div');
-  list.className='hqr-class-slot-list';
-  if(!classes.length){
-    const empty=document.createElement('p');
-    empty.className='hqr-hint hqr-no-classes';
-    empty.textContent='No classes enabled. Configure them in Module Settings.';
-    list.append(empty);
-  }
-  for(const cls of classes){
-    const row=document.createElement('div');
-    row.className='hqr-class-slot';
-    row.dataset.classKey=cls.key;
-    const name=document.createElement('strong');
-    name.className='hqr-class-slot-name';
-    name.textContent=cls.name;
-    const slot=document.createElement('span');
-    slot.className='hqr-class-slot-empty';
-    slot.textContent='Empty — optional';
-    row.append(name,slot);
-    if(cls.unavailable){row.classList.add('hqr-class-slot-unavailable');row.title='This class source is currently unavailable.';}
-    list.append(row);
-  }
+  const list=document.createElement('div');list.className='hqr-class-slot-list';
+  if(!classes.length){const empty=document.createElement('p');empty.className='hqr-hint';
+    empty.textContent='No classes enabled. Configure them in Module Settings.';list.append(empty);}
+  for(const cls of classes)list.append(slotNode(cls));
   return list;
 }
-/** Creates only the new benefit node. Rank microactions never rerender the
- * ApplicationV2: drafts, focus and scrolling must survive unchanged.
- */
 function benefitNode(block,classes=[]){
   const general=block.type==='general';
-  const node=document.createElement('div');
-  node.className='hqr-benefit-block';
-  node.dataset.benefitId=block.id;
-  node.dataset.benefitType=block.type;
-  node.innerHTML=`<div class="hqr-benefit-head">
-    <span><i class="fa-solid ${general?'fa-users':'fa-user-shield'}"></i> ${general?'General':'Class Specific'}</span>
-    <button type="button" data-action="remove-benefit" title="Remove benefit block"><i class="fa-solid fa-xmark"></i></button>
-  </div>`;
+  const node=document.createElement('div');node.className='hqr-benefit-block';
+  node.dataset.benefitId=block.id;node.dataset.benefitType=block.type;
+  node.innerHTML=`<div class="hqr-benefit-head"><span><i class="fa-solid ${general?'fa-users':'fa-user-shield'}"></i> ${general?'General':'Class Specific'}</span><button type="button" data-action="remove-benefit" title="Remove block"><i class="fa-solid fa-xmark"></i></button></div>`;
   if(general){
-    const hint=document.createElement('p');
-    hint.className='hqr-hint';
-    hint.textContent='All eligible Characters. Item and Spell source linking is planned for a later version.';
-    node.append(hint);
-  }else{
-    node.append(classSlotsNode(classes));
-    const hint=document.createElement('p');
-    hint.className='hqr-hint';
-    hint.textContent='Class slots are optional placeholders; drag-and-drop will follow in a later version.';
-    node.append(hint);
-  }
+    const drop=document.createElement('div');drop.className='hqr-benefit-drop';
+    drop.innerHTML='<span class="hqr-hint">Drop Items, Feats, Features or Spells</span><div class="hqr-benefit-sources"></div>';
+    node.append(drop);
+  }else node.append(classSlotsNode(classes));
   return node;
 }
-
 /** Keep a newly created block in view *within* the internal scrolling pane,
  * without scrolling the Foundry window or resetting the pane to the top.
  */
@@ -128,6 +112,7 @@ export class FactionApp extends HandlebarsApplicationMixin(ApplicationV2) {
     card.querySelector('[data-field="rank-min"]').value=String(fresh.min);
     card.querySelector('.hqr-block-list').replaceChildren();
     list.append(card);
+    this.ranks.push(fresh);
     const field=card.querySelector('[data-field="rank-name"]');
     field.focus({preventScroll:true});
     revealWithinPane(this.element.querySelector('.hqr-scroll'),field);
@@ -143,11 +128,71 @@ export class FactionApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if(old)old.replaceWith(classSlotsNode(this.enabledClasses));
       else block.querySelector('.hqr-benefit-head')?.after(classSlotsNode(this.enabledClasses));
     }
+    this._mountBenefitSources();
     const count=root?.querySelector('[data-enabled-classes]');
     if(count)count.textContent=String(this.enabledClasses.length);
   }
+  _mountBenefitSources(){
+    const root=this.element;
+    for(const rank of this.ranks){
+      const card=[...root.querySelectorAll('.hqr-rank-card')].find(n=>n.dataset.rankId===rank.id);
+      if(!card)continue;
+      for(const block of rank.benefits??[]){
+        const pane=[...card.querySelectorAll('.hqr-benefit-block')].find(n=>n.dataset.benefitId===block.id);
+        if(!pane)continue;
+        for(const drop of pane.querySelectorAll('.hqr-benefit-drop')){
+          const list=drop.querySelector('.hqr-benefit-sources');if(!list)continue;
+          const key=drop.dataset.classKey;
+          const items=key?(block.classes?.[key]??[]):(block.items??[]);
+          list.replaceChildren(...items.map(sourceNode));
+        }
+      }
+    }
+  }
   _onRender(){
     const root=this.element;
+    this._mountBenefitSources();
+    root.querySelector('.hqr-ranks')?.addEventListener('dragover',event=>{
+      const drop=event.target.closest('.hqr-benefit-drop');
+      if(drop){event.preventDefault();drop.classList.add('dragover');}
+    });
+    root.querySelector('.hqr-ranks')?.addEventListener('dragleave',event=>{
+      const drop=event.target.closest('.hqr-benefit-drop');
+      if(drop&&!drop.contains(event.relatedTarget))drop.classList.remove('dragover');
+    });
+    root.querySelector('.hqr-ranks')?.addEventListener('drop',async event=>{
+      const drop=event.target.closest('.hqr-benefit-drop');if(!drop)return;
+      event.preventDefault();event.stopPropagation();drop.classList.remove('dragover');
+      try{
+        const data=foundry.applications.ux.TextEditor?.implementation?.getDragEventData?.(event)
+          ??JSON.parse(event.dataTransfer.getData('text/plain'));
+        if(data.type!=='Item')throw new Error('Drop an Item from the World or a Compendium.');
+        const uuid=data.uuid??(data.pack&&data.id?`Compendium.${data.pack}.Item.${data.id}`:data.id?`Item.${data.id}`:null);
+        const source=uuid?await fromUuid(uuid):null;
+        if(source?.documentName!=='Item')throw new Error('Unable to resolve that Item.');
+        const card=drop.closest('.hqr-rank-card');const pane=drop.closest('.hqr-benefit-block');
+        const rank=this.ranks.find(r=>r.id===card?.dataset.rankId);
+        const block=rank?.benefits?.find(b=>b.id===pane?.dataset.benefitId);
+        if(!block)throw new Error('Save the Faction before adding sources to this new block.');
+        const classId=drop.dataset.classKey;
+        const list=classId?(block.classes[classId]??=[]):block.items;
+        if(list.some(row=>row.uuid===source.uuid)){ui.notifications.warn('This benefit is already present in this slot.');return;}
+        const item={id:foundry.utils.randomID(),uuid:source.uuid,name:source.name,img:source.img,quantity:1};
+        list.push(item);drop.querySelector('.hqr-benefit-sources')?.append(sourceNode(item));
+      }catch(error){report(error,'Add rank benefit failed');}
+    });
+    root.querySelector('.hqr-ranks')?.addEventListener('click',event=>{
+      const button=event.target.closest('button[data-action="remove-source"]');if(!button)return;
+      const source=button.closest('.hqr-benefit-source');const drop=button.closest('.hqr-benefit-drop');
+      const card=button.closest('.hqr-rank-card');const pane=button.closest('.hqr-benefit-block');
+      const rank=this.ranks.find(r=>r.id===card?.dataset.rankId);
+      const block=rank?.benefits?.find(b=>b.id===pane?.dataset.benefitId);
+      if(!block)return;
+      const classId=drop.dataset.classKey;
+      const list=classId?block.classes?.[classId]:block.items;
+      const index=list?.findIndex(x=>(x.id??x.uuid)===source.dataset.sourceId);
+      if(index>=0){list.splice(index,1);source.remove();}
+    });
     const imageField=root.querySelector('input[name="image"]');
     const preview=root.querySelector('.hqr-faction-preview');
     const imageEl=root.querySelector('.hqr-faction-preview img');
@@ -215,6 +260,8 @@ export class FactionApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }else if(action==='add-benefit'){
         try{
           const block=newBenefitBlock(button.dataset.type);
+          const rank=this.ranks.find(r=>r.id===card.dataset.rankId);
+          if(rank)(rank.benefits??=[]).push(block);
           const node=benefitNode(block,this.enabledClasses);
           card.querySelector('.hqr-block-list').append(node);
           revealWithinPane(root.querySelector('.hqr-scroll'),node);

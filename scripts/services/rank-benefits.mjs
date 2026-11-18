@@ -1,11 +1,6 @@
 /**
- * Rank Benefits schema v1 (module dataVersion 5).
- * Foundation ONLY: stores named ranks and empty General/Class Specific benefit
- * blocks. No grant operations, document mutations or Actor flags in v0.1.0.
- *
- * Existing rank names, thresholds, ordering and unknown metadata survive.
- * Blocks have stable IDs so future source items and individual class slots
- * can be attached without changing the identity of previously saved data.
+ * Normalize rank and benefit definitions while preserving persistent IDs.
+ * Item grants are performed only by an explicit GM action.
  */
 import {ID,DEFAULT_RANKS,assertGM} from "../constants.mjs";
 

@@ -1,6 +1,7 @@
 import {ID,eligible,assertGM,factions,rankFor,report} from "../constants.mjs";
 import {reputationOf,historyFor} from "../services/reputation.mjs";
 import {applyRenownBatch,getPendingRenownBatch} from "../services/batch-reputation.mjs";
+import {grantRankBenefitsBatch} from '../services/rank-grants.mjs';
 
 const {ApplicationV2,HandlebarsApplicationMixin} = foundry.applications.api;
 const PAGE_SIZE = 20;
@@ -125,6 +126,24 @@ export class ReputationApp extends HandlebarsApplicationMixin(ApplicationV2) {
       root.querySelector(selector)?.addEventListener('input',refresh);
     refresh();
 
+    root.querySelector('[data-action="grant-rank"]')?.addEventListener('click',async event=>{
+      const button=event.currentTarget;button.disabled=true;
+      try{
+        assertGM();const uuid=root.querySelector('[name="factionUuid"]')?.value;
+        const faction=factions().find(f=>f.uuid===uuid);
+        if(!faction)throw new Error('Choose an existing Faction.');
+        const actors=selected().map(id=>game.actors.get(id)).filter(a=>a?.type==='character'&&eligible(a));
+        if(!actors.length)throw new Error('Select at least one eligible Character. Group Actors do not receive Items.');
+        const confirmed=await foundry.applications.api.DialogV2.confirm({window:{title:'Grant Faction Rank Benefits'},
+          content:`<p>Grant currently eligible rank Items for <strong>${faction.name}</strong> to <strong>${actors.length} Character(s)</strong>?</p><p>Only new benefit copies will be created. Previously granted copies are not duplicated. No Items are automatically removed when a rank decreases.</p>`,
+          yes:{label:'Grant Eligible Benefits'},no:{label:'Cancel'}});
+        if(!confirmed)return;
+        const result=await grantRankBenefitsBatch(actors,faction);
+        ui.notifications.info(`${result.created} new Rank Benefit Item(s) granted to ${result.actors} Characters.`);
+        await this.render();
+      }catch(error){report(error,'Grant Rank Benefits failed');}
+      finally{button.disabled=false;}
+    });
     root.querySelector('[data-action="apply"]')?.addEventListener('click',async event=>{
       const button=event.currentTarget;
       try {
